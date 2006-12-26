@@ -132,7 +132,19 @@ or
 
     warehouse_store = identity.SecureObject(warehouse_store,identity.has_permission('warehouse_store_view'))    
 
-That is, anything using the controllers_store or controllers_dispensing modules.  In the future (who knows how far into it) I will add code to dynamically create these links.  Ahh... the future, where we'll all have such wonderful products and ideas.
+That is, anything using the controllers_store or controllers_dispensing modules.  In the future (who knows how far into it) I will add code to dynamically create these links.  Ahh... the future.
 
 
 = Adding users with permissions =
+
+I still use the same table for care2x users with TurboCare.  That is, the user name and password should be preserved.  The permissions on the other hand, are handled separately (using the TurboGears default system).
+
+The users are stored in the "care_users" table.
+
+If you log into the care2x as an administrator through mysql, then you should be able to use a command such as:
+
+INSERT INTO care_users (name, login_id, password) VALUES ('New Name', 'myid', PASSWORD('abc123'));
+
+Then a user with name: New Name and a login id of 'myid' is created with an encrypted password of 'abc123'.
+
+The file "base_care2x_permission.sql" contains the tables and permissions which you can use as an example.  The permissions have already been coded through much of the program already, so at least the permissions table should be used as is (until you change the permissions in the program code).
