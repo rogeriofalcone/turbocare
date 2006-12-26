@@ -1,0 +1,2 @@
+db_module=care2x.model
+history_dir=$base/care2x/sqlobject-history
