@@ -9,10 +9,19 @@ TurboCare is based on the Python web framework called TurboGears.  It uses MySQL
 1. Python 2.4 (python2.4)
 2. SQLite version 3 (sqlite2)
 3. Python ReportLab
-4. 
+4. Python Imaging (PIL)
+5. Python MySQL library
+6. MySQL version 5.0 (5.0.24 tested)
+   - I also recommend getting the administrative packages.
 
 = TurboGears =
 
-TurboGears has good documentation on how to install it on a system.  After installing the above Python packages, it should be really simple
+TurboGears has good documentation on how to install it on a system.  After installing the above Python packages, it should be really simple.  There are only two steps to follow on the following page:
 
 http://www.turbogears.org/download/
+
+after which, you should be ready to use TurboGears.
+
+= Database creation =
+
+The database schema is the Care2x (www.care2x.org) database schema.  When examining Care2x for our project, I had a real hard time working with the PHP, but the schema seemed very well structured.  So I based my project on the schema of the Care2x project, and I've been trying to keep it somewhat compatible
