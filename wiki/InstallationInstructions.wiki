@@ -37,13 +37,102 @@ after which, you should be ready to use TurboGears.
 
 The database schema is the Care2x (www.care2x.org) database schema.  When examining Care2x for our project, I had a real hard time working with the PHP, but the schema seemed very well structured.  So I based my project on the schema of the Care2x project, and I've been trying to keep it somewhat compatible.
 
-In addition to the care2x tables, I've added a number of inventory management tables.
+In addition to the care2x tables, I've added a number of inventory management tables.  These tables aren't really described anywhere at this point.
 
 1. On Ubuntu, MySQL installs with a password-less root user.  You can change this (http://www.mysql.org/doc/refman/5.0/en/set-password.html).  Also, if you prefer not using the care2x schema with the root user, you can create a new user with administrative privileges to the database, and use this user instead of root.
 
 
 2. After adjusting the user account settings, you'll need to create the care2x database schema (http://www.mysql.org/doc/refman/5.0/en/create-database.html).  For example: CREATE DATABASE care2x;
 
-3. In the base directory I have a small database schema utility which I wrote for helping manage the MySQL schema (minor updates), so this can be used to help create the schema.  
+3. In the base directory I have a small database schema utility which I wrote for helping manage the MySQL schema (minor updates), so this can be used to help create the schema.  This python program is called 'mysql_schema.py'.  In the same folder I have a python pickle file which contains the care2x and inventory tables.  The file is called "care2x_schema.data".  To execute the program to create the schema (assuming you've called your database "care2x" and your password is abc123 and you're running the command where the files are located):
+
+python mysql_schema.py -d care2x -u root -p abc123 -o schema_updt -f care2x_schema.data
+
 
 = dev.cfg =
+
+The dev.cfg file is missing from the repository.  The basic contents are as follows:
+[global]
+# This is where all of your settings go for your development environment
+# Settings that are the same for both development and production
+# (such as template engine, encodings, etc.) all go in 
+# care2x/config/app.cfg
+
+# DATABASE
+
+# pick the form for your database
+# sqlobject.dburi="postgres://username@hostname/databasename"
+sqlobject.dburi="mysql://user:password123@localhost:3306/care2x"
+# sqlobject.dburi="sqlite:///file_name_and_path"
+
+# If you have sqlite, here's a simple default to get you started
+# in development
+# sqlobject.dburi="sqlite://%(current_dir_uri)s/devdata.sqlite"
+
+
+# if you are using a database or table type without transactions
+# (MySQL default, for example), you should turn off transactions
+# by prepending notrans_ on the uri
+# sqlobject.dburi="notrans_mysql://username:password@hostname:port/databasename"
+
+# for Windows users, sqlite URIs look like:
+# sqlobject.dburi="sqlite:///drive_letter:/path/to/file"
+
+# SERVER
+
+# Some server parameters that you may want to tweak
+# server.socket_port=8080
+
+# Enable the debug output at the end on pages.
+log_debug_info_filter.on = True
+
+server.environment="development"
+autoreload.package="care2x"
+
+session_filter.on = True
+
+# Set to True if you'd like to abort execution if a controller gets an
+# unexpected parameter. False by default
+tg.strict_parameters = True
+
+# LOGGING
+# Logging configuration generally follows the style of the standard
+# Python logging module configuration. Note that when specifying
+# log format messages, you need to use *() for formatting variables.
+# Deployment independent log configuration is in care2x/config/log.cfg
+[logging]
+
+[[loggers]]
+[[[care2x]]]
+level='DEBUG'
+qualname='care2x'
+handlers=['debug_out']
+
+[[[allinfo]]]
+level='INFO'
+handlers=['debug_out']
+
+[[[access]]]
+level='INFO'
+qualname='turbogears.access'
+handlers=['access_out']
+propagate=0
+
+
+= controllers.py =
+
+My version of the program already has a number of database entries, and some of these entries are currently hard-coded into the program.  You'll need to disable these lines (by commenting them out) to proceed.  Lines such as:
+    pharmacy_main = controllers_dispensing.Dispensing(2)
+
+    pharmacy_main = identity.SecureObject(pharmacy_main, identity.has_permission('pharmacy_main_view'))
+
+or
+
+    warehouse_store = controllers_store.Store(1, "warehouse_store")
+
+    warehouse_store = identity.SecureObject(warehouse_store,identity.has_permission('warehouse_store_view'))    
+
+That is, anything using the controllers_store or controllers_dispensing modules.  In the future (who knows how far into it) I will add code to dynamically create these links.  Ahh... the future, where we'll all have such wonderful products and ideas.
+
+
+= Adding users with permissions =
