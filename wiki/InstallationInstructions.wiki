@@ -6,13 +6,22 @@ TurboCare is based on the Python web framework called TurboGears.  It uses MySQL
 
 = Ubuntu packages =
 
-1. Python 2.4 (python2.4)
+1. Python 2.4 (python2.4) and the development package (python2.4-dev)
+
 2. SQLite version 3 (sqlite2)
+
 3. Python ReportLab
+
 4. Python Imaging (PIL)
+
 5. Python MySQL library
+
 6. MySQL version 5.0 (5.0.24 tested)
+
    - I also recommend getting the administrative packages.
+
+7. 
+
 
 = TurboGears =
 
