@@ -1,0 +1,18 @@
+Installation instructions
+
+= Introduction =
+
+TurboCare is based on the Python web framework called TurboGears.  It uses MySQL for the back-end database.  Up until now, I've been working on Ubuntu, so I'll be using that distribution as the starting point for explaining on how to install the program and get it running.
+
+= Ubuntu packages =
+
+1. Python 2.4 (python2.4)
+2. SQLite version 3 (sqlite2)
+3. Python ReportLab
+4. 
+
+= TurboGears =
+
+TurboGears has good documentation on how to install it on a system.  After installing the above Python packages, it should be really simple
+
+http://www.turbogears.org/download/
