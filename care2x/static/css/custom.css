@@ -1,0 +1,968 @@
+.invisible { display: none; }
+
+input { font-size: 85%;
+			background-color: #D7E5F2;
+			border: 1px solid gray;
+			}
+
+.draggable {
+    cursor: move;
+    position: relative;
+}
+
+/* displayable works with .mark-shown and .mark-hidden */
+.displayable {
+    cursor: pointer;
+}
+
+.mark-shown {
+	background-color: #A7C5DF;
+	width: 130px;
+}
+.mark-hidden {
+	background-color: gray;
+	width: 25px;
+}
+/* rowdisplay works with .show-row and .hide-row */
+.rowdisplay {
+    cursor: pointer;
+}
+
+.show-row {
+	height: 100px;
+}
+.hide-row {
+	height: 15px;
+}
+
+.loadsubtables {
+    cursor: pointer;
+}
+
+.removetable {
+    cursor: pointer;
+}
+/*
+	Report formatting classes
+*/
+.leftjust {
+	text-align: left;
+}
+.rightjust {
+	text-align: right;
+}
+.centrejust {
+	text-align: center;
+}
+.trData {
+	color: black;
+	font-size: 10px;
+	background-color: #FFFFFF;
+	border: 1px solid black;
+}
+.tdData {
+	border: 1px solid gray;
+}
+.trTotal {
+	color: white;
+	font-size: 11px;
+	font-weight: bold;
+	background-color: darkgray;
+	border: 1px solid gray;
+}
+.tdTotal {
+	border: 1px solid white;
+}
+.trTitle {
+	color: black;
+	font-size: 12px;
+	font-weight: bold;
+	background-color: lightgray;
+	border: 1px solid gray;
+	font-variant: small-caps;
+}
+.tdTitle {
+	border: 1px solid white;
+}
+.tMaster {
+	border: 2px double gray;
+	border-collapse: separate;
+	position: relative;
+	left: 0px;
+}
+.tDetail {
+	border: 2px solid gray;
+	border-collapse: separate;
+	position: relative;
+	left: 5px;
+}
+SELECT { font-size: 85%;
+			background-color: #D7E5F2;
+			border: 1px solid gray;
+			}
+			
+INPUT { font-size: 85%;
+			background-color: #D7E5F2;
+			border: 1px solid gray;
+			}
+/* FROM TURBO GEARS */
+		#userMenu
+        {
+            font-size: 10px;
+            font-family: verdana;
+            text-align: center;
+			display: inline;
+			position: relative;
+        }
+		#userMenu A
+		{
+			border: 1px solid gray;
+		}
+		
+        #pageLogin
+        {
+            font-size: 10px;
+            font-family: verdana;
+            text-align: right;
+        }
+
+        #loginBox
+        {
+            width: 30%;
+            margin: auto;
+            margin-top: 10%;
+            padding-left: 10%;
+            padding-right: 10%;
+            padding-top: 5%;
+            padding-bottom: 5%;
+            font-family: verdana;
+            font-size: 10px;
+            background-color: #eee;
+            border: 2px solid #ccc;
+        }
+
+        #loginBox h1
+        {
+            font-size: 42px;
+            font-family: "Trebuchet MS";
+            margin: 0;
+            color: #ddd;
+        }
+
+        #loginBox p
+        {
+            position: relative;
+            top: -1.5em;
+            padding-left: 4em;
+            font-size: 12px;
+            margin: 0;
+            color: #666;
+        }
+
+        #loginBox table
+        {
+            table-layout: fixed;
+            border-spacing: 0;
+            width: 100%;
+        }
+
+        #loginBox td.label
+        {
+            width: 33%;
+            text-align: right;
+        }
+
+        #loginBox td.field
+        {
+            width: 66%;
+        }
+
+        #loginBox td.field input
+        {
+            width: 100%;
+        }
+
+        #loginBox td.buttons
+        {
+            text-align: right;
+        }
+		
+		#hideUnHide
+		{
+			font-size: 8px;
+			color: gray;
+		}
+		#delItem
+		{
+			font-size: 8px;
+			color: red;
+		}
+		#dateEntry
+		{
+			color: yellow;
+		}
+
+/* PARAGRAPH STYLES */
+
+p.docfooter { font-size: 85%;
+			text-align: center;
+			background-color: #D7E5F2;
+			border: thin solid #D7E5F2;
+			padding: 0px;
+			margin: 0px;
+			}
+p.docheader { font-size: 150%;
+			text-align: center;
+			background-color: #D7E5F2;
+			border: thin solid #D7E5F2;
+			padding: 0px;
+			margin: 0px;
+			}
+
+/* DIVs */
+div.flash{	font-size: 100%;
+			color: red;
+			position: relative;
+			vertical-align: middle;
+			background-color: yellow;
+			border: none;
+}
+div.main {	font-size: 100%;
+			position: relative;
+			vertical-align: middle;
+			height: 300px;
+			left: 10%;
+			width: 70%;
+			overflow: auto;
+			background-color: white;
+			border: 1px solid #D5E3F0;
+			clear: none;
+			}
+div.main div.title { font-size: 110%;
+			text-align: center;
+			font-weight: bold;
+			text-decoration: underline;
+			background-color: #D7E5F2;
+			width: 100%;
+				}
+
+div.topbuttons { position: relative;
+			text-align: right;
+			left: 25%;
+			width: 50%;
+			background-color: white;
+			border: 1px none blue;
+			clear: none;
+			margin: 4px 0px 4px 0px;
+			}
+div.topbuttons input { font-size: 85%;
+			background-color: #D7E5F2;
+			border: 1px solid gray;
+			}
+div.topbuttons input.invisible { display:none;}
+	
+				
+div.lightcolour { background-color: white;
+			height: 100%;}
+
+div.leftsidebar {	background-color: #D7E5F2;
+			border: thin solid #D7E5F2;
+			padding: 0px;
+			margin: 0px;
+			position: fixed;
+			width: 48px;
+			height: 100%;
+			left: 1px;
+			top: 1px;
+			}
+div.docfooter { font-size: 85%;
+			text-align: center;
+			position: relative;
+			background-color: #D7E5F2;
+			border: thin solid #D7E5F2;
+			padding: 0px;
+			margin: 0px;
+			}
+div.docheader { font-size: 100%;
+			text-align: center;
+			background-color: #D7E5F2;
+			border: thin solid #D7E5F2;
+			position: static;
+			width: 100%;
+			top: -10px;
+			padding: 0px;
+			margin: 0px;
+			}
+div.smallstring { font-size: 60%;
+			text-align: left;
+			background-color: white;
+			border: thin solid black;
+			padding: 0px;
+			margin: 0px;
+			}
+div.smallstringtop { font-size: 70%;
+			text-align: left;
+			background-color: white;
+			border-top: thin solid black;
+			border-left: thin solid black;
+			border-right: thin solid black;
+			border-bottom: thin solid black;
+			padding: 0px;
+			margin: 0px;
+			}
+div.smallstringodd { font-size: 70%;
+			text-align: left;
+			background-color: white;
+			border-left: thin solid black;
+			border-right: thin solid black;
+			border-bottom: thin solid black;
+			padding: 0px;
+			margin: 0px;
+			}
+div.smallstringeven { font-size: 70%;
+			text-align: left;
+			background-color: #D7E5F2;
+			border-left: thin solid black;
+			border-right: thin solid black;
+			border-bottom: thin solid black;
+			padding: 0px;
+			margin: 0px;
+			}
+div.jsonmessage_on { font-size: 150%;
+			text-align: center;
+			background-color: red;
+			color: yellow;
+			padding: 0px;
+			margin: 0px;
+			position: fixed;
+			left: 2px;
+			top: 2px;
+			visibility: visible;
+			}
+div.jsonmessage_off { font-size: 80%;
+			text-align: center;
+			background-color: red;
+			padding: 0px;
+			margin: 0px;
+			position: fixed;
+			left: 2px;
+			top: 2px;
+			visibility: hidden;
+			}
+			
+div.listing { font-size: 100%;
+			text-align: left;
+			color: black;
+			background-color: white;
+			padding: 1px;
+			margin: 1px;
+			overflow: auto;
+			height: 400px;
+			}
+
+div.dialogbox { font-size: 90%;
+			text-align: left;
+			color: black;
+			background-color: white;
+			padding: 1px;
+			margin: 1px;
+			border: 5px solid #BAC8D5;
+			overflow: visible;
+			top: 50px;
+			left: 50px;
+			position: absolute;
+			width: 300px;
+			height: 200px;
+			z-index: 10;
+}
+div.dialogbox_shadow { font-size: 100%;
+			text-align: left;
+			color: black;
+			background-color: black;
+			padding: 1px;
+			margin: 1px;
+			border: none;
+			top: 58px;
+			left: 57px;
+			position: absolute;
+			width: 310px;
+			height: 210px;
+			z-index: 9;
+			}
+
+div.pick_list { font-size: 100%;
+			text-align: left;
+			color: black;
+			background-color: white;
+			padding: 1px;
+			margin: 1px;
+			border: 5px solid #BAC8D5;
+			overflow: visible;
+			top: 50px;
+			left: 50px;
+			position: absolute;
+			width: 800px;
+			height: 500px;
+			z-index: 10;
+			}
+			
+div.pick_list_col { font-size: 100%;
+			text-align: left;
+			color: black;
+			background-color: white;
+			padding: 1px;
+			margin: 1px;
+			border: none;
+			height: 460px;
+			width: 385px;
+			overflow: auto;
+			}
+			
+div.pick_list_shadow { font-size: 100%;
+			text-align: left;
+			color: black;
+			background-color: black;
+			padding: 1px;
+			margin: 1px;
+			border: none;
+			top: 58px;
+			left: 57px;
+			position: absolute;
+			width: 810px;
+			height: 510px;
+			z-index: 9;
+			}
+
+div.ListItemRow { font-size: 100%;
+			text-align: center;
+			color: black;
+			background-color: #FFEEEE;
+			border: thin inset black;
+			padding: 1px;
+			margin: 1px;
+			}
+div.ListItemRow li {
+		background-color: white;
+		text-align: left;
+			margin: 1px;
+}
+div.ListItemRow li.lite {
+		background-color: pink;
+		text-align: left;
+			margin: 1px;
+}
+
+div.listingrow { font-size: 90%;
+			text-align: left;
+			color: black;
+			background-color: #FFEEEE;
+			border: thin inset black;
+			padding: 2px;
+			margin: 5px;
+			}
+div.listingrow input {
+			font-size: 8px;
+			background-color: white;
+			border: 1px solid gray;			
+}
+
+div.listingrow_error { font-size: 100%;
+			text-align: left;
+			font-weight: bold;
+			color: white;
+			background-color: red;
+			border: thin inset black;
+			padding: 2px;
+			margin: 5px;
+			}
+
+div.listingrow_hidden { font-size: 90%;
+			text-align: left;
+			color: black;
+			display: none;
+			background-color: #FFEEEE;
+			border: none;
+			padding: 0px;
+			margin: 0px;
+			}
+
+div.listingrow_item { font-size: 100%;
+			text-align: left;
+			color: black;
+			background-color: orange;
+			border: thin inset black;
+			padding: 2px;
+			margin: 5px;
+			}
+
+div.listingrow_vendor { font-size: 100%;
+			text-align: left;
+			color: white;
+			background-color: #55DD00;
+			border: thin inset black;
+			padding: 2px;
+			margin: 5px;
+			}
+
+div.listingrow_itemoption { font-size: 100%;
+			text-align: left;
+			color: white;
+			background-color: #55DD00;
+			border: thin inset black;
+			padding: 2px;
+			margin: 5px;
+			}
+
+div.listingrow_location { font-size: 100%;
+			text-align: left;
+			color: white;
+			background-color: #55DD00;
+			border: thin inset black;
+			padding: 2px;
+			margin: 5px;
+			}
+
+div.listingrowcontain_show { font-size: 100%;
+			text-align: left;
+			color: black;
+			background-color: #7777ff;
+			border: thin inset black;
+			padding: 2px;
+			margin: 5px;
+			}
+
+div.listingrowcontain { font-size: 100%;
+			text-align: left;
+			color: black;
+			background-color: #5555dd;
+			border: thin inset black;
+			padding: 2px;
+			margin: 5px;
+			height: 35px;
+			}
+
+div.listingrow object {
+			visibility: hidden;
+			}
+
+div.big_text_1 { font-family: verdana, arial, sans-serif;
+			font-size: 60px;
+			font-weight: bolder;
+			color: #333366;
+			background-color: #eeeeee;
+			margin: 0.25em 0.25em 0.25em 0.25em;
+			text-align: center;
+			vertical-align: middle;
+			position: relative;
+			clear: both;
+			}
+			
+div.big_text_1 div.quote { font-family: verdana, arial, sans-serif;
+			font-size: 10px;
+			font-weight: bolder;
+			font-style: italic;
+			color: #333366;
+			background-color: transparent;
+			width: 20em;
+			padding: 10px;
+			text-align: left;
+			float: left;
+			position: relative;
+			top: -16em;
+			}
+
+div.big_text_2 {font-family: verdana, arial, sans-serif;
+			font-size:55px;
+			font-weight: bolder;
+			color: #444499;
+			text-align: center;
+			vertical-align: bottom;
+			position: relative;
+			left: +1.75em;
+			top: -0.4em;
+			}
+			
+div.error {font-family: verdana, arial, sans-serif;
+			font-size: large;
+			font-weight: bolder;
+			color: red;
+			width: 50%;
+			left: +15em;
+			text-align: center;
+			vertical-align: bottom;
+			position: relative;
+			}
+div.error a {font-family: verdana, arial, sans-serif;
+			font-size: large;
+			font-weight: bold;
+			color: green;
+			text-align: center;
+			vertical-align: bottom;
+			position: relative;
+			}
+			
+/* DIV HEADING STYLES */
+div.docheader h1 { background-color: transparent;
+				font-size: 85%;
+				text-align: center;
+				position: relative;
+				top: 1px;
+				padding: 0px;
+				margin: 0px;
+				}
+div.docheader h2 { background-color: transparent;
+				font-size: 85%;
+				text-align: center;
+				position: relative;
+				padding: 0px;
+				margin: 0px;
+				top: 1px;
+				}
+div.docheader h3 { background-color: transparent;
+				font-size: 100%;
+				text-align: center;
+				position: relative;
+				padding: 0px;
+				margin: 0px;
+				top: 1px;
+				}
+div.invisible {
+		display: none;
+}
+div.infobox {position: relative;
+			border: thin groove #102132;
+			background-color: white;
+			width: 12em;
+			font-size: 90%;
+			text-align: center;
+			}
+div.infobox li { list-style-type: none;
+			text-align: left;
+			padding: 0px;
+			margin: 3px;
+			background-color: #E6F4FF;
+			color: #102132;
+			border: 1px solid #284279;
+			}
+div.infoboxright {float: right;
+			border: thin groove #102132;
+			background-color: white;
+			right: 5px;
+			top: 25%;
+			width: 12em;
+			position: absolute;
+			font-size: 90%;
+			text-align: center;
+			}
+div.infoboxright div {
+			position:relative;
+			margin: 2px;
+}
+div.infoboxright li { list-style-type: none;
+			padding: 0px;
+			margin: 3px;
+			background-color: #E6F4FF;
+			color: #102132;
+			border: 1px solid #284279;
+			text-align: center;
+			}
+
+div.menuright {float: right;
+			border: thin groove #102132;
+			background-color: white;
+			right: 5px;
+			top: 50%;
+			width: 12em;
+			position: absolute;
+			font-size: 90%;
+			text-align: center;
+			}
+			
+div.menuright li { list-style-type: none;
+			padding: 0px;
+			margin: 3px;
+			background-color: #E6F4FF;
+			color: #102132;
+			border: 1px solid #284279;
+			text-align: center;
+			}
+div.important { text-align: center;
+			color: red;
+			font-size: 150%;
+			}
+
+div.notification { float: right;
+			right: 1px;
+			top: 5px;
+			width: 12em;
+			position: relative;
+			font-size: 100%;
+			color: white;
+			background-color: red;
+			text-align: center;
+			}
+
+div.displaymsg { top: 20px;
+			position: absolute;
+			font-size: 100%;
+			color: white;
+			background-color: red;
+			text-align: center;
+			}
+			
+div.SearchBox {position: absolute;
+			left: 33%;
+			top: 33%;
+			background-color: white;
+			border: thin;
+			border-style: ridge;
+			border-color: blue;
+			}
+
+h5.doc_footer {	position: absolute;
+			bottom: 1px;
+			left: 25%;
+			font-size: 50%;
+			}
+
+/* TABLE DEFINITIONS */
+table.menu_form { border: thin groove blue;
+				padding: 0cm;
+				border-collapse: collapse;
+				margin: 5px;
+				left: 1px;
+				position: fixed;
+				}
+
+table.input_box { padding: 3cm }
+table.input_box td { padding: 1.5cm }
+
+table.listing { border: thin groove blue;
+				font-family: serif, sans-serif;
+				padding: 0cm;
+				color: blue;
+				border-collapse: collapse;
+				margin: 5px;
+				}
+table.listing tr { padding: 1px;
+			border-style: solid;
+			border-width: thin;
+			}
+table.listing th { font-weight: bold;
+			font-size: 95%;
+			padding: 2px;
+			border-right: 0.5px solid blue;
+			border-bottom: 0.5px solid blue;
+			border-width: thin;
+			}
+table.listing td { color: black;
+			font-size: 95%;
+			padding-left: 8px;
+			padding-right: 8px;
+			}
+
+table.tableform { border: thin groove blue;
+			padding: 2px;
+			margin: 2px;
+			color: black;
+			text-align: left;
+			}
+table.tableform th { color: black;
+			font-weight: bold;
+			font-size: 95%;
+			padding: 2px;
+			}
+
+table.tableform tr { color: black;
+			padding: 2px;
+			border-bottom: 0.5px solid black;
+			}
+				
+table.tableform td { color: black;
+			font-size: 95%;
+			padding: 2px;
+			vertical-align: top;
+			}
+			
+table.tableform td.entrylabel {background-color: white;
+			border: 0.5px solid white;
+			text-align: left;
+			}
+			
+table.tableform input { background-color: #D7E5F2;
+			color: #102132;
+			border: 1px solid #284279;
+			}
+			
+table.bill { font-size: 80%;
+			font-family: courier, serif;
+			border: 0px none white;
+			width: 100%;
+			margin: 0px 0px 0px 0px;
+			padding: 0px 0px 0px 0px;
+			}
+tr.heading { border-bottom: 1px solid black;
+			font-weight:bold;
+			}
+table.bill tr.total { border-top: 1px solid black;}
+table.bill tr { border: 0px none white;
+			}
+table.bill td { border-right: 1px solid black;
+			margin: 0px 0px 0px 0px;
+			padding: 0px 0px 0px 0px;
+			}
+td.w40 { width: 40%;}
+td.w25 { width: 25%;}
+td.w15 { width: 15%;}
+table.bill td.last { border: 0px none black;
+			width: 25%;
+			}
+			
+table.menupage { border: none;
+			left: 0px;
+			position: static;
+			padding: 0px;
+			margin: 0px;
+			color: black;
+			}
+table.menupage tr { color: black;
+			left: 0px;
+			padding: 0px;
+			border: none;
+			}
+				
+table.menupage td { color: black;
+			padding: 0px;
+			top: 0px;
+			vertical-align: top;
+			left: 0px;
+			}			
+
+table.regular { border: none;
+			left: 0px;
+			padding: 0px;
+			margin: 0px;
+			color: black;
+			}
+			
+table.regular tr { color: black;
+			left: 0px;
+			padding: 2px;
+			margin: 2px;
+			border: none;
+			}
+				
+table.regular td { color: black;
+			padding: 2px;
+			margin: 2px;
+			top: 0px;
+			vertical-align: top;
+			left: 0px;
+			width: 50%;
+			border: 1px solid lightgray;
+			}			
+			
+td.threecol { color: black;
+			padding: 2px;
+			margin: 2px;
+			top: 0px;
+			vertical-align: top;
+			left: 0px;
+			width: 34%;
+			border: 1px solid lightgray;
+			}
+
+table.minimal { border: none;
+			left: 0px;
+			padding: 0px;
+			margin: 0px;
+			color: black;
+			}
+			
+table.minimal tr { color: black;
+			left: 0px;
+			padding: 0px;
+			margin: 1px;
+			border: none;
+			}
+				
+table.minimal td { color: black;
+			border: none;
+			padding: 0px;
+			margin: 1px;
+			top: 0px;
+			vertical-align: top;
+			left: 0px;
+			}			
+/* IMAGES */
+
+img.logo { float: right;
+			top: 1px;
+			left: 1px;
+			position: relative;
+			}
+img.banner { top: 1px;
+			left: 1px;
+			position: relative;
+			}
+/* SELECT */
+
+select.relatedjoin {width: 225px;
+			overflow: scroll;
+			}
+select.foreignkey {width: 225px;
+			overflow: scroll;
+			}
+select.groupselect {width: 225px;
+			overflow: auto;
+			background-color: #D7E5F2;
+			color: #102132;
+			border: 1px solid #284279;
+			}
+
+/* FORMS */
+
+form.tableform { border: thin groove blue;
+			}
+			
+form.tableform { border: thin groove blue;
+			padding: 2px;
+			margin: 2px;
+			color: black;
+			text-align: left;
+			}
+form.tableform th { color: black;
+			font-weight: bold;
+			font-size: 95%;
+			padding: 2px;
+			}
+
+form.tableform tr { color: black;
+			padding: 2px;
+			border-bottom: 0.5px solid black;
+			}
+			
+form.tableform td { color: black;
+			font-size: 95%;
+			padding: 2px;
+			vertical-align: top;
+			}
+
+form.tableform select { color: black;
+			font-size: 95%;
+			}
+			
+form.tableform td.entrylabel {background-color: white;
+			border: 0.5px solid white;
+			text-align: left;
+			}
+			
+form.tableform textarea { background-color: #D7E5F2;
+			color: #102132;
+			border: 1px solid #284279;
+			}
+			
+form.tableform input { background-color: #D7E5F2;
+			color: #102132;
+			border: 1px solid #284279;
+			}
