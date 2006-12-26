@@ -4,6 +4,8 @@ Installation instructions
 
 TurboCare is based on the Python web framework called TurboGears.  It uses MySQL for the back-end database.  Up until now, I've been working on Ubuntu, so I'll be using that distribution as the starting point for explaining on how to install the program and get it running.
 
+TurboCare uses the the database schema from the Care2x project (www.care2x.org) hence the name "TurboCare".
+
 = Ubuntu packages =
 
 1. Python 2.4 (python2.4) and the development package (python2.4-dev)
@@ -12,7 +14,7 @@ TurboCare is based on the Python web framework called TurboGears.  It uses MySQL
 
 3. Python ReportLab
 
-4. Python Imaging (PIL)
+4. Python Imaging Library (PIL)
 
 5. Python MySQL library
 
@@ -20,7 +22,7 @@ TurboCare is based on the Python web framework called TurboGears.  It uses MySQL
 
    - I also recommend getting the administrative packages.
 
-7. 
+7. Also, make sure that gcc libstdc++6-dev and other needed packages listed in the TurboGears documentation are installed.
 
 
 = TurboGears =
@@ -33,4 +35,15 @@ after which, you should be ready to use TurboGears.
 
 = Database creation =
 
-The database schema is the Care2x (www.care2x.org) database schema.  When examining Care2x for our project, I had a real hard time working with the PHP, but the schema seemed very well structured.  So I based my project on the schema of the Care2x project, and I've been trying to keep it somewhat compatible
+The database schema is the Care2x (www.care2x.org) database schema.  When examining Care2x for our project, I had a real hard time working with the PHP, but the schema seemed very well structured.  So I based my project on the schema of the Care2x project, and I've been trying to keep it somewhat compatible.
+
+In addition to the care2x tables, I've added a number of inventory management tables.
+
+1. On Ubuntu, MySQL installs with a password-less root user.  You can change this (http://www.mysql.org/doc/refman/5.0/en/set-password.html).  Also, if you prefer not using the care2x schema with the root user, you can create a new user with administrative privileges to the database, and use this user instead of root.
+
+
+2. After adjusting the user account settings, you'll need to create the care2x database schema (http://www.mysql.org/doc/refman/5.0/en/create-database.html).  For example: CREATE DATABASE care2x;
+
+3. In the base directory I have a small database schema utility which I wrote for helping manage the MySQL schema (minor updates), so this can be used to help create the schema.  
+
+= dev.cfg =
