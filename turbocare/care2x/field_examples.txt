@@ -1,0 +1,63 @@
+	Id = dict(id="ci_Id", name="Id", label="Id", type="Hidden",attr={}, data=Id_data)
+
+	Gar = dict(id="ci_Gar", name="Gar", label="Gar", type="Hidden",attr={}, data="GAR")
+
+	Name = dict(id="ci_Name", name="Name", label="Name", type="String",attr=dict(length=25), data=Name_data)
+
+	Description = dict(id="ci_Description", name="Description", label="Description", type="Text",attr=dict(cols=30,rows=3), data=Description_data)
+
+	Accounting = dict(id="ci_Accounting", name="Accounting", label="Account", type="String",attr=dict(length=25), data=Accounting_data)
+
+	IsFixedAsset = dict(id="ci_IsFixedAsset", name="IsFixedAsset", label="Fixed asset",type="Bool",attr={}, data=IsFixedAsset_data)
+
+	IsService = dict(id="ci_IsService", name="IsService", label="Service",type="Bool",attr={}, data=IsService_data)
+
+	IsForSale = dict(id="ci_IsForSale", name="IsForSale", label="For sale",type="Bool",attr={}, data=IsForSale_data)
+
+#	TestEnum = dict(id="ci_TestEnum", name="TestEnum", label="Enumerated field",type="Enum",attr={}, data='item2', options=['item1', 'item2', 'item3', 'item4'])
+
+#	TestNumeric = dict(id="ci_TestNumeric", name="TestNumeric", label="Numeric field", type="Numeric",attr={}, data='46.6')
+
+#	TestCurrency = dict(id="ci_TestCurrency", name="TestCurrency", label="Currency field", type="Currency",attr={}, data='4')
+
+#	TestDateTime = dict(id="ci_TestDateTime", name="TestDateTime", label="Date time field", type="DateTime",attr={}, data='2006-05-02')
+
+	SrchPidName = dict(id="ci_SrchPidName", name="Name", label="Name", type="String",attr=dict(length=25), data='')
+
+#	SrchPidDescription = dict(id="ci_SrchPidDescription", name="Description", label="Description", type="String",attr=dict(length=25), data='')
+
+	ParentItem = dict(id="ci_ParentItem", name="ParentItem", label="Parent catalog item", type="ForeignKey",attr=dict(srchUrl="CatalogItemSearch",lookupUrl="CatalogItemGet",srchFields=[SrchPidName]), data=ParentItem_data, init_display=ParentItem_display)
+
+	CompoundSrch = dict(id="ci_CompoundSrch", name="Name", label="Name", type="String",attr=dict(length=25), data='')
+
+	Compound = dict(id="ci_Compound", name="Compound", label="Compound list", type="ForeignKey",attr=dict(srchUrl="CatalogItemCompoundSearch",lookupUrl="CatalogItemCompoundGet",srchFields=[CompoundSrch]), data=Compound_data, init_display=Compound_display)
+
+	PackagingSrch = dict(id="ci_PackagingSrch", name="Name", label="Name", type="String",attr=dict(length=25), data='')
+
+	Packaging = dict(id="ci_Packaging", name="Packaging", label="Packaging type", type="ForeignKey",attr=dict(srchUrl="CatalogItemPackagingSearch",lookupUrl="CatalogItemPackagingGet",srchFields=[PackagingSrch]), data=Packaging_data, init_display=Packaging_display)
+
+	ChildItems = dict(id="ci_ChildItems", name="ChildItems", label="Child items", type="MultiJoin",attr=dict(displayUrl="CatalogItemMultiJoinList",listUrl="CatalogItemMultiJoinList",linkUrl="CatalogItem"), data=ChildItems_data)
+
+	#displayUrl - the url for display text, listUrl - the url for showing a list of items linked (Id,ColName,field_num), linkUrl - an url used to retrieve a list item for editting
+
+	StockItems = dict(id="ci_StockItems", name="StockItems", label="Stock items", type="MultiJoin",attr=dict(displayUrl="CatalogItemMultiJoinList",listUrl="CatalogItemMultiJoinList",linkUrl="CatalogItem"), data=StockItems_data)
+
+	# Inventory groups
+	SrchInvGrpName = dict(id="ci_SrchInvGrpName", name="Name", label="Group name", type="String",attr=dict(length=25), data='')
+
+	CatalogGroups = dict(id="ci_CatalogGroups", name="CatalogGroups", label="Catalog groups", type="RelatedJoin", attr=dict(displayUrl="CatalogItemInvGroups", listUrl="CatalogItemInvGroups", srchUrl="InvGroupSearch", saveUrl='CatalogItemInvGroupSave', srchFields=[SrchInvGrpName]), data=CatalogGroups_data)
+	#displayUrl - the url for display text, listUrl - the url for showing a list of items linked (Id), srchFields - list of fields to search in related join table, srchUrl - the url to submit the search to, 
+
+	DisplayMessage = dict(id="ci_DisplayMessage", name="DisplayMessage", type="Display",attr=dict(css_class='displaymsg'), data=DisplayMessage_data)		
+
+	fields = [Id, Name, Description, CatalogGroups, ChildItems, Accounting, Compound, Packaging, StockItems, ParentItem, IsFixedAsset, IsService, IsForSale, Gar]
+	#Configure any of the links that might need configuring
+	
+	#RETURN VALUES HERE
+	return dict(id=id, Name='CatalogItem', Label='Inventory Catalog', Fields=fields, FieldsSrch=[Name], Read='CatalogItem', Add='CatalogItemSave', Del='CatalogItemDel', Edit='CatalogItem', Save='CatalogItemSave', SrchUrl='CatalogItemSearch', MenuBar='CatalogItemMenu', TreeView='CatalogItemTree')
+
+#TABBER
+	Tab1 = [Field1, Field2, Field3]
+	Tab2 = [Field4]
+	Tab3 = [Field5, Field6]
+	testtab = dict(id="ci_tabber1", name = "Tabber", label = "Not used", type = "Tabber", attr=dict(tabs=[Tab1, Tab2, Tab3]))
