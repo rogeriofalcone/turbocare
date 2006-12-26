@@ -16,7 +16,7 @@ import controllers_reports
 import controllers_UDReport	
 import controllers_saved_reports
 from care2x import json
-
+#David is very  good at being bad..
 log = logging.getLogger("care2x.controllers")
 
 class Root(controllers.RootController):
