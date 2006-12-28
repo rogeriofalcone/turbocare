@@ -4,6 +4,7 @@
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
 <title>Welcome to CIHSR TurboCare</title>
+
 </head>
 <body>
 <div id="header">&nbsp;</div>
@@ -16,14 +17,7 @@
     <h2>Things to do:</h2>
     <ul class="links">
       <li py:if="tg.identity.anonymous"><a href="/login">login</a></li>
-	  <li py:if="'reg_view' in tg.identity.permissions"><a href="/registration">Registration</a></li>
-	  <li py:if="'bill_view' in tg.identity.permissions"><a href="/billing">Billing</a></li>
-	  <li py:if="'pharmacy_main_view' in tg.identity.permissions"><a href="/pharmacy_main">Pharmacy dispensing</a></li>
-	  <li py:if="'warehouse_main_view' in tg.identity.permissions"><a href="/warehouse_main">Warehouse dispensing</a></li>
-	  <li py:if="'pharmacy_store_view' in tg.identity.permissions"><a href="/pharmacy_store">Pharmacy Inventory</a></li>
-	  <li py:if="'warehouse_store_view' in tg.identity.permissions"><a href="/warehouse_store">Warehouse Inventory</a></li>
-	  <li py:if="'admin' in tg.identity.groups"><a href="/inventory">Admin Inventory</a></li>
-	  <li py:if="'admin' in tg.identity.groups"><a href="/catwalk">User admin</a></li>
+      <li py:for="link in links"><a href="${link['link']}">${link['name']}</a></li>
 	  <li py:if="not tg.identity.anonymous"><a href="/logout">logout</a></li>
     </ul>
   </div>
