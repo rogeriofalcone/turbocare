@@ -215,7 +215,7 @@ class Store(turbogears.controllers.Controller):
 	def CatalogItemsEditorSave(self, Name='New Name', Description='',Accounting='',IsFixedAsset=False,\
 			IsService=False,IsForSale=True,IsDispensable=True,IsSelectable=None,MinStockAmt=None,\
 			ReorderAmt=None,Tax=None,ParentItemID=None,CompoundID=None,PackagingID=None,\
-			CatalogItemID=None, CatalogGroups=[], Operation='', **kw):
+			CatalogItemID=None, CatalogGroups=[], CatalogGroupCount=[], Operation='', **kw):
 		'''	Create/Update a CatalogItem entry
 			NOTE: in the future, check for any attempts to make a circular reference with the ParentItemID
 		'''
@@ -240,7 +240,10 @@ class Store(turbogears.controllers.Controller):
 			catalogitem.Tax = Tax
 			# Remove any Catalog groups which we're not using
 			# convert our CatalogGroups list to an integer list
-			CatalogGroups = [int(x) for x in CatalogGroups]
+			if len(CatalogGroupCount) == 1:
+				CatalogGroups = [int(CatalogGroups)]
+			else:
+				CatalogGroups = [int(x) for x in CatalogGroups]
 			for group in catalogitem.CatalogGroups:
 				if not (group.id in CatalogGroups):
 					catalogitem.removeInvGrpStock(group)
@@ -255,13 +258,18 @@ class Store(turbogears.controllers.Controller):
 			pass
 		elif (Operation in ['New', 'New sub item']) or (Operation == 'Save' and CatalogItemID==None):
 			# Make a new unique entry but with a copy of the current supplied values
-			catalogitem = model.InvCatalogItem(Name="New Catalog Item",Description=Description,Accounting=\
+			if Name in ['', None]:
+				Name = "New Catalog Item"
+			catalogitem = model.InvCatalogItem(Name=Name,Description=Description,Accounting=\
 				Accounting,IsFixedAsset=IsFixedAsset,IsService=IsService,IsForSale=IsForSale,IsDispensable=\
 				IsDispensable,IsSelectable=IsSelectable,MinStockAmt=MinStockAmt,ReorderAmt=ReorderAmt,\
 				Tax=Tax,ParentItemID=ParentItemID,CompoundID=CompoundID,PackagingID=PackagingID)
 			# Add the catalog groups
 			# convert our CatalogGroups list to an integer list
-			CatalogGroups = [int(x) for x in CatalogGroups]
+			if len(CatalogGroupCount) == 1:
+				CatalogGroups = [int(CatalogGroups)]
+			else:
+				CatalogGroups = [int(x) for x in CatalogGroups]
 			for groupid in CatalogGroups:
 				catalogitem.addInvGrpStock(groupid)
 			# Reset the ParentItemID if we want a sub-item
@@ -285,7 +293,10 @@ class Store(turbogears.controllers.Controller):
 			else:
 				catalogitem.Status = 'deleted'
 				turbogears.flash('Record marked deleted!')
-		raise cherrypy.HTTPRedirect('CatalogItemsEditor?CatalogItemID=%d' % CatalogItemID)
+		if CatalogItemID in ['', None]:
+			raise cherrypy.HTTPRedirect('CatalogItemsEditor')
+		else:
+			raise cherrypy.HTTPRedirect('CatalogItemsEditor?CatalogItemID=%d' % CatalogItemID)
 
 	@expose(format='json')
 	@validate(validators={'QuickSearchText':validators.String()})

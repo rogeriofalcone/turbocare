@@ -62,7 +62,7 @@ def Location(self, id='',Id='', Op='', **kw):
 	Id = dict(id="l_Id", name="Id", label="Id", type="Hidden",attr={}, data=Id_data)
 	Name = dict(id="l_Name", name="Name", label="Name", type="String",attr=dict(length=50), data=Name_data)
 	Description = dict(id="l_Description", name="Description", label="Description", type="Text",attr=dict(cols=40,rows=4), data=Description_data)
-	CanReceive = dict(id="l_CanReceive", name="Can receive", label="Can receive", type="Bool",attr=dict(), data=CanReceive_data)
+	CanReceive = dict(id="l_CanReceive", name="CanReceive", label="Can receive", type="Bool",attr=dict(), data=CanReceive_data)
 	CanSell = dict(id="l_CanSell", name="CanSell", label="Can sell", type="Bool",attr=dict(), data=CanSell_data)
 	IsStore = dict(id="l_IsStore", name="IsStore", label="Is store", type="Bool",attr=dict(), data=IsStore_data)
 	IsConsumed = dict(id="l_IsConsumed", name="IsConsumed", label="Is consumed", type="Bool",attr=dict(), data=IsConsumed_data)
@@ -120,8 +120,10 @@ def LocationGet(self, id='', Id='', field_id='', field_num='', **kw):
 		return dict(display='None', record={}, field_id=field_id, field_num=field_num)
 	
 @expose(format='json')
-@validate(validators={'Id':validators.String(),'id':validators.String(), 'Name':validators.String(), 'Description':validators.String(), 'CanReceive':validators.StringBool(), 'CanSell':validators.StringBool(), 'IsConsumed':validators.StringBool()})
-def LocationSave(self, Id='', id='', Name='', Description='', CanReceive=False, CanSell=False, IsConsumed=False, **kw):
+@validate(validators={'Id':validators.String(),'id':validators.String(), 'Name':validators.String(), 'Description':validators.String(),\
+'CanReceive':validators.StringBool(), 'CanSell':validators.StringBool(), 'IsConsumed':validators.StringBool(), 'IsStore':validators.StringBool()})
+def LocationSave(self, Id='', id='', Name='', Description='', CanReceive=False, CanSell=False, IsConsumed=False, \
+IsStore=False, **kw):
 #		log.debug("Is Service: " + str(IsService))
 #		log.debug("IsForSale: " + str(IsForSale))
 	if id != '':
@@ -147,10 +149,11 @@ def LocationSave(self, Id='', id='', Name='', Description='', CanReceive=False, 
 				record.CanReceive = CanReceive
 				record.CanSell = CanSell
 				record.IsConsumed = IsConsumed
+				record.IsStore = IsStore
 				result_msg="Record saved"
 				result = 1
 		else:
-			record = model.InvLocation(Name=Name, Description=Description, CanReceive=CanReceive, CanSell=CanSell, IsConsumed=IsConsumed, Status='')
+			record = model.InvLocation(Name=Name, Description=Description, CanReceive=CanReceive, IsStore=IsStore, CanSell=CanSell, IsConsumed=IsConsumed, Status='')
 			result_msg = "Record added"
 			result = 1
 		record_id = record.id
@@ -181,7 +184,7 @@ def LocationDel(Id, id='', **kw):
 	try:
 		if int_id > 0:
 			#Check to see if the record can be completely deleted (ie. no references exist)
-			if (len(record.TransfersToHere) + len(record.TransfersFromHere) + len(record.StockItems)) == 0:
+			if len(record.StockItems) == 0:
 				#remove any groups the record might belong to
 				for group in record.Groups:
 					record.removeInvGrpLocation(group)

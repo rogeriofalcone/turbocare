@@ -100,7 +100,8 @@
 						<div class="row">
 							<div style="width:200px" class="label"><input id="btnEditCatalogGroups" type="button" value="Catalog Groups" ></input></div>
 							<div id="CatalogGroups">
-								<li py:for="cataloggroup in cataloggroups">${cataloggroup['name']}</li>
+								<li py:for="cataloggroup in cataloggroups">${cataloggroup['name']}
+								<INPUT name="CatalogGroupCount" type="hidden" value="1" /></li>
 								<INPUT py:for="cataloggroup in cataloggroups" name="CatalogGroups" type="hidden" value="${cataloggroup['id']}"></INPUT>
 							</div>
 						</div>
