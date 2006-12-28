@@ -27,6 +27,7 @@ class Root(controllers.RootController):
 	    for location in Locations:
 		    name_store = '%s_store' % location.Name.lower().replace(' ','_')
 		    name_disp = '%s_disp' % location.Name.lower().replace(' ','_')
+		    log.debug("Current location is " + str(location))
 		    # Create the store location
 		    if getattr(self,name_store,None) == None:
 			    setattr(self,name_store,eval('identity.SecureObject(controllers_store.Store(%d, "%s"),identity.has_permission("%s_view"))' % (location.id, name_store, name_store)))
@@ -71,9 +72,28 @@ class Root(controllers.RootController):
     
     @expose(template="turbocare.templates.welcome")
     def index(self):
-        import time
-        log.debug("Happy TurboGears Controller Responding For Duty")
-        return dict(now=time.ctime())
+        results = []
+        #Display top menu based on permissions of user. 
+        if identity.has_permission("reg_view"):    
+            results.append(dict(link='/registration',name='Registration'))
+        if identity.has_permission("bill_view"):
+            results.append(dict(link='/billing',name='Billing'))
+        Locations = model.InvLocation.select()
+        for location in Locations:
+            name_store = '%s_store' % location.Name.lower().replace(' ','_')
+            name_disp = '%s_disp' % location.Name.lower().replace(' ','_')
+            # Create the store link
+            if getattr(self,name_store,None) != None and identity.has_permission('%s_view' % name_store):
+                results.append(dict(link='/%s' % name_store, name='%s Inventory' % location.Name))
+            # Create the dispensing location
+            if location.CanSell:
+                if getattr(self,name_disp,None) != None and identity.has_permission('%s_view' % name_disp):
+                    results.append(dict(link='/%s' % name_disp, name='%s Dispensing' % location.Name))
+        if identity.in_group("admin"):
+            results.append(dict(link='/inventory',name='Admin Inventory'))
+            results.append(dict(link='/catwalk',name='User admin'))
+
+        return dict(links=results)
 
     @expose(template="turbocare.templates.login")
     def login(self, forward_url=None, previous_url=None, *args, **kw):
@@ -126,16 +146,15 @@ class Root(controllers.RootController):
         # Dynamically create links for the stores and the dispensing locations
         Locations = model.InvLocation.select()
         for location in Locations:
-	    name_store = '%s_store' % location.Name.lower().replace(' ','_')
-	    name_disp = '%s_disp' % location.Name.lower().replace(' ','_')
-	    # Create the store link
-	    if getattr(self,name_store,None) != None and identity.has_permission('%s_view' % name_store):
-		    results.append(dict(link='/%s' % name_store, name='%s Inventory' % location.Name))
-	    # Create the dispensing location
-	    if location.CanSell:
-		    if getattr(self,name_disp,None) != None and identity.has_permission('%s_view' % name_disp):
-			    results.append(dict(link='/%s' % name_disp, name='%s Dispensing' % location.Name))
-
+            name_store = '%s_store' % location.Name.lower().replace(' ','_')
+            name_disp = '%s_disp' % location.Name.lower().replace(' ','_')
+            # Create the store link
+            if getattr(self,name_store,None) != None and identity.has_permission('%s_view' % name_store):
+                results.append(dict(link='/%s' % name_store, name='%s Inventory' % location.Name))
+            # Create the dispensing location
+            if location.CanSell:
+                if getattr(self,name_disp,None) != None and identity.has_permission('%s_view' % name_disp):
+                    results.append(dict(link='/%s' % name_disp, name='%s Dispensing' % location.Name))
         if identity.in_group("admin"):
             results.append(dict(link='/inventory',name='Admin Inventory'))
             results.append(dict(link='/catwalk',name='User admin'))
