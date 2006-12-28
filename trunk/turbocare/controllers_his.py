@@ -9,12 +9,12 @@ from turbogears.toolbox.catwalk import CatWalk
 import model
 from widgets_his import *
 
-log = logging.getLogger("care2x.controllers")
+log = logging.getLogger("turbocare.controllers")
 
    
 class HIS(controllers.RootController):
 
-	@expose(html="care2x.templates.form")
+	@expose(html="turbocare.templates.form")
 	def PersonEdit(self, **kw):
 		java_script = "\n\
 			function update_form_delay(){\n\
@@ -38,7 +38,7 @@ class HIS(controllers.RootController):
 		personForm = widgets.TableForm("PersonEdit", fields=[personAddrCitytownNr,personTitle,personName_first,personNameMiddle,personNameLast,personDateBirth,personBloodGroup,personAddrIsValid,personAddrCitytown_find], action="PersonEditsave", submit_text="Add")
 		return dict(form=personForm, action='PersonEdit',extra_script=form_js.display(),message="")
 
-	@expose('care2x.templates.search')
+	@expose('turbocare.templates.search')
 	def AddressCityTownSearch(self, **kw):
 		if kw.has_key("CallingForm"):
 			ret_form = widgets.HiddenField("CallingForm",attrs={'value':kw["CallingForm"]})

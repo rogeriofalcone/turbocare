@@ -2,10 +2,10 @@ from setuptools import setup, find_packages
 from turbogears.finddata import find_package_data
 
 import os
-execfile(os.path.join("care2x", "release.py"))
+execfile(os.path.join("turbocare", "release.py"))
 
 setup(
-    name="care2x",
+    name="turbocare",
     version=version,
     
     # uncomment the following lines if you fill them out in release.py
@@ -19,11 +19,11 @@ setup(
     install_requires = [
         "TurboGears >= 1.0b1",
     ],
-    scripts = ["start-care2x.py"],
+    scripts = ["start-turbocare.py"],
     zip_safe=False,
     packages=find_packages(),
-    package_data = find_package_data(where='care2x',
-                                     package='care2x'),
+    package_data = find_package_data(where='turbocare',
+                                     package='turbocare'),
     keywords = [
         # Use keywords if you'll be adding your package to the
         # Python Cheeseshop

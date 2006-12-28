@@ -15,14 +15,14 @@ import sys
 # probably installed
 if len(sys.argv) > 1:
     turbogears.update_config(configfile=sys.argv[1], 
-        modulename="care2x.config")
+        modulename="turbocare.config")
 elif exists(join(dirname(__file__), "setup.py")):
     turbogears.update_config(configfile="dev.cfg",
-        modulename="care2x.config")
+        modulename="turbocare.config")
 else:
     turbogears.update_config(configfile="prod.cfg",
-        modulename="care2x.config")
+        modulename="turbocare.config")
 
-from care2x.controllers import Root
+from turbocare.controllers import Root
 
 turbogears.start_server(Root())

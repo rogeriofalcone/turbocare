@@ -15,7 +15,7 @@ from model import DATE_FORMAT
 from printer_inventory import *
 import utils
 
-log = logging.getLogger("care2x.controllers")
+log = logging.getLogger("turbocare.controllers")
 conn = model.hub.getConnection()
 
 # What a store needs to do
@@ -39,11 +39,11 @@ class Store(turbogears.controllers.Controller):
 		self.LocationName = model.InvLocation.get(LocationID).Name
 		self.LocationURL = LocationURL
 
-	@expose(html='care2x.templates.store_menu')
+	@expose(html='turbocare.templates.store_menu')
 	def index(self, **kw):
 		return dict(LocationName=self.LocationName)
 	
-	@expose(html='care2x.templates.programmingerror')
+	@expose(html='turbocare.templates.programmingerror')
 	def ProgrammingError(self, error='', next_link = '', **kw):
 		if error == '':
 			error = "Unknown Error"
@@ -51,7 +51,7 @@ class Store(turbogears.controllers.Controller):
 			next_link = "/"
 		return dict(error_message = error, next_link=next_link)
 	
-	@expose(html='care2x.templates.programmingerror')
+	@expose(html='turbocare.templates.programmingerror')
 	def idFail(error):
 		error= "Not Permited to do operation"
 		log.debug(error)
@@ -59,7 +59,7 @@ class Store(turbogears.controllers.Controller):
 		return dict(error_message = error, next_link=next_link)
 
 
-	@expose(html='care2x.templates.dataentryerror')
+	@expose(html='turbocare.templates.dataentryerror')
 	def DataEntryError(self, error='', next_link = '', **kw):
 		if error == '':
 			error = "Unknown Error"
@@ -87,7 +87,7 @@ class Store(turbogears.controllers.Controller):
 			transfer = model.InvStockTransfer.get(id)
 			transfer.destroySelf()
 
-	@expose(html='care2x.templates.store_catalogitemseditor')
+	@expose(html='turbocare.templates.store_catalogitemseditor')
 	@validate(validators={'CatalogItemID':validators.Int(),'StockItemID':validators.Int()})
 	@identity.require(identity.has_permission("stores_catalog_edit"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
@@ -358,7 +358,7 @@ class Store(turbogears.controllers.Controller):
 			results.append(dict(id=item.id, text='%s (%d)' % (item.Name,item.id)))
 		return dict(results=results, function_name='CatalogItemsEditorPackagingSelect')
 
-	@expose(html='care2x.templates.store_purchaseorderseditor')
+	@expose(html='turbocare.templates.store_purchaseorderseditor')
 	@validate(validators={'PurchaseOrderID':validators.Int()})
 	@identity.require(identity.has_permission("stores_po_view"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
@@ -518,7 +518,7 @@ class Store(turbogears.controllers.Controller):
 		log.debug('....Result length: %d' % len(results))
 		return dict(results=results)
 	
-	@expose(html='care2x.templates.purchaseorder')
+	@expose(html='turbocare.templates.purchaseorder')
 	@identity.require(identity.has_permission("stores_po_edit"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
 	def PurchaseOrderCreate(self, CatalogItemID=[], Counter=[], **kw):
@@ -585,7 +585,7 @@ class Store(turbogears.controllers.Controller):
 				items.append(dict(id=vendor.id, Name=vendor.Name, Description=vendor.Description, Price=quote_item.Price, Ranking=quote_item.Ranking, Product=quote_item.Product, Notes=quote_item.Notes, ValidOn=quote_item.Quote.ValidOn.strftime('%Y-%m-%d')))
 		return dict(items=items)
 
-	@expose(html='care2x.templates.store_purchaseorderseditor')
+	@expose(html='turbocare.templates.store_purchaseorderseditor')
 	@validate(validators={'PurchaseOrderID':validators.Int(),'Notes':validators.String(),'Operation':validators.String(),\
 	'POSentOnDate':validators.String(),'ExpectedDeliveryDate':validators.String()})
 	@identity.require(identity.has_permission("stores_po_edit"))
@@ -771,7 +771,7 @@ class Store(turbogears.controllers.Controller):
 					POItemCatalogItemID=POItem.CatalogItemID))
 		return dict(results=results)
 
-	@expose(html='care2x.templates.store_goodsreceivededitor')
+	@expose(html='turbocare.templates.store_goodsreceivededitor')
 	@validate(validators={'GoodsReceivedID':validators.Int()})
 	@identity.require(identity.has_permission("stores_gr_view"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
@@ -1101,7 +1101,7 @@ class Store(turbogears.controllers.Controller):
 		else:
 			raise cherrypy.HTTPRedirect('GoodsReceivedEditor')
 			
-	@expose(html='care2x.templates.store_quoterequestseditor')
+	@expose(html='turbocare.templates.store_quoterequestseditor')
 	@validate(validators={'QuoteRequestID':validators.Int()})
 	@identity.require(identity.has_permission("stores_quoterequest_edit"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")		
@@ -1394,7 +1394,7 @@ class Store(turbogears.controllers.Controller):
 		else:
 			raise cherrypy.HTTPRedirect('QuoteRequestsEditor')
 			
-	@expose(html='care2x.templates.store_quoteseditor')
+	@expose(html='turbocare.templates.store_quoteseditor')
 	@validate(validators={'QuoteID':validators.Int(),'QuoteRequestID':validators.Int(),'VendorID':validators.Int()})
 	@identity.require(identity.has_permission("stores_quote_view"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")				
@@ -1722,7 +1722,7 @@ class Store(turbogears.controllers.Controller):
 		else:
 			raise cherrypy.HTTPRedirect('QuotesEditor')
 			
-	@expose(html='care2x.templates.store_vendorseditor')
+	@expose(html='turbocare.templates.store_vendorseditor')
 	@validate(validators={'VendorID':validators.Int()})
 	@identity.require(identity.has_permission("stores_vendor_view"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")			
@@ -1928,7 +1928,7 @@ class Store(turbogears.controllers.Controller):
 		else:
 			raise cherrypy.HTTPRedirect('VendorsEditor')
 
-	@expose(html='care2x.templates.store_stockitemseditor')
+	@expose(html='turbocare.templates.store_stockitemseditor')
 	@validate(validators={'StockItemID':validators.Int()})
 	@identity.require(identity.has_permission("stores_stock_view"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")				
@@ -2200,7 +2200,7 @@ class Store(turbogears.controllers.Controller):
 		else:
 			raise cherrypy.HTTPRedirect('StockItemsEditor')
 
-	@expose(html='care2x.templates.store_stocktransferrequestseditor')
+	@expose(html='turbocare.templates.store_stocktransferrequestseditor')
 	@validate(validators={'StockTransferRequestID':validators.Int()})
 	@identity.require(identity.has_permission("stores_stocktransferrequest_view"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")				
@@ -2552,7 +2552,7 @@ class Store(turbogears.controllers.Controller):
 		else:
 			raise cherrypy.HTTPRedirect('StockTransferRequestsEditor')
 
-	@expose(html='care2x.templates.store_stocktransferseditor')
+	@expose(html='turbocare.templates.store_stocktransferseditor')
 	@validate(validators={'StockTransferID':validators.Int(), 'StockTransferRequestItemID':validators.Int(), \
 	'StockLocationID':validators.Int()})
 	@identity.require(identity.has_permission("stores_stocktransfer_view"))
