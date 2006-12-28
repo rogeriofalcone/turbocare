@@ -20,6 +20,21 @@ from turbocare import json
 log = logging.getLogger("turbocare.controllers")
 
 class Root(controllers.RootController):
+	
+    def __init__(self):
+	    # Dynamically create Store and dispensing locations from locations which we have in the database
+	    Locations = model.InvLocation.select()
+	    for location in Locations:
+		    name_store = '%s_store' % location.Name.lower().replace(' ','_')
+		    name_disp = '%s_disp' % location.Name.lower().replace(' ','_')
+		    # Create the store location
+		    if getattr(self,name_store,None) == None:
+			    setattr(self,name_store,eval('identity.SecureObject(controllers_store.Store(%d, "%s"),identity.has_permission("%s_view"))' % (location.id, name_store, name_store)))
+		    # Create the dispensing location
+		    if location.CanSell:
+			    if getattr(self,name_disp,None) == None:
+				    setattr(self,name_disp,eval('identity.SecureObject(controllers_dispensing.Dispensing(%d),identity.has_permission("%s_view"))' % (location.id, name_disp)))
+	    
      #catwalk = CatWalk(model,allowedHosts=['127.0.0.1','192.168.11.3','192.168.11.120'])
     catwalk = CatWalk(model_userperm) #Create a user admininstrator CatWalk with the custom User Model.
     catwalk = identity.SecureObject(catwalk,identity.in_group('admin'))  #Securing objects is good. 
@@ -43,16 +58,16 @@ class Root(controllers.RootController):
     user_reports = controllers_UDReport.UserDefinedReport()
     
     # Dispensing locations
-    warehouse_main = identity.SecureObject(controllers_dispensing.Dispensing(1) ,identity.has_permission('warehouse_main_view'))
-    pharmacy_main = identity.SecureObject(controllers_dispensing.Dispensing(2), identity.has_permission('pharmacy_main_view')) # id=2 is Pharmacy Main 
+    # warehouse_main = identity.SecureObject(controllers_dispensing.Dispensing(1) ,identity.has_permission('warehouse_main_view'))
+    # pharmacy_main = identity.SecureObject(controllers_dispensing.Dispensing(2), identity.has_permission('pharmacy_main_view')) # id=2 is Pharmacy Main 
 
 
     # xray = controllers_dispensing.Dispensing(9) # id=9 is the xray dept.
     
     # Store locations - Warehouse managing tools
-    warehouse_store = identity.SecureObject(controllers_store.Store(1, "warehouse_store"),identity.has_permission('warehouse_store_view'))   
-    pharmacy_store = identity.SecureObject(controllers_store.Store(2, "pharmacy_store"),identity.has_permission('pharmacy_store_view'))
- 
+    # warehouse_store = identity.SecureObject(controllers_store.Store(1, "warehouse_store"),identity.has_permission('warehouse_store_view'))   
+    # pharmacy_store = identity.SecureObject(controllers_store.Store(2, "pharmacy_store"),identity.has_permission('pharmacy_store_view'))
+	
     
     @expose(template="turbocare.templates.welcome")
     def index(self):
@@ -100,14 +115,27 @@ class Root(controllers.RootController):
             results.append(dict(link='/registration',name='Registration'))
         if identity.has_permission("bill_view"):
             results.append(dict(link='/billing',name='Billing'))
-        if identity.has_permission("pharmacy_main_view"):
-            results.append(dict(link='/pharmacy_main',name='Pharmacy dispensing'))
-        if identity.has_permission("warehouse_main_view"):
-            results.append(dict(link='/warehouse_main',name='Warehouse dispensing'))    
-        if identity.has_permission("pharmacy_store_view"):
-            results.append(dict(link='/pharmacy_store',name='Pharmacy Inventory'))
-        if identity.has_permission("warehouse_store_view"):
-            results.append(dict(link='/warehouse_store',name='Warehouse Inventory'))            
+        #if identity.has_permission("pharmacy_main_view"):
+        #    results.append(dict(link='/pharmacy_main',name='Pharmacy dispensing'))
+        #if identity.has_permission("warehouse_main_view"):
+        #    results.append(dict(link='/warehouse_main',name='Warehouse dispensing'))    
+        #if identity.has_permission("pharmacy_store_view"):
+        #    results.append(dict(link='/pharmacy_store',name='Pharmacy Inventory'))
+        #if identity.has_permission("warehouse_store_view"):
+        #    results.append(dict(link='/warehouse_store',name='Warehouse Inventory'))         
+        # Dynamically create links for the stores and the dispensing locations
+        Locations = model.InvLocation.select()
+        for location in Locations:
+	    name_store = '%s_store' % location.Name.lower().replace(' ','_')
+	    name_disp = '%s_disp' % location.Name.lower().replace(' ','_')
+	    # Create the store link
+	    if getattr(self,name_store,None) != None and identity.has_permission('%s_view' % name_store):
+		    results.append(dict(link='/%s' % name_store, name='%s Inventory' % location.Name))
+	    # Create the dispensing location
+	    if location.CanSell:
+		    if getattr(self,name_disp,None) != None and identity.has_permission('%s_view' % name_disp):
+			    results.append(dict(link='/%s' % name_disp, name='%s Dispensing' % location.Name))
+
         if identity.in_group("admin"):
             results.append(dict(link='/inventory',name='Admin Inventory'))
             results.append(dict(link='/catwalk',name='User admin'))
