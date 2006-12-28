@@ -17,7 +17,7 @@ import model_inventory
 import inventory_catalogitem
 from printer_inventory import *
 
-log = logging.getLogger("care2x.controllers")
+log = logging.getLogger("turbocare.controllers")
 
 class Dispensing(controllers.RootController):
 	
@@ -30,25 +30,25 @@ class Dispensing(controllers.RootController):
 		self.LocationID = LocationID
 		self.LocationName = model.InvLocation.get(LocationID).Name
 	
-	@expose(html='care2x.templates.dispensing')
+	@expose(html='turbocare.templates.dispensing')
 	@identity.require(identity.has_permission("dispensing_view"))
 	def index(self, CustomerID='', **kw):
 		return dict(title='%s dispensing' % self.LocationName, customer_id=CustomerID)
 	
-	@expose(html='care2x.templates.programmingerror')
+	@expose(html='turbocare.templates.programmingerror')
 	def idFail(error):
 		error= "Not Permited to do operation"
 		log.debug(error)
 		next_link = "/billing/"
 		return dict(error_message = error, next_link=next_link)
 
-	@expose(html='care2x.templates.programmingerror')
+	@expose(html='turbocare.templates.programmingerror')
 	def ProgrammingError(self, error='', next_link = '', **kw):
 		if error == '':
 			error = "Unknown Error"
 		return dict(error_message = error, next_link=next_link)
 
-	@expose(html='care2x.templates.dataentryerror')
+	@expose(html='turbocare.templates.dataentryerror')
 	def DataEntryError(self, error='', next_link = '', **kw):
 		if error == '':
 			error = "Unknown Error"

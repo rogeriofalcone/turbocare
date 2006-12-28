@@ -1,12 +1,10 @@
 from datetime import datetime
-
 from sqlobject import *
-
 from turbogears import identity 
 from turbogears.database import PackageHub
 from model_inventory import *
 
-hub = PackageHub("care2x")
+hub = PackageHub("turbocare")
 __connection__ = hub
 
 
@@ -86,4 +84,5 @@ class Permission(SQLObject):
     
     groups = RelatedJoin( "Group",
                         intermediateTable="group_permission",
-                         joinColumn="permission_id", 
+                         joinColumn="permission_id",
+                         otherColumn="group_id" ) 

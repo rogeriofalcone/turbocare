@@ -21,12 +21,12 @@ import model_inventory
 import inventory_catalogitem
 from printer_inventory import *
 
-log = logging.getLogger("care2x.controllers")
-ReportBaseDir= "care2x/static/user_reports"
+log = logging.getLogger("turbocare.controllers")
+ReportBaseDir= "turbocare/static/user_reports"
 
 class SavedReport(controllers.RootController):
 #===== Inventory App Stuff ====================================================
-	@expose(html='care2x.templates.saved')
+	@expose(html='turbocare.templates.saved')
 	@identity.require(identity.not_anonymous())
 	def index(self, customer_id='', receipt_id='', **kw):
 		usersDir = self.getDirectories(ReportBaseDir)
@@ -46,7 +46,7 @@ class SavedReport(controllers.RootController):
 			return []
 		#print file_list
 		new_list=[]
-		log.debug("Your Groups are " + str(turbogears.identity.current.groups))
+		log.debug("Your Permissions are " + str(turbogears.identity.current.permissions))
 		for name in file_list:
 			if os.path.isdir(my_dir + "/" +name):
 #				log.debug('Dir name is ' + name)

@@ -10,7 +10,7 @@ import model
 import model_inventory
 import report_CatalogItems
 
-log = logging.getLogger("care2x.controllers")
+log = logging.getLogger("turbocare.controllers")
 
 def get_barcode(id):
 	return "/static/images/barcode/" + str(id).zfill(12) + ".png"
@@ -103,13 +103,13 @@ class Inventory(controllers.RootController):
 		
 		return dict(menu=mMain)
 
-	@expose(html='care2x.templates.json_form')
+	@expose(html='turbocare.templates.json_form')
 	def index(self, **kw):
 		start_script = 'inv.AppMenu("/inventory/InventoryAppMenu")'
 		javascript = widgets.JSSource(start_script)
 		return dict(data=javascript.display(),title="Inventory Management")
 	
-	@expose(html='care2x.templates.programmingerror')
+	@expose(html='turbocare.templates.programmingerror')
 	def ProgrammingError(self, error='', next_link = '', **kw):
 		if error == '':
 			error = "Unknown Error"
@@ -117,7 +117,7 @@ class Inventory(controllers.RootController):
 			next_link = "/inventory"
 		return dict(error_message = error, next_link=next_link)
 
-	@expose(html='care2x.templates.dataentryerror')
+	@expose(html='turbocare.templates.dataentryerror')
 	def DataEntryError(self, error='', next_link = '', **kw):
 		if error == '':
 			error = "Unknown Error"

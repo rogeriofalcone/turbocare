@@ -16,7 +16,7 @@ from mytable_sqlite import MyTable
 import pprint
 import inspect
 
-log = logging.getLogger("care2x.controllers")	
+log = logging.getLogger("turbocare.controllers")	
 
 class Temp:
 	def tfunc(self):
@@ -855,8 +855,7 @@ class UserDefinedReport(controllers.RootController):
 		# ]
 		# Produce our formatted table, convert datetime types to datetime objects... in the next version
 		Data = []
-		#f = open('data_process.py','a')
-		#f.write('==================%s============================\n' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        #f.write('==================%s============================\n' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 		for row in mtbl.data:
 			if TD.has_key('ParentTableID'):
 				Data.append([TD['TableID'],TD['ParentTableID'],'Data']+list(row))
@@ -955,7 +954,7 @@ class UserDefinedReport(controllers.RootController):
 		return dict(success=True)
 			
 		
-	@expose(template="care2x.templates.UDReport")
+	@expose(template="turbocare.templates.UDReport")
 	def index(self):
 		return dict(title='User Defined Reports', tablenames=self.TableList())
 		

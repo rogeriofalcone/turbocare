@@ -15,22 +15,22 @@ import model_inventory
 import inventory_catalogitem
 from printer_inventory import *
 
-log = logging.getLogger("care2x.controllers")
+log = logging.getLogger("turbocare.controllers")
 
 class Billing(controllers.RootController):
 #===== Inventory App Stuff ====================================================
-	@expose(html='care2x.templates.billing')
+	@expose(html='turbocare.templates.billing')
 	def index(self, customer_id='', receipt_id='', **kw):
 		return dict(customer_id=customer_id,receipt_id=receipt_id, title="Billing")
 
-	@expose(html='care2x.templates.programmingerror')
+	@expose(html='turbocare.templates.programmingerror')
 	def idFail(error):
 		error= "Not Permited to do operation"
 		log.debug(error)
 		next_link = "/billing/"
 		return dict(error_message = error, next_link=next_link)
 		
-	@expose(html='care2x.templates.programmingerror')
+	@expose(html='turbocare.templates.programmingerror')
 	def ProgrammingError(self, error='', next_link = '', **kw):
 		if error == '':
 			error = "Unknown Error"
@@ -38,7 +38,7 @@ class Billing(controllers.RootController):
 			next_link = "/billing/"
 		return dict(error_message = error, next_link=next_link)
 
-	@expose(html='care2x.templates.dataentryerror')
+	@expose(html='turbocare.templates.dataentryerror')
 	def DataEntryError(self, error='', next_link = '', **kw):
 		if error == '':
 			error = "Unknown Error"
@@ -698,7 +698,7 @@ class Billing(controllers.RootController):
 		
 	#	Step 3: Load the data so that the receipt items can be assigned to a particular stock location
 	@identity.require(identity.has_permission( "bill_edit"))
-	@expose(html='care2x.templates.billing_receiptitemsadd')
+	@expose(html='turbocare.templates.billing_receiptitemsadd')
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
 	def ReceiptItemsLoad(self, ReceiptID, **kw):
 		ReceiptItems = []

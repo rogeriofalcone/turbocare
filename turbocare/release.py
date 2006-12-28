@@ -1,4 +1,4 @@
-# Release information about care2x
+# Release information about turbocare
 
 version = "1.0"
 

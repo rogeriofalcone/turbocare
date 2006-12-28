@@ -16,23 +16,23 @@ import model_inventory
 import inventory_catalogitem
 from printer_inventory import *
 
-log = logging.getLogger("care2x.controllers")
+log = logging.getLogger("turbocare.controllers")
 conn = model.hub.getConnection()
 
 class Registration(turbogears.controllers.Controller):
 #===== Inventory App Stuff ====================================================
-	@expose(html='care2x.templates.registration_search')
+	@expose(html='turbocare.templates.registration_search')
 	def index(self, **kw):
 		return dict(title="Registration Search")
 
-	@expose(html='care2x.templates.programmingerror')
+	@expose(html='turbocare.templates.programmingerror')
 	def idFail(error):
 		error= "Not Permited to do operation"
 		log.debug(error)
 		next_link = "/billing/"
 		return dict(error_message = error, next_link=next_link)
 
-	@expose(html='care2x.templates.programmingerror')
+	@expose(html='turbocare.templates.programmingerror')
 	def ProgrammingError(self, error='', next_link = '', **kw):
 		if error == '':
 			error = "Unknown Error"
@@ -40,7 +40,7 @@ class Registration(turbogears.controllers.Controller):
 			next_link = "/billing/"
 		return dict(error_message = error, next_link=next_link)
 
-	@expose(html='care2x.templates.dataentryerror')
+	@expose(html='turbocare.templates.dataentryerror')
 	def DataEntryError(self, error='', next_link = '', **kw):
 		if error == '':
 			error = "Unknown Error"
@@ -391,7 +391,7 @@ class Registration(turbogears.controllers.Controller):
 			Block=Block,District=District,State=State,Country=Country, history=History, SelectedCity=SelectedCity,\
 			PatientID=PatientID, CustomerID=CustomerID, DateBirth=DateBirth, Age=Age)			
 	
-	@expose(html='care2x.templates.registration_patient_page1')
+	@expose(html='turbocare.templates.registration_patient_page1')
 	@identity.require(identity.has_permission("reg_edit"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
 	def RegistrationPage1Reload(self, Tribe='', Title='', Gender='', Religion='', Firm='', PatientType='', \
@@ -498,7 +498,7 @@ class Registration(turbogears.controllers.Controller):
 			PatientID=PatientID, CustomerID=CustomerID, DateBirth=DateBirth, Age=Age)			
 
 	#	Step 1: Enter/Update Primary patient information
-	@expose(html='care2x.templates.registration_patient_page1')
+	@expose(html='turbocare.templates.registration_patient_page1')
 	
 	def RegistrationPage1(self, PatientID='', CustomerID='', **kw):
 		'''	When loading the patient from a link or redirection, then this function is called
@@ -521,7 +521,7 @@ class Registration(turbogears.controllers.Controller):
 	'PostOffice':validators.String(),'Block':validators.String(), 'District':validators.String(), \
 	'State':validators.String(),'Country':validators.String(), 'DateBirth':validators.String(), \
 	'Age':validators.String()})
-	@expose(html='care2x.templates.registration_patient_page2')
+	@expose(html='turbocare.templates.registration_patient_page2')
 	@identity.require(identity.has_permission("reg_edit"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
 	def RegistrationPage1Save(self, Tribe='', Title='', Gender='', Religion='', Firm='', PatientType='', \
@@ -764,7 +764,7 @@ class Registration(turbogears.controllers.Controller):
 	'PatientID':validators.Int(),'CustomerID':validators.Int(), 'EncounterID':validators.Int(), \
 	'ReceiptID':validators.Int(),'btnNext':validators.String(), 'FinancialClassNr':validators.Int(), \
 	'Email':validators.String(),'EncounterType':validators.String()})
-	@expose(html='care2x.templates.registration_patient_page3')
+	@expose(html='turbocare.templates.registration_patient_page3')
 	@identity.require(identity.has_permission("reg_edit"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
 	def RegistrationPage2Save(self, PatientID=None, CustomerID=None, EncounterID=None, ReceiptID=None, btnNext='', 

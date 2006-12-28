@@ -5,18 +5,18 @@ from turbogears import controllers, expose, validate, redirect
 from turbogears import identity
 from turbogears.toolbox.catwalk import CatWalk 
 import model
-from care2x import json
+from turbocare import json
 from report_Generic import GenericReport
 
-log = logging.getLogger("care2x.controllers")
+log = logging.getLogger("turbocare.controllers")
 
 class Reports(controllers.RootController):
 
-	@expose(template="care2x.templates.reports_menu")
+	@expose(template="turbocare.templates.reports_menu")
 	def index(self):
 		return dict(PageName='Hospital Reports')
 		
-	@expose(html='care2x.templates.report')
+	@expose(html='turbocare.templates.report')
 	def CatalogItemsReport(self):
 		'''	Report on the Catalog Items
 		'''
