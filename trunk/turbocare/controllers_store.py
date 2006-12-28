@@ -41,7 +41,8 @@ class Store(turbogears.controllers.Controller):
 
 	@expose(html='turbocare.templates.store_menu')
 	def index(self, **kw):
-		return dict(LocationName=self.LocationName)
+		Location = model.InvLocation.get(int(self.LocationID))
+		return dict(LocationName=self.LocationName, IsStore=Location.IsStore, CanReceive=Location.CanReceive)
 	
 	@expose(html='turbocare.templates.programmingerror')
 	def ProgrammingError(self, error='', next_link = '', **kw):
