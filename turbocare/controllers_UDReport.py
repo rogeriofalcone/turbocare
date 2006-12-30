@@ -986,10 +986,13 @@ class UserDefinedReport(controllers.RootController):
 
 	@expose(template="turbocare.templates.UDReportEditor")
 	def Editor(self):
-		tables = self.TableList()
-		tablenames = tables.keys()
-		tablenames.sort()
-		return dict(title='User Defined Reports', tablenames=tablenames, tables=tables)
+		usersDir = self.getDirectories(ReportBaseDir)
+		usersFiles= {}
+		for direc in usersDir:
+			log.debug("Directory name " +direc)
+			usersFiles[direc]=self.getReport(ReportBaseDir,direc)
+		log.debug(usersFiles)
+		return dict(groups=usersDir,reports=usersFiles, title="Saved Reports")
 	
 	@expose(html='turbocare.templates.UDReportViewer')
 	@identity.require(identity.not_anonymous())
@@ -1033,6 +1036,16 @@ class UserDefinedReport(controllers.RootController):
 			if name[0] != '.':
 				new_list.append(name)
 		return new_list
+		
+	@expose(format='json')
+	def LoadSavedQuery(self, Group='', ReportFile='', **kw):
+		'''	Load the specified report file, for editing.
+		'''
+		f = open(ReportBaseDir+Group+'/'+ReportFile,'r')
+		Query = f.read()
+		QD = simplejson.loads(Query)
+		f.close()
+		return dict(QD=QD)
 		
 	@expose(format='json')
 	def ExecuteSavedQuery(self, Group='', ReportFile='', **kw):
