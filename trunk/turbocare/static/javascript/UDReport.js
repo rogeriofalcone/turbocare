@@ -138,6 +138,45 @@ qry.multiselect_csv = function(element_id){
 	}
 }
 /*
+	ChangeGroup: Create a query object, then serialize it into JSON format
+	to transmit to the app server and save it to a file for future use
+*/
+qry.ChangeGroup = function(e) {
+	var Group = getElement('Group').value;
+	if (Group!='') {
+		qry.toggle_message("Loading...");
+		var postVars = 'Group='+Group;
+		var d = postJSON('LoadReportList',postVars);
+		d.addCallbacks(qry.UpdateReportList,qry.error_report);
+	}
+}
+/*
+	UpdateReportList: Update the report listing for a group
+*/
+qry.UpdateReportList = function(d) {
+	qry.toggle_message("");
+	var ReportFile = getElement('ReportFile');
+	replaceChildNodes(ReportFile, null);
+	for (var i=0; i<d.reports.length; i++) {
+		ReportFile.appendChild(createDOM('OPTION',{'value':d.reports[i]},d.reports[i]));
+	}
+}
+/*
+	EditReport: Create a query object, then serialize it into JSON format
+	to transmit to the app server and save it to a file for future use
+*/
+qry.EditReport = function(e) {
+	var Group = getElement('Group').value;
+	var ReportFile = getElement('ReportFile').value;
+	if (Group!=''&&ReportFile!='') {
+		qry.toggle_message("Loading...");
+		var postVars = 'Group='+Group+'&ReportFile='+ReportFile;
+		var d = postJSON('LoadSavedQuery',postVars);
+		d.addCallbacks(def.RenderQueryEditor,qry.error_report);
+	}
+}
+
+/*
 	Collect Query Variables:  Scan the DOM tree starting at id="QueryDefinition"
 	for the desired query definition (tables, columns, filters, grouping, sorting, etc...)
 */
@@ -888,6 +927,8 @@ qry.RedisplayTables = function(el){
 */
 qry.OpenOnLoad = function() {
 	//We have some inputs with the  dateEntry class which want to have a date control added
+	connect("Group","onclick",qry.ChangeGroup);
+	connect("ReportFile","ondblclick",qry.EditReport);
 	var dateInputs = getElementsByTagAndClassName('INPUT',"dateEntry",document);
 	for (i=0;i<dateInputs.length; i++){
 		connect(dateInputs[i],"onclick",qry.DatePick);
