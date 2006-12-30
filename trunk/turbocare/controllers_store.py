@@ -241,9 +241,9 @@ class Store(turbogears.controllers.Controller):
 			catalogitem.Tax = Tax
 			# Remove any Catalog groups which we're not using
 			# convert our CatalogGroups list to an integer list
-			if len(CatalogGroupCount) == 1:
+			if isinstance(CatalogGroups, basestring): # Then it is a single line entry
 				CatalogGroups = [int(CatalogGroups)]
-			else:
+			else: # It's an array entry
 				CatalogGroups = [int(x) for x in CatalogGroups]
 			for group in catalogitem.CatalogGroups:
 				if not (group.id in CatalogGroups):
@@ -267,9 +267,9 @@ class Store(turbogears.controllers.Controller):
 				Tax=Tax,ParentItemID=ParentItemID,CompoundID=CompoundID,PackagingID=PackagingID)
 			# Add the catalog groups
 			# convert our CatalogGroups list to an integer list
-			if len(CatalogGroupCount) == 1:
+			if isinstance(CatalogGroups, basestring): # Then it is a single line entry
 				CatalogGroups = [int(CatalogGroups)]
-			else:
+			else: # It's an array entry
 				CatalogGroups = [int(x) for x in CatalogGroups]
 			for groupid in CatalogGroups:
 				catalogitem.addInvGrpStock(groupid)
