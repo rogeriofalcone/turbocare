@@ -223,12 +223,40 @@ qry.ParseQuery = function(el){
 	to transmit to the app server and process it as a query
 */
 qry.SerializeQuery = function() {
+	qry.toggle_message("Running Query...");
 	var QD = getElement("QueryDefinition");
 	var query = qry.ParseQuery(QD);
 	var data = serializeJSON(query);
 	var postVars = 'Query='+data;
 	var d = postJSON('ExecuteQuery',postVars);
 	d.addCallbacks(rr.Render,qry.error_report);
+}
+/*
+	SaveReport: Create a query object, then serialize it into JSON format
+	to transmit to the app server and save it to a file for future use
+*/
+qry.SaveReport = function() {
+	var ReportName = getElement('ReportName').value;
+	if (ReportName==''||ReportName==null) {
+		alert('You need to give the report a name');
+		getElement('ReportName').focus();
+	} else {
+		qry.toggle_message("Saving Query...");
+		var QD = getElement("QueryDefinition");
+		var query = qry.ParseQuery(QD);
+		var data = serializeJSON(query);
+		var postVars = 'Query='+data+'&ReportName='+ReportName;
+		var d = postJSON('SaveQuery',postVars);
+		d.addCallbacks(qry.IsSaved,qry.error_report);
+	}
+}
+/*
+	IsSaved: Call back for SaveReport.  Informs the user on
+	the status of the saving of the report definition
+*/
+qry.IsSaved = function(d) {
+	qry.toggle_message("");
+	alert(d.message);
 }
 // AJSON reactions ==================
 qry.updated = function(data){
@@ -280,6 +308,18 @@ qry.merge_hidden_inputs = function(parentid){
 			}
 		}
 	}
+}
+// Show/Hide the query definition section
+qry.ToggleQueryDefinition = function(){
+	var elem = getElement('QueryDefinition');
+	if (elem.style.display != 'none') {
+		elem.style.display = 'none';
+	} else {
+		elem.style.display = 'block';
+		qry.toggle_message("Re-displaying Query...");
+		var d = callLater(1,qry.RedisplayTables);
+	}
+	//toggleElementClass(elem,'invisible');
 }
 // AJSON actions ====================
 
@@ -467,8 +507,8 @@ qry.ElemNumericFormat = function() {
 		}
 	}
 	var sel = createDOM('SELECT',{'name':'NumericFormat'});
-	appendChildNodes(sel,Opt('12,34,567.12',true),Opt('12,34,567.'),Opt('12,345,678.12'),Opt('12,345,678.'),
-		Opt('123.46%'),Opt('123456.'),Opt('123456.123456'));
+	appendChildNodes(sel,Opt('12,34,567.12',true),Opt('12,34,567.'),Opt('12,34 lakh'),Opt('12,345,678.12'),
+		Opt('12,345,678.'),Opt('123.46%'),Opt('123456.'),Opt('123456.123456'));
 	return createDOM('DIV',null,sel);	
 }
 // Formatting for date columns
@@ -572,7 +612,7 @@ qry.ColFK = function(tablename,colname,count){
 	var type = createDOM('INPUT',{'type':'hidden','name':'ColType','value':'ForeignKey'});
 	var table = createDOM('INPUT',{'type':'hidden','name':'TableName','value':tablename});
 	appendChildNodes(col,name,table,type,qry.ElemShowHide(),qry.ElemDrag(),qry.ElemColName(colname),
-		qry.ElemAggType(),qry.ElemSorting(),qry.ElemJustification('Left'));
+		qry.ElemAggType(),qry.ElemSorting(),qry.ElemJustification('Left'),qry.ElemNumericFormat(),qry.ElemDateFormat());
 	return col;
 }
 // Function column (these columns have no filtering enabled)
@@ -582,7 +622,7 @@ qry.ColFunction = function(tablename,colname,count){
 	var type = createDOM('INPUT',{'type':'hidden','name':'ColType','value':'Function'});
 	var table = createDOM('INPUT',{'type':'hidden','name':'TableName','value':tablename});
 	appendChildNodes(col,name,table,type,qry.ElemShowHide(),qry.ElemDrag(),qry.ElemColName(colname),
-		qry.ElemAggType(),qry.ElemSorting(),qry.ElemJustification('Left'));
+		qry.ElemAggType(),qry.ElemSorting(),qry.ElemJustification('Left'),qry.ElemNumericFormat(),qry.ElemDateFormat());
 	return col;
 }
 /*
@@ -696,9 +736,9 @@ qry.RenderQueryBuilder = function(data){
 		}
 		swapDOM(qdef,mTbl);
 		//The first render doesn't work, so a re-render is needed
-		qry.RedisplayTables();
+		qry.toggle_message("Displaying Query Builder...");
+		var d = callLater(1,qry.RedisplayTables);
 	}
-	qry.toggle_message('');
 }
 /*
 	RenderSubTables: When a user wants to view the sub-tables of a table
@@ -728,6 +768,11 @@ qry.RenderSubTables = function(data) {
 		qry.RedisplayTables(cTbl);
 	}
 	qry.toggle_message('');
+}
+// Call the RedisplayTables function with a message indicating what is being done
+qry.CallRedisplayTables = function() {
+	qry.toggle_message("Re-displaying Query Builder...");
+	var d = callLater(1,qry.RedisplayTables);
 }
 /*
 	RedisplayTables: Attempts to fix any bugs with the display or 
@@ -833,7 +878,9 @@ qry.RedisplayTables = function(el){
 			connect(removetable[i],"onclick",qry.RemoveTable);
 		}
 	}
-	qry.toggle_message('');
+	qry.toggle_message('Ready');
+	var d = callLater(1,qry.toggle_message);
+	
 }
 //Configure our events using the Mochikit signal library
 /*

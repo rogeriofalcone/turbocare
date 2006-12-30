@@ -27,19 +27,29 @@
   </head>
 
 <body>
-	Step 1:  Select the starting table
+	<DIV >Step 1:  Select the starting table</DIV>
 	<div>
 		<SELECT id="TableName" style="font-size:11px">
-			<OPTION py:for="table in tablenames" value="${table}">${table}:  ${tablenames[table]}</OPTION>
+			<OPTION py:for="table in tablenames" value="${table}">${table}:  ${tables[table]}</OPTION>
 		</SELECT>
 	</div>
-	Step 2: Choose the columns, filters, groupings etc (<a href="javascript:qry.RedisplayTables()">re-display</a>)
+	<DIV >Step 2: Choose the columns, filters, groupings etc 
+		(<a href="javascript:qry.CallRedisplayTables()">re-display</a>) 
+		(<a href="javascript:qry.ToggleQueryDefinition()">Show/Hide Query Definition</a>)
+	</DIV>
+	<br />
 	<div id="QueryDefinition" class="QryMkrTbl">
 	</div>
-	Step 3: <A href="javascript:qry.SerializeQuery()">Run the query</A>
+	 <DIV >Step 3: <A href="javascript:qry.SerializeQuery()">Run the query</A>
+		[<A href="javascript:rr.HideDetails()">Hide all details</A> ||
+		<A href="javascript:rr.ShowDetails()">Show all details</A>]
+	</DIV>
 	<DIV id='RenderReport' style="font-size:10px">
 	</DIV>
-	Step 4: (Optional) Print the results
-	Step 5: (Optional) Save the query
+	<DIV >Step 4: (Optional) <A href="javascript:rr.PrintPreview()">Print the results</A></DIV>
+	<DIV >
+		Step 5: (Optional) <A href="javascript:qry.SaveReport()">Save the query</A>
+		<DIV style="position:relative; left:3em">Report Name: <INPUT type="text" size="30" name="ReportName" id="ReportName" value="" /></DIV>
+	</DIV>
 </body>
 </html>

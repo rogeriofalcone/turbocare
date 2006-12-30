@@ -4,6 +4,7 @@ rr.Dfn = null;
 rr.Data = null;
 rr.NumericFmt = '12,34,567.12'; //default numeric format (changes to the very first number format in the definition)
 rr.isDefaultSet = false; //checks to see if the above default is set
+rr.PrintPreviewWindow = null;
 // Show/hide a message for the user
 rr.toggle_message = function(message){
 	var node_class = getNodeAttribute("json_status","class");
@@ -16,7 +17,38 @@ rr.toggle_message = function(message){
 	}
 }
 /*
-	Render: Render the report
+	HideDetails & ShowDetails:
+	Show/Hide All Report detail sections
+*/
+rr.HideDetails = function() {
+	var rows = getElementsByTagAndClassName('DIV','rowdisplay','RenderReport');
+	for (var i=0; i<rows.length;i++) {
+		var el = rows[i];
+		var tbl = el.nextSibling;
+		while (!hasElementClass(tbl,'tDetail')){
+			tbl = tbl.nextSibling;
+		}
+		if (!hasElementClass(tbl,'invisible')) {
+			addElementClass(tbl,'invisible');
+		}
+	}
+}
+rr.ShowDetails = function() {
+	var rows = getElementsByTagAndClassName('DIV','rowdisplay','RenderReport');
+	for (var i=0; i<rows.length;i++) {
+		var el = rows[i];
+		var tbl = el.nextSibling;
+		while (!hasElementClass(tbl,'tDetail')){
+			tbl = tbl.nextSibling;
+		}
+		if (hasElementClass(tbl,'invisible')) {
+			removeElementClass(tbl,'invisible');
+		}
+	}
+}
+/*
+	Render: Call RenderReport (I use this to force the displaying of a message)
+	RenderReport: Render the report
 	d: the ajson object which is returned
 	d.Data and d.Dfn
 	
@@ -30,11 +62,18 @@ rr.Render = function(d){
 		rr.Dfn = d.Dfn;
 		rr.Data = d.Data;
 	}
+	if (rr.Data!=null) {
+		var d = callLater(1,rr.RenderReport);
+	} else {
+		rr.toggle_message('');
+	}
+}
+rr.RenderReport = function() {
 	// Grab our render location
 	var el = getElement('RenderReport');
 	// Initialize our report DOM
 	replaceChildNodes(el,null);
-	if (d.Data.length > 1) {
+	if (rr.Data.length > 1) {
 		// Render the lines of data
 		var i = rr.RenderSubTable(0,el);
 		if (i < rr.Data.length) {
@@ -177,6 +216,19 @@ rr.NumericCol = function(data,fmt) {
 			res = intgr[len-i-1] + res;
 		}
 		return res+'.'+dec;
+	} else if (fmt=='12,34 lakh') {
+		var d = numberFormatter('#.00')(parseFloat(data)/100000);
+		var dec = d.slice(d.indexOf('.')+1);
+		var intgr = d.slice(0,d.indexOf('.'));
+		var len = intgr.length;
+		var res = '';
+		for (i=0;i<intgr.length;i++) {
+			if ((i==2||i==4||i==6||i==8||i==10||i==12||i==14||i==16||i==18||i==20)&&(intgr[len-i-1]!='-')) {
+				res = ','+res;
+			}
+			res = intgr[len-i-1] + res;
+		}
+		return res+' lakh';
 	} else if (fmt=='12,34,567.') {
 		var d = numberFormatter('#.00')(parseFloat(data));
 		var intgr = d.slice(0,d.indexOf('.'));
@@ -270,4 +322,35 @@ rr.ToggleTable = function(s){
 	} else {
 		addElementClass(tbl,'invisible');
 	}
+}
+/*
+	PrintPreview: Open just the report tables in a separate window
+	- Remove the "show/hide" text
+*/
+
+rr.Template = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
+rr.Template = rr.Template + '<html xmlns="http://www.w3.org/1999/xhtml">';
+rr.Template = rr.Template + '<head>';
+rr.Template = rr.Template + '<meta content="text/html; charset=UTF-8" http-equiv="content-type" />';
+rr.Template = rr.Template + '    <title>Print Preview</title>';
+rr.Template = rr.Template + '   <link rel="stylesheet" href="/static/css/custom.css" type="text/css" />';
+rr.Template = rr.Template + '<LINK HREF="/tg_static/css/widget.css" TYPE="text/css" REL="stylesheet"/>';
+rr.Template = rr.Template + '    <LINK HREF="/static/javascript/calendar/calendar-green.css" TYPE="text/css" REL="stylesheet"/>';
+rr.Template = rr.Template + '    <LINK HREF="/static/css/table.css" TYPE="text/css" REL="stylesheet"/>';
+rr.Template = rr.Template + '</head>';
+rr.Template = rr.Template + '<body>';
+rr.Template2 = '</body>';
+rr.Template2 = rr.Template2 + '</html>';
+
+rr.PrintPreview = function() {
+	// Create the new window
+	var w = window.open();
+	//var report = getElement('RenderReport').cloneNode(true);
+	var report_string = getElement('RenderReport').innerHTML;
+	//el.write(report.replace('[show/hide] ',''));
+	var el = w.document;
+	el.open();
+	el.write(rr.Template + report_string.replace('[show/hide] ','','g') + rr.Template2);
+	el.close();
+	rr.toggle_message('');
 }

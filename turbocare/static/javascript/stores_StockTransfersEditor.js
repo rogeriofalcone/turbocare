@@ -101,7 +101,7 @@ barcode.LoadStockItemID = function(dom_obj){
 */
 var shortcuts = {};//keyboard short cut operations
 shortcuts.keypress = function(dom_obj){
-	if ((dom_obj.modifier()['ctrl'] == true) && (dom_obj.key()['string'] == 'o')) {
+	if ((dom_obj.modifier()['ctrl'] == true) && (dom_obj.key()['string'] == 'l')) {
 		store.renderIdDialog();
 	}
 }

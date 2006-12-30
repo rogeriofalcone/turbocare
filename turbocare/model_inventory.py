@@ -420,12 +420,13 @@ class InvCatalogItem(SQLObject):
 		
 	#Assists in choosing the next stock location item.  Especially useful when the stock in question has
 	#an expire date.  Returns the stock id
-	def NextStockItemID(self):
+	#If a quantity is specified, then it will search for a stock item with the correct quantity available
+	def NextStockItemID(self, Quantity=0):
 		ExpireDate = None
 		StockItemID = None
 		#Find the item closest to Expire
 		for stock in self.StockItems:
-			if stock.QtyAvailable() > 0:
+			if stock.QtyAvailable() > Quantity:
 				if (stock.ExpireDate != None) and (ExpireDate ==None):
 					ExpireDate = stock.ExpireDate
 					StockItemID = stock.id
@@ -436,7 +437,7 @@ class InvCatalogItem(SQLObject):
 		#Probably no expire dates, so find the first available item
 		if StockItemID == None:
 			for stock in self.StockItems:
-				if stock.QtyAvailable() > 0:
+				if stock.QtyAvailable() > Quantity:
 					StockItemID = stock.id
 					break
 		return StockItemID
@@ -476,7 +477,7 @@ class InvCatalogItem(SQLObject):
 	ReceiptItems = MultipleJoin("InvReceiptItems",joinColumn="catalog_item_id")
 	Compound = ForeignKey("InvCatalogCompound",default=None) #Which catalog items are needed to make this item... if it is produced internally
 	Packaging = ForeignKey("InvPackaging",default=None) #The type of packaging the item is delivered in.  The quantity number gets meaning from this.
-	Name = StringCol(length=40)
+	Name = StringCol(length=50)
 	Description = StringCol(length=255,default=None)
 	Accounting = StringCol(length=200,default=None)
 	IsFixedAsset = BoolCol(default=False)
@@ -685,7 +686,21 @@ class InvStockItem(SQLObject):
 			if location.Location.CanSell:
 				Available.append(location)
 		return Available
-
+		
+	def FindStockLocationIDs(self, Quantity):
+		'''	A list of stock location ids which can fulfill the required amount
+			First found, first used!
+		'''
+		SL = []
+		CurrQuantity = 0
+		for location in self.Locations:
+			if location.Location.CanSell and location.QtyAvailable() > 0:
+				SL.append(location.id)
+			CurrQuantity += location.QtyAvailable()
+			if CurrQuantity >= Quantity:
+				break
+		return SL
+		
 	Name = StringCol(length=40)
 	CatalogItem = ForeignKey("InvCatalogItem")
 	PurchaseOrder = ForeignKey("InvGoodsReceived",default=None) # Almost always exists, except when the item is produced locally
