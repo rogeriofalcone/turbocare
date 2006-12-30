@@ -6,7 +6,6 @@ from turbogears import identity
 from turbogears.toolbox.catwalk import CatWalk 
 import model
 import model_userperm
-import controllers_his
 import controllers_inventory
 import controllers_billing
 import controllers_registration
@@ -44,8 +43,6 @@ class Root(controllers.RootController):
     billing = identity.SecureObject(billing,identity.has_permission('bill_view'))
 	
     saved = controllers_saved_reports.SavedReport()
-    
-    his = controllers_his.HIS()
     
     
     inventory = controllers_inventory.Inventory()
