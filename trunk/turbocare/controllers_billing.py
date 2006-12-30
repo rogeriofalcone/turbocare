@@ -543,9 +543,48 @@ class Billing(controllers.RootController):
 		if self.IsSelfPay(ReceiptID) and InsrAmt > 0:
 			CashAmt += InsrAmt
 			InsrAmt = 0
-		# Go through and confirm the unit cost again
+		# Go through and confirm the unit cost again (and verify that all receipt items have been assigned to stock)
 		for item in record.CatalogItems:
-			item.UnitCost = item.StockItems[0].StockItem.SalePrice
+			# Check to make sure all the items are assigned to a particular stock item
+			if len(item.StockItems) == 0: # Hmmm... somehow the item wasn't assigned to a stock location
+				# At this point, we'll just assign the next available stock location to the item
+				# We'll force a re-adjustment if the quantities cannot be fulfilled (no option at this point?)
+				StockItemID = item.CatalogItem.NextStockItemID(item.Quantity)
+				if StockItemID == None: # Insufficient stock to fulfill request, try to partially fill it
+					StockItemID = item.CatalogItem.NextStockItemID()
+					if StockItemID == None: # No stock at all, set the receipt item to zero!!!!!
+						item.Quantity = 0
+						item.UnitCost = 0
+				if StockItemID != None: # Complete the assignment
+					StockItem = model.InvStockItem.get(StockItemID)
+					if item.Quantity > StockItem.QtyAvailable():
+						item.Quantity = StockItem.QtyAvailable()
+					StockLocationIDs = StockItem.FindStockLocationIDs(item.Quantity)
+					if record.Customer.InventoryLocationID == None:
+						LocationID = self.GetDefaultCustomerLocationID()
+					else:
+						LocationID = record.Customer.InventoryLocationID 
+					new_stocklocation = model.InvStockLocation(StockItemID=StockItemID, \
+						LocationID=LocationID, ReceiptID=item.id, Quantity=0.0, IsConsumed=True, IsSold=True)
+					#Create the stock transfer
+					log.debug('......creating %d new stock transfer(s)' % len(StockLocationIDs))
+					CurrQuantity = item.Quantity # Keep track of the current quantity transferred
+					for stocklocationid in StockLocationIDs:
+						StockLocation = model.InvStockLocation.get(stocklocationid)
+						if CurrQuantity <= StockLocation.QtyAvailable():
+							TransferQty = CurrQuantity
+							CurrQuantity = 0
+						else:
+							TransferQty = StockLocation.QtyAvailable()
+							CurrQuantity = CurrQuantity - TransferQty
+						new_stck_transfer = model.InvStockTransfer(FromStockLocationID=stocklocationid, \
+							ToStockLocation=new_stocklocation.id, Qty=TransferQty)
+						if CurrQuantity <= 0:
+							break
+					#Update the unit price
+					item.UnitCost = item.StockItems[0].StockItem.SalePrice
+			else:
+				item.UnitCost = item.StockItems[0].StockItem.SalePrice
 		# Apply the payment to our Receipt and linked items
 		record.TotalPayment = record.TotalPaymentCalc()
 		NewAmt = CurrCredit + InsrAmt # This is what we have to spend

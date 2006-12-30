@@ -1,4 +1,11 @@
 import logging
+import os
+import sys
+import stat
+import string
+import getopt
+import os.path
+import time
 import cherrypy
 import simplejson
 from sqlobject import *
@@ -27,7 +34,7 @@ MAX_LEVELS = 1 # The maximum depth that we search for sub-tables
 RD = ReportDefinition.ReportDefinition
 CS = 'ColumnSort'
 CD = 'ColumnDefinitions'
-
+ReportBaseDir = 'turbocare/static/user_reports/'
 
 class UserDefinedReport(controllers.RootController):
 	'''	User defined reports.  This gives the greatest amount of flexibility to the user for reporting.
@@ -822,7 +829,7 @@ class UserDefinedReport(controllers.RootController):
 			for col,num in zip(ShowCols,range(len(ShowCols))):
 				if ((col['ColType'] in ['ForeignKey','Function']) and TypeCols[num] == 'Text'):
 					try:
-						log.debug('Convert (%s): row.%s' % (tablename, col['ColName']))
+						#log.debug('Convert (%s): row.%s' % (tablename, col['ColName']))
 						frow.append('%r' % eval('row.%s' % col['ColName']))
 					except AttributeError: # If our foreign key is "None"
 						frow.append(None)
@@ -908,6 +915,8 @@ class UserDefinedReport(controllers.RootController):
 		p = pprint.PrettyPrinter(stream=f)
 		p.pprint(QD)
 		f.close()
+		if str(Query) in ['{"Tables":[]}', "{'Tables':[]}"]:
+			return dict(Data=None, Dfn=QD)
 		# End of debugging file
 		MT = self.GetMasterTable(QD)
 		# log.debug('Execute Query: table: %s' % MT['TableName'])
@@ -933,14 +942,28 @@ class UserDefinedReport(controllers.RootController):
 						NewReportData += sub_data
 			elif row[2] == 'Total':
 				NewReportData.append(row)
-		log.debug('.....SAVING DATA')
-		f = open('datareport.py','w')
-		p = pprint.PrettyPrinter(stream=f)
-		p.pprint(NewReportData)
-		f.close()
-		log.debug('.....DATA SAVED')
+		#log.debug('.....SAVING DATA')
+		#f = open('datareport.py','w')
+		#p = pprint.PrettyPrinter(stream=f)
+		#p.pprint(NewReportData)
+		#f.close()
+		#log.debug('.....DATA SAVED')
 		return dict(Data=NewReportData, Dfn=QD)
 		
+	@expose(format='json')
+	def SaveQuery(self, Query=None, ReportName='', **kw):
+		'''	Save the query definition (already serialized) to a file
+		'''
+		if str(Query) in ['{"Tables":[]}', "{'Tables':[]}"]:
+			return dict(message="Error: No Query Definition to save")
+		elif ReportName in ['', None]:
+			return dict(message="Error: No Report Name for the definition")
+		FileName = str(ReportName.replace(' ','_') + datetime.now().strftime('%Y%m%d%H%M%S.qry'))
+		f = open('%snew/%s' % (ReportBaseDir, FileName),'w')
+		f.write(Query)
+		f.close()
+		return dict(message="Report %s saved as %s in %s" % (ReportName, FileName, ReportBaseDir+'new/'))
+	
 	@expose(format='json')
 	def DebugData(self, data):
 		''' 	Used to debug the data the web browser is sending me.
@@ -954,7 +977,91 @@ class UserDefinedReport(controllers.RootController):
 		return dict(success=True)
 			
 		
-	@expose(template="turbocare.templates.UDReport")
-	def index(self):
-		return dict(title='User Defined Reports', tablenames=self.TableList())
+	@expose(template="turbocare.templates.UDReportBuilder")
+	def Builder(self):
+		tables = self.TableList()
+		tablenames = tables.keys()
+		tablenames.sort()
+		return dict(title='User Defined Reports', tablenames=tablenames, tables=tables)
+
+	@expose(template="turbocare.templates.UDReportEditor")
+	def Editor(self):
+		tables = self.TableList()
+		tablenames = tables.keys()
+		tablenames.sort()
+		return dict(title='User Defined Reports', tablenames=tablenames, tables=tables)
+	
+	@expose(html='turbocare.templates.UDReportViewer')
+	@identity.require(identity.not_anonymous())
+	def index(self, **kw):
+		usersDir = self.getDirectories(ReportBaseDir)
+		usersFiles= {}
+		for direc in usersDir:
+			log.debug("Directory name " +direc)
+			usersFiles[direc]=self.getReport(ReportBaseDir,direc)
+		log.debug(usersFiles)
+		return dict(groups=usersDir,reports=usersFiles, title="Saved Reports")
+	
+	def getDirectories(self,my_dir):
+		try:
+			file_list = os.listdir(my_dir)
+		except:
+			log.debug("No such directory "+ ReportBaseDir)
+			return []
+		#print file_list
+		new_list=[]
+		log.debug("Your Permissions are " + str(turbogears.identity.current.permissions))
+		for name in file_list:
+			if os.path.isdir(my_dir + "/" +name):
+#				log.debug('Dir name is ' + name)
+				#Check is user is in write group. 
+				if name in turbogears.identity.current.permissions:
+					new_list.append(name)
+					log.debug('You are allowed ' + name)
+		return new_list
 		
+	@expose(format='json')
+	def LoadReportList(self, Group='', **kw):
+		'''	Load the list of reports for a particular group '''
+		return dict(reports=self.getReport(ReportBaseDir,Group))
+
+	def getReport(self,basedir,direcory_name):
+		log.debug("In "+direcory_name)
+		new_list=[]
+		file_list = os.listdir(basedir+"/" + direcory_name)
+		for name in file_list:
+			if name[0] != '.':
+				new_list.append(name)
+		return new_list
+		
+	@expose(format='json')
+	def ExecuteSavedQuery(self, Group='', ReportFile='', **kw):
+		'''	Load the specified report file, then run the query.
+		'''
+		f = open(ReportBaseDir+Group+'/'+ReportFile,'r')
+		Query = f.read()
+		QD = simplejson.loads(Query)
+		f.close()
+		if str(Query) in ['{"Tables":[]}', "{'Tables':[]}"]:
+			return dict(Data=None, Dfn=QD)
+		# End of debugging file
+		MT = self.GetMasterTable(QD)
+		# Get the results for the Master table
+		ReportData = self.DataProcess(self.GetFilteredData(MT), MT)
+		self.TotalRecords = len(ReportData)
+		# Make a list of reports recursively
+		sDetailTables = self.GetDetailTables(QD, MT['TableID'])
+		# Loop through the data of the master results, and inserting detail sections
+		NewReportData = []
+		for row in ReportData:
+			self.RecordCount += 1
+			if row[2] == 'Data':
+				ids = row[-1] # id's for filtering the detail sections
+				NewReportData.append(list(row))
+				for td in sDetailTables:
+					sub_data = self.GetDetailSection(QD, td, ids,1)
+					if len(sub_data) > 0:
+						NewReportData += sub_data
+			elif row[2] == 'Total':
+				NewReportData.append(row)
+		return dict(Data=NewReportData, Dfn=QD)

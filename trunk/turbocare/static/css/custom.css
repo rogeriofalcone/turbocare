@@ -10,26 +10,34 @@ input { font-size: 85%;
     position: relative;
 }
 
-/* displayable works with .mark-shown and .mark-hidden */
+/* 
+	displayable works with .mark-shown and .mark-hidden
+	These are used for the user defined reports, to show and
+	hide columns.
+*/
 .displayable {
     cursor: pointer;
 }
 
 .mark-shown {
 	background-color: #A7C5DF;
-	width: 130px;
+	width: 150px;
 }
 .mark-hidden {
 	background-color: gray;
 	width: 25px;
 }
-/* rowdisplay works with .show-row and .hide-row */
+/* 
+	rowdisplay works with .show-row and .hide-row 
+	These are used for user defined reports for showing
+	hiding rows (that is, tables)
+*/
 .rowdisplay {
     cursor: pointer;
 }
 
 .show-row {
-	height: 100px;
+	height: 150px;
 }
 .hide-row {
 	height: 15px;
