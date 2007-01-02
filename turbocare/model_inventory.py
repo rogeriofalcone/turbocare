@@ -868,7 +868,7 @@ class InvCustomer(SQLObject):
 		SumTotalSelfPay = 0.0
 		if DoNotIncludReceiptID==None:
 			for receipt in self.Receipts:
-				SumTotalSelfPay += receipt.TotalSelfPay
+				SumTotalSelfPay += receipt.TotalPaymentCalc() # receipt.TotalSelfPay
 		else:
 			DoNotIncludReceiptID = int(DoNotIncludReceiptID)
 			for receipt in self.Receipts:
@@ -909,7 +909,8 @@ class InvCustomer(SQLObject):
 	InventoryLocation = ForeignKey("InvLocation",default=None) #Where purchased items get moved to in the Inventory location table
 	Groups = RelatedJoin("InvGrpCustomer")
 	Sort = IntCol(default=1000)
-	ExternalID = IntCol(default=None)
+	# ExternalID = IntCol(default=None)
+	ExternalID = ForeignKey("Person",default=None)
 	Status = StringCol(length=25,dbName="status",default="")
 	ModifyId = StringCol(length=35,dbName="modify_id",default=cur_user_id())
 	ModifyTime = DateTimeCol(default=cur_date_time(),dbName="modify_time")
@@ -1468,7 +1469,7 @@ class InvReceipt(SQLObject):
 			if not item.IsDispensed():
 				return False
 		return True
-	
+			
 	def FromLocationList(self):
 		'''	List of locations where the items were originally from
 		'''
@@ -1490,7 +1491,7 @@ class InvReceipt(SQLObject):
 			Empty, Un-Paid, Paid (not dispensed), Completed (paid and dispensed)
 		'''
 		self.TotalPayment = self.TotalPaymentCalc()
-		if self.TotalPaid == self.TotalPayment:
+		if self.TotalPaid == self.TotalPayment and self.IsSatisfied():
 			text = 'Paid for'
 		else:
 			text = 'Un-paid for'
@@ -1519,7 +1520,7 @@ class InvReceipt(SQLObject):
 		
 	def IsSatisfied(self):
 		for item in self.CatalogItems:
-			if not item.IsSatisfied:
+			if not item.IsSatisfied():
 				return False
 		return True
 
@@ -1553,7 +1554,8 @@ class InvReceipt(SQLObject):
 	SelfPayNotes = StringCol(length=200,default=None) #any notable details of the payment
 	TotalInsurance = FloatCol(default=None) #Company insurance
 	InsuranceNotes = StringCol(length=200,default=None) #any notable details about insurance
-	ExternalId = IntCol(default=None) #Connect the receipt to an external record, in this case, a particular encounter
+	# ExternalId = IntCol(default=None) #Connect the receipt to an external record, in this case, a particular encounter
+	ExternalId = ForeignKey("Encounter",default=None) #Connect the receipt to an external record, in this case, a particular encounter
 	Sort = IntCol(default=1000)
 	Status = StringCol(length=25,dbName="status",default="")
 	ModifyId = StringCol(length=35,dbName="modify_id",default=cur_user_id())

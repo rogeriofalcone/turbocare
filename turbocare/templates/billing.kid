@@ -5,7 +5,7 @@
 
 <head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
-    <title>${getattr(self,'title','Forms Tutorial')}</title>
+    <title>${getattr(self,'title','Billing')}</title>
     <LINK HREF="/tg_static/css/widget.css" TYPE="text/css" REL="stylesheet"/>
     <LINK HREF="/static/javascript/calendar/calendar-green.css" TYPE="text/css" REL="stylesheet"/>
     <LINK HREF="/static/css/table.css" TYPE="text/css" REL="stylesheet"/>
@@ -61,6 +61,7 @@
 	</form>
 	<div id="buttons" class="topbuttons">
 		<input id="btnPay" type="button" value="Confirm Payment"></input>
+		<input id="btnRefund" style="display:none" type="button" value="Refund Cash"></input>
 	</div>
 	<div id="RightBox" style="top:60px" class="infoboxright"> Information
 		<div id="customer_info">Billing information

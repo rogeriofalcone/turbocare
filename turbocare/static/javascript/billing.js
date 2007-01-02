@@ -639,6 +639,12 @@ billing.LoadPatient = function(data){
 	for (i=0; i<HistoryRows.length; i++){
 			connect(HistoryRows[i],'ondblclick',billing.ReceiptItemOnClickLoad);		
 	}
+	//If the Customer has no credit, then hide the refund button
+	if (getElement('balance_amt').value>=0) {
+		getElement('btnRefund').style.display = 'none';
+	} else {
+		getElement('btnRefund').style.display = '';
+	}
 }
 /*
 	Go through the entire receipt and recalculate the totals for each line, and the grand total
@@ -853,6 +859,7 @@ connect(window, 'onload', function(){
 	connect('btnCancel','onclick',billing.Cancel);
 	connect('btnNew','onclick',billing.New);
 	connect('btnPay','onclick',billing.renderPayment);
+	connect('btnRefund','onclick',billing.renderRefund);
 	});
 //Connect on onload for the document to open the document using javascript
 connect(window, 'onload', billing.OpenOnLoad);
@@ -1311,6 +1318,73 @@ billing.paymentUpdate = function(dom_obj){
 	TotalCashAmt.value = parseFloat(PrevBalance) + parseFloat(CurrBalance.value);
 	if (TotalCashAmt.value < 0) {
 		TotalCashAmt.value = 0;
+	}
+}
+//Remove our payment dialog box
+billing.refund_remove = function(){
+	swapDOM('refundbox',null);
+	swapDOM('refundshadow',null);
+}
+/*
+	Call the billing.Pay() function with variables we pull
+	from our payment dialog, and close the dialog
+*/
+billing.refund_post = function() {
+	var CashAmt = getElement('refund_CashAmt').value;
+	if (isNaN(CashAmt)) {
+		alert("The value entered needs to be numeric, but it doesn't look numeric");
+	} else if (CashAmt<=0) {
+		alert("Cannot refund zero or less, operation CANCELLED");
+	} else if (confirm('Are you sure you want to refund the customer for Rs. '+CashAmt+'?  This operation cannot be un-done.')) {
+		billing.refund_remove();
+		location = 'BillingRefund?CashAmt='+CashAmt+'&ReceiptID='+billing.ReceiptId;
+	}
+}
+/*
+	renderRefund: Create a dialog box for making a refund.
+*/
+billing.renderRefund = function (e){
+	var StringEdit = function(name, label, value){
+		var row = createDOM('TR',null);
+		var label = createDOM('TD',label);
+		var data = createDOM('TD',null);
+		var edit = createDOM('INPUT',{'type':'text','size':'12','name':name,'id':'refund_'+name, 'value':value});
+		data.appendChild(edit);
+	  	row.appendChild(label);
+	  	row.appendChild(data);
+	  	return row;
+	}
+	billing.toggle_message("");
+	var MaxRefund = -parseFloat(getElement('balance_amt').value);
+	if (billing.IsModified()) {
+		alert("First save the record before making a refund");
+	} else if (MaxRefund <= 0) {
+		alert("Not enough credit to perform a refund.  Operation CANCELLED.");
+	} else {
+		//This is the big div box that surrounds the entire selection process
+		var dialog = createDOM('DIV',{'style':'width:300px;height:100px','class':'dialogbox','id':'refundbox'});
+		var shadow = createDOM('DIV',{'style':'width:310px;height:110px','class':'dialogbox_shadow','id':'refundshadow'});
+		//Close link
+		var close_link = createDOM('A',{'href':'javascript:billing.refund_remove()'},"Close");
+		dialog.appendChild(close_link);
+		//The main table
+		var table = createDOM('TABLE',{'class':'regular'});
+		var tbody = createDOM('TBODY',null);
+		// Add fields
+		tbody.appendChild(StringEdit('CashAmt','Refund Amount (Rs)',MaxRefund));
+		var btn_row = createDOM('TR',null);
+		var btn_col = createDOM('TD',null);
+		var submit_btn = createDOM('BUTTON',{'id':'btnRefundDialog', 'name':'btnRefundDialog', 'value':'Refund', 'type':'submit'},'Refund');
+		tbody.appendChild(submit_btn);
+		//Create our dialog
+		table.appendChild(tbody);
+		dialog.appendChild(table);
+		document.body.appendChild(shadow);
+		setOpacity(shadow,0.5);
+		document.body.appendChild(dialog);
+		//Attach the button event
+		connect('btnRefundDialog','onclick', billing.refund_post);
+		getElement('refund_CashAmt').focus();
 	}
 }
 /*

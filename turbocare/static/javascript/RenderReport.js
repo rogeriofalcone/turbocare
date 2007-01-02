@@ -166,7 +166,7 @@ rr.RenderRowData = function(row, TD, isTotal){
 		} else if (CD.ColType=='DateTime') {
 			coldata = rr.DateTimeCol(coldata,CD.DateFormat);
 		} else if ((CD.ColType=='ForeignKey'||CD.ColType=='Function')&&(!isNaN(coldata))) {
-			coldata = rr.NumericCol(coldata,rr.NumericFmt);
+			coldata = rr.NumericCol(coldata,CD.NumericFormat);
 		}
 		var col = createDOM('TD',{'class':'tdData'},coldata)
 		if (CD.Justification=='Left') {

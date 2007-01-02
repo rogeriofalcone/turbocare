@@ -334,6 +334,7 @@ class UserDefinedReport(controllers.RootController):
 				return "Function", None
 			
 	@expose(format='json')
+	@identity.require(identity.not_anonymous())
 	def LoadTables(self):
 		return self.TableList()
 	
@@ -474,6 +475,7 @@ class UserDefinedReport(controllers.RootController):
 		return Tdict
 		
 	@expose(format='json')
+	@identity.require(identity.not_anonymous())
 	def GetSubTables(self, tablename=None, **kw):
 		'''	Return a formatted list of sub-tables '''
 		ST = []
@@ -495,6 +497,7 @@ class UserDefinedReport(controllers.RootController):
 			return dict(SubTables=ST)
 		
 	@expose(format='json')
+	@identity.require(identity.not_anonymous())
 	def GetTableDefinition(self, tablename=None, **kw):
 		'''	Return a formatted table definition, including all sub tables (and their sub tables)
 		'''
@@ -904,6 +907,7 @@ class UserDefinedReport(controllers.RootController):
 		return NewSubData
 	
 	@expose(format='json')
+	@identity.require(identity.not_anonymous())
 	def ExecuteQuery(self, Query=None, **kw):
 		'''	Parse and then execute the query, returning the results.
 			Query: a serialized JSON object which we need to convert
@@ -951,6 +955,7 @@ class UserDefinedReport(controllers.RootController):
 		return dict(Data=NewReportData, Dfn=QD)
 		
 	@expose(format='json')
+	@identity.require(identity.has_permission("report_editor"))
 	def SaveQuery(self, Query=None, ReportName='', **kw):
 		'''	Save the query definition (already serialized) to a file
 		'''
@@ -965,6 +970,7 @@ class UserDefinedReport(controllers.RootController):
 		return dict(message="Report %s saved as %s in %s" % (ReportName, FileName, ReportBaseDir+'new/'))
 	
 	@expose(format='json')
+	@identity.require(identity.has_permission("report_editor"))
 	def DebugData(self, data):
 		''' 	Used to debug the data the web browser is sending me.
 			format the data and save it to a temporary file
@@ -978,6 +984,7 @@ class UserDefinedReport(controllers.RootController):
 			
 		
 	@expose(template="turbocare.templates.UDReportBuilder")
+	@identity.require(identity.has_permission("report_editor"))
 	def Builder(self):
 		tables = self.TableList()
 		tablenames = tables.keys()
@@ -985,6 +992,7 @@ class UserDefinedReport(controllers.RootController):
 		return dict(title='User Defined Reports', tablenames=tablenames, tables=tables)
 
 	@expose(template="turbocare.templates.UDReportEditor")
+	@identity.require(identity.has_permission("report_editor"))
 	def Editor(self):
 		usersDir = self.getDirectories(ReportBaseDir)
 		usersFiles= {}
@@ -992,7 +1000,7 @@ class UserDefinedReport(controllers.RootController):
 			log.debug("Directory name " +direc)
 			usersFiles[direc]=self.getReport(ReportBaseDir,direc)
 		log.debug(usersFiles)
-		return dict(groups=usersDir,reports=usersFiles, title="Saved Reports")
+		return dict(groups=usersDir,reports=[], title="Saved Reports")
 	
 	@expose(html='turbocare.templates.UDReportViewer')
 	@identity.require(identity.not_anonymous())
@@ -1003,7 +1011,7 @@ class UserDefinedReport(controllers.RootController):
 			log.debug("Directory name " +direc)
 			usersFiles[direc]=self.getReport(ReportBaseDir,direc)
 		log.debug(usersFiles)
-		return dict(groups=usersDir,reports=usersFiles, title="Saved Reports")
+		return dict(groups=usersDir,reports=[], title="Saved Reports")
 	
 	def getDirectories(self,my_dir):
 		try:
@@ -1024,6 +1032,7 @@ class UserDefinedReport(controllers.RootController):
 		return new_list
 		
 	@expose(format='json')
+	@identity.require(identity.not_anonymous())
 	def LoadReportList(self, Group='', **kw):
 		'''	Load the list of reports for a particular group '''
 		return dict(reports=self.getReport(ReportBaseDir,Group))
@@ -1038,6 +1047,7 @@ class UserDefinedReport(controllers.RootController):
 		return new_list
 		
 	@expose(format='json')
+	@identity.require(identity.has_permission("report_editor"))
 	def LoadSavedQuery(self, Group='', ReportFile='', **kw):
 		'''	Load the specified report file, for editing.
 		'''
@@ -1048,6 +1058,7 @@ class UserDefinedReport(controllers.RootController):
 		return dict(QD=QD)
 		
 	@expose(format='json')
+	@identity.require(identity.not_anonymous())
 	def ExecuteSavedQuery(self, Group='', ReportFile='', **kw):
 		'''	Load the specified report file, then run the query.
 		'''
