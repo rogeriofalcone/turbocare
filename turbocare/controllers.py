@@ -37,7 +37,7 @@ class Root(controllers.RootController):
 	    
      #catwalk = CatWalk(model,allowedHosts=['127.0.0.1','192.168.11.3','192.168.11.120'])
     catwalk = CatWalk(model_userperm) #Create a user admininstrator CatWalk with the custom User Model.
-    catwalk = identity.SecureObject(catwalk,identity.in_group('admin'))  #Securing objects is good. 
+    catwalk = identity.SecureObject(catwalk,identity.has_permission('admin_catwalk'))  #Securing objects is good. 
 	
     billing = controllers_billing.Billing()
     billing = identity.SecureObject(billing,identity.has_permission('bill_view'))
@@ -46,7 +46,7 @@ class Root(controllers.RootController):
     
     
     inventory = controllers_inventory.Inventory()
-    inventory = identity.SecureObject(inventory,identity.in_group('admin'))
+    inventory = identity.SecureObject(inventory,identity.has_permission('admin_controllers_inventory'))
     
 	
     registration = controllers_registration.Registration()
