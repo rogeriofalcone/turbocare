@@ -692,7 +692,7 @@ class Billing(controllers.RootController):
 			UrlVars='id=%s&ReceiptID=%s' % (id, ReceiptID), result_msg=result_msg, SrchNow=False, NoAjax=True)
 	
 	#	Step 2: Save the items.  If no receipt is given, then create a new receipt.
-	@expose()
+	@expose(format='json')
 	@identity.require(identity.has_permission( "bill_edit"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
 	def CustomerSaveReceipt(self, Id='', id='', ReceiptID='', data='', **kw):
@@ -733,9 +733,11 @@ class Billing(controllers.RootController):
 				new_item = model.InvReceiptItems(ReceiptID=ReceiptID, CatalogItemID=CatalogItemID, Quantity=Quantity)
 				totalcost += new_item.UnitCost*Quantity
 			receipt.TotalPayment = totalcost
-		raise cherrypy.HTTPRedirect('ReceiptItemsLoad?ReceiptID=%s' % ReceiptID)
+		raise cherrypy.HTTPRedirect('index?receipt_id=%d' % ReceiptID)
+		#raise cherrypy.HTTPRedirect('ReceiptItemsLoad?ReceiptID=%s' % ReceiptID)
 		
 	#	Step 3: Load the data so that the receipt items can be assigned to a particular stock location
+	# NOTE!!!! This is now obsolete.  I do automatic default assignments now
 	@identity.require(identity.has_permission( "bill_edit"))
 	@expose(html='turbocare.templates.billing_receiptitemsadd')
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
@@ -753,6 +755,7 @@ class Billing(controllers.RootController):
 	
 	#	Step 4: Save the Receipt items with their updated stock locations, then redirect back to the billing screen.
 	#	This page just saves data and then redirects the user to the next appropriate page.
+	# NOTE!!!! This is now obsolete.  I do automatic default assignments now
 	@expose()
 	@identity.require(identity.has_permission( "bill_edit"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
@@ -837,7 +840,36 @@ class Billing(controllers.RootController):
 				ItemOptions.append(dict(id=location.id, Name=location.Name(), UnitPrice=location.StockItem.SalePrice, \
 					ExpireDate=ExpireDate, Status=location.Status))
 		return dict(items=ItemOptions)
-		
+	
+	@expose()
+	@identity.require(identity.has_permission("bill_refund"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	@validate(validators={'CashAmt':validators.Number(),'ReceiptID':validators.Int()})
+	def BillingRefund(self, ReceiptID, CashAmt, **kw):
+		'''	Refund some cash to a customer
+			Only allow refunds if the customer has credit, and only up to the credit amount
+			If a refund cannot be fulfilled as requested, then don't do any refund at all, even
+			if the customer has some credit
+		'''
+		# Load the customer
+		Customer = model.InvReceipt.get(ReceiptID).Customer
+		if (Customer.CalcBalance() >= 0):
+			ErrorMsg = 'Refund rejected, Customer has no credit'
+			NextLink = 'index?receipt_id=%d' % ReceiptID
+			raise cherrypy.HTTPRedirect('DataEntryError?error=%s&next_link=%s' % (ErrorMsg, NextLink))
+		elif (CashAmt <= 0):
+			ErrorMsg = 'Refund ignored, cannot refund a 0 or negative amount'
+			NextLink = 'index?receipt_id=%d' % ReceiptID
+			raise cherrypy.HTTPRedirect('DataEntryError?error=%s&next_link=%s' % (ErrorMsg, NextLink))
+		elif (Customer.CalcBalance() + CashAmt > 0):
+			ErrorMsg = 'Refund rejected, Customer has insufficient credit'
+			NextLink = 'index?receipt_id=%d' % ReceiptID
+			raise cherrypy.HTTPRedirect('DataEntryError?error=%s&next_link=%s' % (ErrorMsg, NextLink))
+		else:
+			payment = model.InvCustomerPayment(CustomerID=Customer.id, DatePaid=model.cur_date_time(),\
+				Amount=-CashAmt,Notes='Cash refund from user id: %s' % (model.cur_user_id()))
+		raise cherrypy.HTTPRedirect('index?receipt_id=%d' % ReceiptID)
+
 	@expose(format='json')
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
 	def BillingPrintReceipt(self, ReceiptID, **kw):

@@ -8,6 +8,11 @@
     <meta content="text/html; charset=UTF-8"
         http-equiv="content-type" py:replace="''"/>
     <title>Login</title>
+    <SCRIPT TYPE="text/javascript">
+	connect(window, 'onload', function() {
+		getElement('user_name').focus();
+	});
+   </SCRIPT>
     <style type="text/css">
         #loginBox
         {

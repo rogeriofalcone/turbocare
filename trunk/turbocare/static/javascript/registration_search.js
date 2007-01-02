@@ -65,17 +65,24 @@ barcode.LoadPatientID = function(dom_obj) {
 */
 var shortcuts = {};//keyboard short cut operations
 shortcuts.keypress = function(dom_obj){
-	if ((dom_obj.modifier()['ctrl'] == true) && (dom_obj.key()['string'] == 'c')) {
+	if ((dom_obj.modifier()['ctrl'] == true) && (dom_obj.key()['string'] == 'l')) {
 		reg.renderCustomerIdDialog();
+		dom_obj.stop();
 	}
 }
 shortcuts.keydown = function(dom_obj){
 	if (dom_obj.key()['string']=='KEY_ENTER') {
+		var el = dom_obj.target();
 		//Perform a search
-		var search_text = getElement('SearchText').value;
-		var search_address = getElement('SearchAddress').value;
-		if ((search_text + search_address) != ''){
-			reg.Search();
+		if (el.id == 'SearchText' || el.id == 'SearchAddress') {
+			var search_text = getElement('SearchText').value;
+			var search_address = getElement('SearchAddress').value;
+			if ((search_text + search_address) != ''){
+				reg.Search();
+			}
+		} else if (el.id == 'dialog_CustomerID' && !isNaN(el.value)) {
+			var postVars = 'CustomerID='+el.value;
+			document.location.href = 'RegistrationPage1?'+postVars;			
 		}
 	}
 }
@@ -321,5 +328,6 @@ reg.renderCustomerIdDialog = function(){
 	setOpacity(shadow,0.5);
 	document.body.appendChild(dialog);
 	//Attach the button event
+	connect('dialog_CustomerID','onkeydown',shortcuts.keydown);
 	getElement('dialog_CustomerID').focus();
 }

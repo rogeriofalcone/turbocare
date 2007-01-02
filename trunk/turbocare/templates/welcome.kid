@@ -4,7 +4,6 @@
 <head>
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
 <title>Welcome to CIHSR TurboCare</title>
-
 </head>
 <body>
 <div id="header">&nbsp;</div>
@@ -16,9 +15,9 @@
   <div id="sidebar">
     <h2>Things to do:</h2>
     <ul class="links">
-      <li py:if="tg.identity.anonymous"><a href="/login">login</a></li>
-      <li py:for="link in links"><a href="${link['link']}">${link['name']}</a></li>
-	  <li py:if="not tg.identity.anonymous"><a href="/logout">logout</a></li>
+	<li py:if="tg.identity.anonymous"><a href="/login">login</a></li>
+	<li py:for="item in menuitems"><a href="${item['link']}">${item['name']}</a></li>
+	<li py:if="not tg.identity.anonymous"><a href="/logout">logout</a></li>
     </ul>
   </div>
 

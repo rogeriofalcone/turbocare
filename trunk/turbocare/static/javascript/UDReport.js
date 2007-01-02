@@ -406,7 +406,19 @@ qry.RemoveTable = function(dom_obj){
 		swapDOM(table,null);
 	}
 }
-
+/*
+	DuplicateColumn: Create a duplicate column based on the current column
+	and place it next to the current column
+*/
+qry.DuplicateColumn = function(e){
+	e.stop();
+	var Col = e.src().parentNode.parentNode;
+	var Dup = Col.cloneNode(true);
+	ref = Col.parentNode.insertBefore(Dup, Col.nextSibling);
+	// Re-display just the table so the column gets placed properly
+	qry.toggle_message("Re-displaying table...");
+	qry.RedisplayTables(Col.parentNode.parentNode);
+}
 /*
 	AJSON Reactions to the above actions
 */
@@ -424,6 +436,10 @@ qry.ElemShowHide = function() {
 // The click and drag element (part of a column entry)
 qry.ElemDrag = function() {
 	return createDOM('DIV',{'class':'draggable'},"[Click to drag]");
+}
+// The duplicate column element (part of a column entry)
+qry.ElemDuplicate = function() {
+	return createDOM('DIV',null,createDOM('BUTTON',{'style':'font-size:10px','type':'button','name':'Duplicate','value':'Duplicate'},'Duplicate'));
 }
 // The column name element (part of a column entry)
 qry.ElemColName = function(name) {
@@ -568,7 +584,7 @@ qry.ColRowToggle = function() {
 	var col = createDOM('DIV',{'class':'tablecol mark-shown show-row','style':'width:30px'});
 	var row = createDOM('DIV',{'class':'rowdisplay'});
 	var type = createDOM('INPUT',{'type':'hidden','name':'ColType','value':'RowDisplay'});
-	appendChildNodes(row,DIV(null,'S'),DIV(null,'H'),DIV(null,'W'),DIV(null,'---'),DIV(null,'H'),DIV(null,'I'),DIV(null,'D'));
+	appendChildNodes(row,DIV(null,'S'),DIV(null,'H'),DIV(null,'O'),DIV(null,'W'),DIV(null,'---'),DIV(null,'H'),DIV(null,'I'),DIV(null,'D'),DIV(null,'E'));
 	// The following code is not used for anything, but I couldn't get the page to render correctly without it... so it's filler
 	var sel = createDOM('SELECT',null);
 	appendChildNodes(sel,OPTION(null,'ONE'),OPTION(null,'TWO'));
@@ -581,7 +597,7 @@ qry.ColLoadSubTables = function() {
 	var col = createDOM('DIV',{'class':'tablecol mark-shown show-row','style':'width:30px'});
 	var row = createDOM('DIV',{'class':'loadsubtables'});
 	var type = createDOM('INPUT',{'type':'hidden','name':'ColType','value':'LoadSubTables'});
-	appendChildNodes(row,DIV(null,'L'),DIV(null,'O'),DIV(null,'A'),DIV(null,'D'),DIV(null,'--'),DIV(null,'S'),DIV(null,'B'));
+	appendChildNodes(row,DIV(null,'L'),DIV(null,'O'),DIV(null,'A'),DIV(null,'D'),DIV(null,'--'),DIV(null,'S'),DIV(null,'U'),DIV(null,'B'),DIV(null,'T'),DIV(null,'B'),DIV(null,'L'));
 	// The following code is not used for anything, but I couldn't get the page to render correctly without it... so it's filler
 	var sel = createDOM('SELECT',null);
 	appendChildNodes(sel,OPTION(null,'ONE'),OPTION(null,'TWO'));
@@ -610,7 +626,7 @@ qry.ColDateTime = function(tablename,colname,count){
 	var table = createDOM('INPUT',{'type':'hidden','name':'TableName','value':tablename});
 	appendChildNodes(col,name,type,table,qry.ElemShowHide(),qry.ElemDrag(),qry.ElemColName(colname),
 		qry.ElemFmToDate(tablename,colname),qry.ElemExtraFilter(),qry.ElemAggType(),qry.ElemSorting(),
-		qry.ElemDateFormat(),qry.ElemJustification('Left'));
+		qry.ElemDateFormat(),qry.ElemJustification('Left'),qry.ElemDuplicate());
 	return col;
 }
 // Text column
@@ -620,7 +636,8 @@ qry.ColText = function(tablename,colname,count){
 	var type = createDOM('INPUT',{'type':'hidden','name':'ColType','value':'Text'});
 	var table = createDOM('INPUT',{'type':'hidden','name':'TableName','value':tablename});
 	appendChildNodes(col,name,table,type,qry.ElemShowHide(),qry.ElemDrag(),qry.ElemColName(colname),
-		qry.ElemTextFilter(),qry.ElemExtraFilter(),qry.ElemAggType(),qry.ElemSorting(),qry.ElemJustification('Left'));
+		qry.ElemTextFilter(),qry.ElemExtraFilter(),qry.ElemAggType(),qry.ElemSorting(),qry.ElemJustification('Left'),
+		qry.ElemDuplicate());
 	return col;
 }
 // Numeric column
@@ -631,7 +648,7 @@ qry.ColNumeric = function(tablename,colname,count){
 	var table = createDOM('INPUT',{'type':'hidden','name':'TableName','value':tablename});
 	appendChildNodes(col,name,table,type,qry.ElemShowHide(),qry.ElemDrag(),qry.ElemColName(colname),
 		qry.ElemNumFilter(),qry.ElemExtraFilter(),qry.ElemAggType(),qry.ElemSorting(),qry.ElemNumericFormat(),
-		qry.ElemJustification('Right'));
+		qry.ElemJustification('Right'),qry.ElemDuplicate());
 	return col;
 }
 // Boolean column
@@ -641,7 +658,8 @@ qry.ColBoolean = function(tablename,colname,count){
 	var type = createDOM('INPUT',{'type':'hidden','name':'ColType','value':'Boolean'});
 	var table = createDOM('INPUT',{'type':'hidden','name':'TableName','value':tablename});
 	appendChildNodes(col,name,table,type,qry.ElemShowHide(),qry.ElemDrag(),qry.ElemColName(colname),
-		qry.ElemBoolFilter(),qry.ElemExtraFilter(),qry.ElemAggType(),qry.ElemSorting(),qry.ElemJustification('Right'));
+		qry.ElemBoolFilter(),qry.ElemExtraFilter(),qry.ElemAggType(),qry.ElemSorting(),qry.ElemJustification('Right'),
+		qry.ElemDuplicate());
 	return col;
 }
 // Foreign Key column (these columns have no filtering enabled)
@@ -651,7 +669,8 @@ qry.ColFK = function(tablename,colname,count){
 	var type = createDOM('INPUT',{'type':'hidden','name':'ColType','value':'ForeignKey'});
 	var table = createDOM('INPUT',{'type':'hidden','name':'TableName','value':tablename});
 	appendChildNodes(col,name,table,type,qry.ElemShowHide(),qry.ElemDrag(),qry.ElemColName(colname),
-		qry.ElemAggType(),qry.ElemSorting(),qry.ElemJustification('Left'),qry.ElemNumericFormat(),qry.ElemDateFormat());
+		qry.ElemAggType(),qry.ElemSorting(),qry.ElemJustification('Left'),qry.ElemNumericFormat(),qry.ElemDateFormat(),
+		qry.ElemDuplicate());
 	return col;
 }
 // Function column (these columns have no filtering enabled)
@@ -661,7 +680,8 @@ qry.ColFunction = function(tablename,colname,count){
 	var type = createDOM('INPUT',{'type':'hidden','name':'ColType','value':'Function'});
 	var table = createDOM('INPUT',{'type':'hidden','name':'TableName','value':tablename});
 	appendChildNodes(col,name,table,type,qry.ElemShowHide(),qry.ElemDrag(),qry.ElemColName(colname),
-		qry.ElemAggType(),qry.ElemSorting(),qry.ElemJustification('Left'),qry.ElemNumericFormat(),qry.ElemDateFormat());
+		qry.ElemAggType(),qry.ElemSorting(),qry.ElemJustification('Left'),qry.ElemNumericFormat(),qry.ElemDateFormat(),
+		qry.ElemDuplicate());
 	return col;
 }
 /*
@@ -902,6 +922,12 @@ qry.RedisplayTables = function(el){
 		    function(elem) {
 			connect(elem, 'onclick', RowDisplay.toggle);
 		    });
+		var dupbtns = getElementsByTagAndClassName('BUTTON', null,parents[j]);
+		for (var i=0;i<dupbtns.length; i++){
+			if (dupbtns[i].name=='Duplicate') {
+				connect(dupbtns[i],"onclick",qry.DuplicateColumn);
+			}
+		}
 		var dateInputs = getElementsByTagAndClassName('INPUT',"dateEntry",parents[j]);
 		for (var i=0;i<dateInputs.length; i++){
 			connect(dateInputs[i],"onclick",qry.DatePick);
@@ -927,8 +953,12 @@ qry.RedisplayTables = function(el){
 */
 qry.OpenOnLoad = function() {
 	//We have some inputs with the  dateEntry class which want to have a date control added
-	connect("Group","onclick",qry.ChangeGroup);
-	connect("ReportFile","ondblclick",qry.EditReport);
+	if (getElement("Group")!=null){
+		connect("Group","onclick",qry.ChangeGroup);
+	}
+	if (getElement("ReportFile")!=null){
+		connect("ReportFile","ondblclick",qry.EditReport);
+	}
 	var dateInputs = getElementsByTagAndClassName('INPUT',"dateEntry",document);
 	for (i=0;i<dateInputs.length; i++){
 		connect(dateInputs[i],"onclick",qry.DatePick);

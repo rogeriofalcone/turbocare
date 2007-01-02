@@ -65,18 +65,18 @@ barcode.LoadPatientID = function(dom_obj) {
 */
 var shortcuts = {};//keyboard short cut operations
 shortcuts.keypress = function(dom_obj){
-	if ((dom_obj.modifier()['ctrl'] == true) && (dom_obj.key()['string'] == 'c')) {
+	if ((dom_obj.modifier()['ctrl'] == true) && (dom_obj.key()['string'] == 'l')) {
+		dom_obj.stop();
 		reg.renderCustomerIdDialog();
 	}
 }
 shortcuts.keydown = function(dom_obj){
 	if (dom_obj.key()['string']=='KEY_ENTER') {
-		var customerid = getElement("dialog_CustomerID");
-		if ((customerid != null) && (customerid.value != null) && (customerid.value != '')){
-			//Load the items available for the customer
-			reg.customeriddialog_remove();
-			var postVars = 'CustomerID='+customerid.value;
-			document.location.href = 'RegistrationPage1?'+postVars;
+		var el = dom_obj.target();
+		//Perform a search
+		if (el.id == 'dialog_CustomerID' && !isNaN(el.value)) {
+			var postVars = 'CustomerID='+el.value;
+			document.location.href = 'RegistrationPage1?'+postVars;			
 		}
 	}
 }
@@ -692,5 +692,6 @@ reg.renderCustomerIdDialog = function(){
 	setOpacity(shadow,0.5);
 	document.body.appendChild(dialog);
 	//Attach the button event
+	connect('dialog_CustomerID','onkeydown',shortcuts.keydown);
 	getElement('dialog_CustomerID').focus();
 }
