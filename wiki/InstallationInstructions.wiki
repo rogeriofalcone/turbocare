@@ -104,3 +104,4 @@ cp dev-sample.cfg dev.cfg
 python start-turbocare.py
 If this loads without errors you have installed turbocare.  Start working using 127.0.0.1:8080.
 
+sudo apt-get install libapache-mod-python2.4 apache2
