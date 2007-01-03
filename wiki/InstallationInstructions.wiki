@@ -20,8 +20,6 @@ TurboCare uses the the database schema from the Care2x project (www.care2x.org) 
 
 6. MySQL version 5.0 (5.0.24 tested)
 
-sudo apt-get install python-pysqlite2 python-mysqldb python-imaging  gcc libc6-dev python-dev python-setuptools build-essential mysql-server python-reportlab mysql-admin
-
    - I also recommend getting the administrative packages.
 
 
@@ -82,3 +80,10 @@ INSERT INTO care_users (name, login_id, password) VALUES ('New Name', 'myid', PA
 Then a user with name: New Name and a login id of 'myid' is created with an encrypted password of 'abc123'.
 
 The file "base_care2x_permission.sql" contains the tables and permissions which you can use as an example.  The permissions have already been coded through much of the program already, so at least the permissions table should be used as is (until you change the permissions in the program code).
+
+
+Shortcuts for Ubuntu
+
+sudo apt-get install python-pysqlite2 python-mysqldb python-imaging  gcc libc6-dev python-dev python-setuptools build-essential mysql-server python-reportlab mysql-admin
+
+sudo easy_install -Z TurboGears
