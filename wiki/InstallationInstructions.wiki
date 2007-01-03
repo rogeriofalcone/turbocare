@@ -102,3 +102,5 @@ python mysql_schema.py -d care2x -u root -o schema_updt -f turbocare_schema.data
 python mysql_schema.py -d care2x -u root -o restore -f turbocare_backup.data
 cp dev-sample.cfg dev.cfg
 python start-turbocare.py
+If this loads without errors you have installed turbocare.  Start working using 127.0.0.1:8080.
+
