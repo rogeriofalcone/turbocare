@@ -379,6 +379,9 @@ reg.CityTownSearchUpdateKeyDown = function(dom_obj){
 	if (dom_obj.key()['string']=='KEY_ENTER') {
 		reg.CityTownSearchUpdate();
 		dom_obj.stopPropagation();
+	} else if (dom_obj.key()['string']=='KEY_ARROW_DOWN') {
+		// Move the focus to the search area if there are search results
+		reg.CityTownSearchKeydown(dom_obj);
 	}
 }
 /*
@@ -426,12 +429,12 @@ reg.CityTownSearchKeydown = function(dom_obj){
 		var row = rows[0];
 	}
 	//Process the even
+	dom_obj.stop();
 	if (dom_obj.key()['string']=='KEY_ENTER') {
 		reg.SelectCityTownResult(dom_obj);
 	} else if 	(dom_obj.key()['string']=='KEY_ARROW_UP') {
 		//find the row before our selected row
 		var rows = getElementsByTagAndClassName('LI',null,'CityTownSearchResults');
-		//do nothing if the number of rows is 1
 		if (rows.length > 1)  {
 			//if the first row is selected, then we'll select the last row
 			if (getNodeAttribute(rows[0],'class') == 'lite') {
@@ -448,6 +451,9 @@ reg.CityTownSearchKeydown = function(dom_obj){
 					}
 				}
 			}
+		} else if (rows.length == 1) {
+			var buttons = getElementsByTagAndClassName('INPUT',null,rows[0]);
+			buttons[0].focus();
 		}
 	} else if 	(dom_obj.key()['string']=='KEY_ARROW_DOWN') {
 		//find the row after our selected row
@@ -469,9 +475,12 @@ reg.CityTownSearchKeydown = function(dom_obj){
 					}
 				}
 			}
+		} else if (rows.length == 1) {
+			var buttons = getElementsByTagAndClassName('INPUT',null,rows[0]);
+			buttons[0].focus();
 		}
 	}
-	dom_obj.stopPropagation();
+	dom_obj.stop();
 }
 /*
 	After the search box is rendered, display any results that we have

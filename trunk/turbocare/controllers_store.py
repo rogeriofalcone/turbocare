@@ -213,8 +213,8 @@ class Store(turbogears.controllers.Controller):
 	@identity.require(identity.has_permission("stores_catalog_edit"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
 
-	def CatalogItemsEditorSave(self, Name='New Name', Description='',Accounting='',IsFixedAsset=False,\
-			IsService=False,IsForSale=True,IsDispensable=True,IsSelectable=None,MinStockAmt=None,\
+	def CatalogItemsEditorSave(self, Name='New Name', Description='',Accounting='',IsFixedAsset=None,\
+			IsService=None,IsForSale=None,IsDispensable=None,IsSelectable=None,MinStockAmt=None,\
 			ReorderAmt=None,Tax=None,ParentItemID=None,CompoundID=None,PackagingID=None,\
 			CatalogItemID=None, CatalogGroups=[], CatalogGroupCount=[], Operation='', **kw):
 		'''	Create/Update a CatalogItem entry

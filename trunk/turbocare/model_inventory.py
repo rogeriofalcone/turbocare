@@ -873,7 +873,7 @@ class InvCustomer(SQLObject):
 			DoNotIncludReceiptID = int(DoNotIncludReceiptID)
 			for receipt in self.Receipts:
 				if receipt.id != DoNotIncludReceiptID:
-					SumTotalSelfPay += receipt.TotalSelfPay
+					SumTotalSelfPay += receipt.TotalPaymentCalc() # receipt.TotalSelfPay
 		SumCustomerPayments = 0.0
 		for payment in self.Payments:
 			SumCustomerPayments += payment.Amount
@@ -1649,7 +1649,7 @@ class InvReceiptItems(SQLObject):
 	def IsSatisfied(self):
 		QtyPurchased = 0
 		for item in self.StockItems:
-			QtyPurchased += item.Quantity
+			QtyPurchased += item.QtyAfterTransfers()
 		if QtyPurchased >= self.Quantity:
 			value = True
 		else:

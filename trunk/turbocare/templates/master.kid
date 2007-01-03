@@ -9,7 +9,7 @@
     <SCRIPT SRC="/static/javascript/userMenu.js" TYPE="text/javascript"></SCRIPT>
     <SCRIPT SRC="/static/javascript/validate.js" TYPE="text/javascript"></SCRIPT>
    <link rel="stylesheet" href="/static/css/custom.css" type="text/css" />
-    <meta py:replace="item[:]"/> 
+    <meta py:replace="item[:]"/>
 </head>
 
 <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">
@@ -26,7 +26,7 @@
     <div id="UserMenu" style="font-family:helvetica,arial,serif;font-size:11px;text-align:center" class="userMenu">
     </div>
 <div class="docheader">
-CiHSR - TurboCare</div>
+CiHSR&nbsp;-&nbsp;TurboCare</div>
 
     <div py:if="tg_flash" class="flash" py:content="tg_flash"></div>
 

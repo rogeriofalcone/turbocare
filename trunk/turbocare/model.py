@@ -11,6 +11,9 @@ __connection__ = hub
 
 # class YourDataClass(SQLObject):
 #     pass
+dbReligion = ['Christian', 'Hindu', 'Muslim', 'Scientology', 'Unknown']
+dbGender = ['U','F','M']
+dbTitles = ['Ms.', 'Mrs.', 'Mr.', 'Dr.']
 
 class Visit(SQLObject):
     class sqlmeta:
@@ -378,7 +381,7 @@ class Person(SQLObject):
 	Title = StringCol(length=25,dbName='title', default=None)
 	Photo = BLOBCol(dbName='photo', default=None)
 	PhotoFilename = StringCol(length=60,dbName='photo_filename', default=None)
-	EthnicOrig = ForeignKey("ClassEthnicOrig", dbName='ethnic_orig', default=None)
+	EthnicOrig = ForeignKey("TypeEthnicOrig", dbName='ethnic_orig', default=None)
 	OrgId = StringCol(length=60,dbName='org_id', default=None)
 	SssNr = StringCol(length=60,dbName='sss_nr', default=None)
 	NatIdNr = StringCol(length=60,dbName='nat_id_nr', default=None)
@@ -4037,6 +4040,7 @@ class TypeEthnicOrig(SQLObject):
 	ClassNr = ForeignKey('ClassEthnicOrig',dbName='class_nr')
 	Name = StringCol(length=35,dbName='name')
 	LdVar = StringCol(length=35,dbName='LD_var')
+	Persons = MultipleJoin("Person",joinColumn='ethnic_orig')
 	Status = StringCol(length=25,default='')
 #	History = StringCol(length=255,default='')
 	ModifyId = StringCol(length=35,default=cur_user_id())#varchar(35) NOT NULL default '',

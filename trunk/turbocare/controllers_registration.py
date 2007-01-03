@@ -331,7 +331,7 @@ class Registration(turbogears.controllers.Controller):
 			Gender = patient.Sex
 		else:
 			Gender = 'u'
-		items=['U','F','M']
+		items=model.dbGender
 		genders=[]
 		for gender in items:
 			if gender == Gender.upper():
@@ -344,22 +344,26 @@ class Registration(turbogears.controllers.Controller):
 			Religion = patient.Religion
 		else:
 			Religion = 'Unknown'
-		items=['Christian', 'Hindu', 'Muslim', 'Scientology', 'Unknown']
+		items=model.dbReligion
 		religions=[]
 		for religion in items:
 			if religion == Religion:
 				religions.append(dict(id=religion, name=religion, selected='selected'))
 			else:
 				religions.append(dict(id=religion, name=religion, selected=None))
-		# Load our tribes: similar to titles *****************************************************STILL UNFINISHED
-		Tribe = ''
-		items=['option1', 'option2', 'option3']
+		# Load our tribes: similar to titles 
+		if patient!=None and patient.EthnicOrigID!=None:
+			Tribe = patient.EthnicOrig.Name
+		else:
+			Tribe = ''
+		items= model.TypeEthnicOrig.select(AND (model.TypeEthnicOrig.q.ClassNrID==model.ClassEthnicOrig.q.id,
+			model.ClassEthnicOrig.q.Name == 'Tribe'),orderBy=[model.TypeEthnicOrig.q.Name])
 		tribes=[]
 		for tribe in items:
-			if tribe == Tribe:
-				tribes.append(dict(id=tribe, name=tribe, selected='selected'))
+			if tribe.Name == Tribe:
+				tribes.append(dict(id=tribe.id, name=tribe.Name, selected='selected'))
 			else:
-				tribes.append(dict(id=tribe, name=tribe, selected=None))
+				tribes.append(dict(id=tribe.id, name=tribe.Name, selected=None))
 		# Load previous registration information
 		History = []
 		if customer != None:
@@ -453,7 +457,7 @@ class Registration(turbogears.controllers.Controller):
 			else:
 				firms.append(dict(id=firm.FirmId, name=firm.Name, selected=None))
 		# Load our titles: we need title.name and title.selected (where title.selected = 'selected' for the patient's title)
-		items=['Ms.', 'Mrs.', 'Mr.', 'Dr.']
+		items=model.dbTitles
 		titles=[]
 		for title in items:
 			if title == Title:
@@ -463,7 +467,7 @@ class Registration(turbogears.controllers.Controller):
 		# Load our genders: similar to titles
 		if Gender == '':
 			Gender = 'U'
-		items=['U','F','M']
+		items=model.dbGender
 		genders=[]
 		for gender in items:
 			if gender == Gender:
@@ -473,21 +477,26 @@ class Registration(turbogears.controllers.Controller):
 		# Load our religions: similar to titles
 		if Religion == '':
 			Religion = 'Unknown'
-		items=['Christian', 'Hindu', 'Muslim', 'Scientology', 'Unknown']
+		items=model.dbReligion
 		religions=[]
 		for religion in items:
 			if religion == Religion:
 				religions.append(dict(id=religion, name=religion, selected='selected'))
 			else:
 				religions.append(dict(id=religion, name=religion, selected=None))
-		# Load our tribes: similar to titles *****************************************************STILL UNFINISHED
-		items=['option1', 'option2', 'option3']
+		# Load our tribes: similar to titles 
+		if not Tribe in ['',None]:
+			Tribe = model.TypeEthnicOrig.get(int(Tribe)).Name
+		else:
+			Tribe = ''
+		items= model.TypeEthnicOrig.select(AND (model.TypeEthnicOrig.q.ClassNrID==model.ClassEthnicOrig.q.id,
+			model.ClassEthnicOrig.q.Name == 'Tribe'),orderBy=[model.TypeEthnicOrig.q.Name])
 		tribes=[]
 		for tribe in items:
-			if tribe == Tribe:
-				tribes.append(dict(id=tribe, name=tribe, selected='selected'))
+			if tribe.Name == Tribe:
+				tribes.append(dict(id=tribe.id, name=tribe.Name, selected='selected'))
 			else:
-				tribes.append(dict(id=tribe, name=tribe, selected=None))
+				tribes.append(dict(id=tribe.id, name=tribe.Name, selected=None))
 		# Load previous registration information
 		History = []
 		History.append('NEW PATIENT')		
@@ -597,13 +606,13 @@ class Registration(turbogears.controllers.Controller):
 			patient.Religion = Religion
 			bday = time.strptime(str(DateBirth),DATE_FORMAT)
 			patient.DateBirth = datetime.datetime(bday.tm_year,bday.tm_mon,bday.tm_mday)
-			# patient.XXXXXXX = Tribe  ******************Need to add this sometime
+			patient.EthnicOrig = int(Tribe)
 		else:
 			bday = time.strptime(str(DateBirth),DATE_FORMAT)
 			bdate = datetime.datetime(bday.tm_year,bday.tm_mon,bday.tm_mday)
 			patient = model.Person(NameFirst=NameFirst,NameLast=NameLast,NameMiddle=NameMiddle,\
 				AddrStr=AddressStreet,AddrCitytownNrID=AddrCitytownNrID,Sex=Gender,Religion=Religion,\
-				DateBirth=bdate)
+				DateBirth=bdate, EthnicOrig=int(Tribe))
 			citytown = model.AddressCityTown.get(AddrCitytownNrID)
 			AddressLabel = '%s\n%s\n%s, %s\n%s\n%s' % (AddressStreet, citytown.Name, citytown.Block, citytown.District, citytown.State, citytown.ZipCode)			
 			PatientName = ('%s %s,%s,%s' % (Title, NameFirst, NameMiddle, NameLast)).replace(',,',',').replace(',', ' ').strip()
