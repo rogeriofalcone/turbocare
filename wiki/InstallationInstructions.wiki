@@ -20,7 +20,10 @@ TurboCare uses the the database schema from the Care2x project (www.care2x.org) 
 
 6. MySQL version 5.0 (5.0.24 tested)
 
+sudo apt-get install python-pysqlite2 python-mysqldb python-imaging  gcc libc6-dev python-dev python-setuptools build-essential mysql-server python-reportlab mysql-admin
+
    - I also recommend getting the administrative packages.
+
 
 7. Also, make sure that gcc libstdc++6-dev and other needed packages listed in the TurboGears documentation are installed.
 
