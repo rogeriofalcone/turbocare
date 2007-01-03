@@ -87,5 +87,18 @@ Shortcuts for Ubuntu
 sudo apt-get install python-pysqlite2 python-mysqldb python-imaging  gcc libc6-dev python-dev python-setuptools build-essential mysql-server python-reportlab mysql-admin subversion
 
 sudo easy_install -Z TurboGears
+sudo easy_install -Z sqlobject
+
+cd ~/
 
 svn checkout http://turbocare.googlecode.com/svn/trunk/ turbocare
+
+mysql -u root 
+   ->create database care2x;
+ctrl-D
+
+cd ~/turbocare
+python mysql_schema.py -d care2x -u root -o schema_updt -f turbocare_schema.data
+python mysql_schema.py -d care2x -u root -o restore -f turbocare_backup.data
+cp dev-sample.cfg dev.cfg
+python start-turbocare.py
