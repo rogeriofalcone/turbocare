@@ -84,6 +84,8 @@ The file "base_care2x_permission.sql" contains the tables and permissions which 
 
 Shortcuts for Ubuntu
 
-sudo apt-get install python-pysqlite2 python-mysqldb python-imaging  gcc libc6-dev python-dev python-setuptools build-essential mysql-server python-reportlab mysql-admin
+sudo apt-get install python-pysqlite2 python-mysqldb python-imaging  gcc libc6-dev python-dev python-setuptools build-essential mysql-server python-reportlab mysql-admin subversion
 
 sudo easy_install -Z TurboGears
+
+svn checkout http://turbocare.googlecode.com/svn/trunk/ turbocare
