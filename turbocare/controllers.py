@@ -38,7 +38,8 @@ class Root(controllers.RootController):
      #catwalk = CatWalk(model,allowedHosts=['127.0.0.1','192.168.11.3','192.168.11.120'])
     catwalk = CatWalk(model_userperm) #Create a user admininstrator CatWalk with the custom User Model.
     catwalk = identity.SecureObject(catwalk,identity.has_permission('admin_catwalk'))  #Securing objects is good. 
-	
+    #tempwalk = CatWalk(model_userperm) #Create a user admininstrator CatWalk with the custom User Model.
+ 	
     billing = controllers_billing.Billing()
     billing = identity.SecureObject(billing,identity.has_permission('bill_view'))
 	
@@ -66,6 +67,8 @@ class Root(controllers.RootController):
     @expose(template="turbocare.templates.welcome")
     def index(self):
         import time
+	if identity.current.anonymous:
+		raise redirect("/login")
         log.debug("Crazy TurboGears Controller Responding For Duty")
         return dict(now=time.ctime(),menuitems=self.UserMenu())
 
@@ -74,7 +77,10 @@ class Root(controllers.RootController):
         if not identity.current.anonymous \
             and identity.was_login_attempted() \
             and not identity.get_identity_errors():
-            raise redirect(forward_url)
+            if forward_url in ['',None,'/login','login']:
+		    raise redirect('/')
+            else:
+		raise redirect(forward_url)
         forward_url=None
         previous_url= cherrypy.request.path
 
@@ -95,7 +101,7 @@ class Root(controllers.RootController):
     @expose()
     def logout(self):
         identity.current.logout()
-        raise redirect("/")
+        raise redirect("/login")
 
     @expose(format='json')
     def LoadMenu(self, **kw):
@@ -110,23 +116,58 @@ class Root(controllers.RootController):
         results = []
         #Display top menu based on permissions of user. 
 	if identity.not_anonymous():
-		results.append(dict(link='/user_reports',name='User Reports'))
+		results.append(dict(link='/user_reports',name='User Reports',sub_menu=[]))
         if identity.has_permission("reg_view"):    
-            results.append(dict(link='/registration',name='Registration'))
+            results.append(dict(link='/registration',name='Registration',sub_menu=[]))
         if identity.has_permission("bill_view"):
-            results.append(dict(link='/billing',name='Billing'))
+            results.append(dict(link='/billing',name='Billing',sub_menu=[]))
         Locations = model.InvLocation.select()
+	LocationStoreGroups = {}
+	LocationDispGroups = {}
         for location in Locations:
 	    name_store = '%s_store' % location.Name.lower().replace(' ','_')
 	    name_disp = '%s_disp' % location.Name.lower().replace(' ','_')
 	    # Create the store link
 	    if getattr(self,name_store,None) != None and identity.has_permission('%s_view' % name_store):
-		    results.append(dict(link='/%s' % name_store, name='%s Inventory' % location.Name))
+		    for group in location.Groups:
+			    if LocationStoreGroups.has_key(group.Name):
+				    LocationStoreGroups[group.Name].append(dict(link='/%s' % name_store, name='%s Inventory' % location.Name,sub_menu=[]))
+			    else:
+				    LocationStoreGroups[group.Name] = [dict(link='/%s' % name_store, name='%s Inventory' % location.Name,sub_menu=[])]
+		    if len(location.Groups) == 0:
+			    if LocationStoreGroups.has_key('Other'):
+				    LocationStoreGroups['Other'].append(dict(link='/%s' % name_store, name='%s Inventory' % location.Name,sub_menu=[]))
+			    else:
+				    LocationStoreGroups['Other'] = [dict(link='/%s' % name_store, name='%s Inventory' % location.Name,sub_menu=[])]
 	    # Create the dispensing location
 	    if location.CanSell:
 		    if getattr(self,name_disp,None) != None and identity.has_permission('%s_view' % name_disp):
-			    results.append(dict(link='/%s' % name_disp, name='%s Dispensing' % location.Name))
-        if identity.in_group("admin"):
-            results.append(dict(link='/inventory',name='Admin Inventory'))
-            results.append(dict(link='/catwalk',name='User admin'))
+			    for group in location.Groups:
+				    if LocationDispGroups.has_key(group.Name):
+					    LocationDispGroups[group.Name].append(dict(link='/%s' % name_store, name='%s Dispensing' % location.Name,sub_menu=[]))
+				    else:
+					    LocationDispGroups[group.Name] = [dict(link='/%s' % name_store, name='%s Dispensing' % location.Name,sub_menu=[])]
+			    if len(location.Groups) == 0:
+				    if LocationDispGroups.has_key('Other'):
+					    LocationDispGroups['Other'].append(dict(link='/%s' % name_store, name='%s Dispensing' % location.Name,sub_menu=[]))
+				    else:
+					    LocationDispGroups['Other'] = [dict(link='/%s' % name_store, name='%s Dispensing' % location.Name,sub_menu=[])]
+        if len(LocationStoreGroups) > 0:
+		SubMenu = []
+		keys = LocationStoreGroups.keys()
+		keys.sort()
+		for key in keys:
+			SubMenu.append(dict(link='',name=key, sub_menu=LocationStoreGroups[key]))
+		results.append(dict(link='', name='Inventory', sub_menu=SubMenu))
+        if len(LocationDispGroups) > 0:
+		SubMenu = []
+		keys = LocationDispGroups.keys()
+		keys.sort()
+		for key in keys:
+			SubMenu.append(dict(link='',name=key, sub_menu=LocationDispGroups[key]))
+		results.append(dict(link='', name='Dispensing', sub_menu=SubMenu))
+        if identity.has_permission("admin_controllers_inventory"):
+            results.append(dict(link='/inventory',name='Admin Inventory',sub_menu=[]))
+        if identity.has_permission("admin_catwalk"):
+            results.append(dict(link='/catwalk',name='User admin',sub_menu=[]))
         return results

@@ -1,25 +1,3 @@
-/*
-	Application wide shortcuts:
-*/
-var shortcuts = {};//keyboard short cut operations
-shortcuts.keypress = function(dom_obj){
-	if ((dom_obj.modifier()['ctrl'] == true) && (dom_obj.key()['string'] == 'c')) {
-		usermenu.renderCustomerIdDialog();
-	}
-}
-shortcuts.keydown = function(dom_obj){
-	if (dom_obj.key()['string']=='KEY_ENTER') {
-		var customerid = getElement("dialog_CustomerID");
-		if ((customerid != null) && (customerid.value != null) && (customerid.value != '')){
-			//Load the items available for the customer
-			usermenu.customeriddialog_remove();
-			var postVars = 'CustomerID='+customerid.value;
-			document.location.href = 'RegistrationPage1?'+postVars;
-		}
-	}
-}
-
-
 //AJAX Post function
 
 //Funky redraw function
@@ -93,20 +71,65 @@ usermenu.toggle_message = function(message){
 	Render the Menu
 */
 usermenu.RenderUserMenu = function(data){
-	var Item = function(link, name, number) {
-		var link = createDOM('A',{'id':'menu_link_'+number, 'href':link, 'style':'padding: 0px 2px 0px 2px;'},'[('+number+') '+name+']');
-		return link;
+	var SubMenu = function(results,parentid,myid,MenuDiv) {
+		var Menu = createDOM('DIV',{'id':myid,'style':'display:none'});
+		// Create link to parent menu
+		Menu.appendChild(createDOM('A',{'href':"javascript:usermenu.ShowMenu('"+parentid+"')", 
+			'style':'padding: 0px 2px 0px 2px;'},'[<<Previous Menu]'));
+		for (var i=0;i<results.length;i++){
+			var subid = '';
+			if (results[i].sub_menu.length > 0) {
+				subid = myid+'SubMenu' + i;
+				// Menu and Sub menu DIVs are not nested, but I attach them to the top level DIV
+				SubMenu(results[i].sub_menu,myid,subid,MenuDiv);
+				Menu.appendChild(createDOM('A',{'href':"javascript:usermenu.ShowMenu('"+subid+"')", 
+					'style':'padding: 0px 2px 0px 2px;'},'['+results[i].name+'>>]'));
+			} else {
+				Menu.appendChild(createDOM('A',{'href':results[i].link,	'style':'padding: 0px 2px 0px 2px;'},
+					'['+results[i].name+']'));
+			}
+		}
+		MenuDiv.appendChild(Menu);
 	}
 	//Reset the message
 	usermenu.toggle_message('');
 	//Remove any existing search box
 	var MyMenu = getElement("UserMenu");
 	replaceChildNodes(MyMenu,null);
+	// Create Menu Bar
+	var Menu = createDOM('DIV',{'id':'MainMenu'});
 	var results = data.results;
-	for (i=0;i<results.length;i++){
-		MyMenu.appendChild(Item(results[i].link,results[i].name,i));
+	for (var i=0;i<results.length;i++){
+		var subid = '';
+		if (results[i].sub_menu.length > 0) {
+			subid = 'MainMenuSubMenu' + i;
+			// Menu and Sub menu DIVs are not nested, but I attach them to the top level DIV
+			SubMenu(results[i].sub_menu,'MainMenu',subid,MyMenu);
+			Menu.appendChild(createDOM('A',{'href':"javascript:usermenu.ShowMenu('"+subid+"')", 
+				'style':'padding: 0px 2px 0px 2px;'},'['+results[i].name+'>>]'));
+		} else {
+			Menu.appendChild(createDOM('A',{'href':results[i].link,	'style':'padding: 0px 2px 0px 2px;'},
+				'['+results[i].name+']'));
+		}
+	}
+	MyMenu.appendChild(Menu);
+}
+/*
+	ShowMenu: Hide the current menu and display the Child or Parent menu
+	currid: The id for the current menu DIV (which we want to hide)
+	nextid: The id for the Child or Parent menu DIV we want to display
+*/
+usermenu.ShowMenu = function(showid) {
+	var divs = getElementsByTagAndClassName('DIV',null,'UserMenu');
+	for (var i=0;i<divs.length;i++) {
+		if (divs[i].id==showid) {
+			divs[i].style.display = '';
+		} else {
+			divs[i].style.display = 'none';
+		}
 	}
 }
+
 
 //Connect on onload for the document to open the document using javascript
 connect(window, 'onload', usermenu.LoadMenu);

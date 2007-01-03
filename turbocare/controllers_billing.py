@@ -526,6 +526,8 @@ class Billing(controllers.RootController):
 		'''	Go through all the receipt items in the receipt and mark the items
 			as paid for.  Create a new payment record (marking the date and 
 			amount when money was exchanged).
+			Double check the items on the receipt and make sure they are marked as paid if no payments are
+			outstanding.
 		'''
 		log.debug('MakeReceiptPayment')
 		try:

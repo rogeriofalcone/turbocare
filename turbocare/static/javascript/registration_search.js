@@ -1,4 +1,15 @@
-//Document wide variables
+function hasParent(el,parent_id) {
+	var node = getElement(el);
+	var ret_val = false;
+	if (node==null) { return false; }
+	while (node.parentNode != null) {
+		if (node.parentNode.id == parent_id){
+			ret_val = true;
+		}
+		node = node.parentNode;
+	}
+	return ret_val;
+}
 var barcode = {};//The barcode object
 //The barcode value
 barcode.CustomerID = ''; //Defined as 20 numeric characters followed by a enter key
@@ -70,6 +81,16 @@ shortcuts.keypress = function(dom_obj){
 		dom_obj.stop();
 	}
 }
+/*
+    33: 'KEY_PAGE_UP',
+    34: 'KEY_PAGE_DOWN',
+    35: 'KEY_END',
+    36: 'KEY_HOME',
+    37: 'KEY_ARROW_LEFT',
+    38: 'KEY_ARROW_UP',
+    39: 'KEY_ARROW_RIGHT',
+    40: 'KEY_ARROW_DOWN',
+*/
 shortcuts.keydown = function(dom_obj){
 	if (dom_obj.key()['string']=='KEY_ENTER') {
 		var el = dom_obj.target();
@@ -84,8 +105,37 @@ shortcuts.keydown = function(dom_obj){
 			var postVars = 'CustomerID='+el.value;
 			document.location.href = 'RegistrationPage1?'+postVars;			
 		}
+	} else if  (dom_obj.key()['string']=='KEY_ARROW_UP') {
+		if (hasParent(dom_obj.target(),'SearchResults')) {
+			dom_obj.stop()
+			reg.NavigateResults(-1);
+		}
+	} else if  (dom_obj.key()['string']=='KEY_ARROW_DOWN') {
+		dom_obj.stop();
+		reg.NavigateResults(1);
+	} else if  (dom_obj.key()['string']=='KEY_PAGE_UP') {
+		if (hasParent(dom_obj.target(),'SearchResults')) {
+			dom_obj.stop()
+			reg.NavigateResults(-10);
+		}
+	} else if  (dom_obj.key()['string']=='KEY_PAGE_DOWN') {
+		if (hasParent(dom_obj.target(),'SearchResults')) {
+			dom_obj.stop()
+			reg.NavigateResults(10);
+		}
+	} else if  (dom_obj.key()['string']=='KEY_HOME') {
+		if (hasParent(dom_obj.target(),'SearchResults')) {
+			dom_obj.stop()
+			reg.NavigateResults('home');
+		}
+	} else if  (dom_obj.key()['string']=='KEY_END') {
+		if (hasParent(dom_obj.target(),'SearchResults')) {
+			dom_obj.stop()
+			reg.NavigateResults('end');
+		}
 	}
 }
+
 
 //AJAX Post function
 function postJSON(url, postVars) {
@@ -231,13 +281,80 @@ reg.Search = function(){
 	them when the page finishes loading.  Otherwise, do nothing.
 */
 reg.OpenOnLoad = function() {
-	getElement('SearchText').focus();
+	if (getElement('SearchText')!=null) {
+		getElement('SearchText').focus();
+	}
 }
 
 /*
-	AJSON Reactions to the above actions
+	NavigateResults: Move up and down the list of results
+	n: The number of records to move: 1, 10, -1, -10, 'home', 'end'
+		if the record is on the first and we need to navigate "up" then we'll go to the bottom of the list
+		if we're at the end, and we need to navigate "down" then we'll go to the top of the list
 */
-
+reg.NavigateResults = function(n){
+	var curResult = getElementsByTagAndClassName('LI','itemSelected','SearchResults');
+	if (curResult.length==0) {
+		var results = getElementsByTagAndClassName('LI',null,'SearchResults');
+		addElementClass(results[0],'itemSelected');
+		results[0].firstChild.focus();
+	} else if (n=='home') {
+		// Clear previous selected item
+		for (var i=0;i<curResult.length;i++) {
+			removeElementClass(curResult[i],'itemSelected');
+		}
+		var results = getElementsByTagAndClassName('LI',null,'SearchResults');
+		addElementClass(results[0],'itemSelected');
+		results[0].firstChild.focus();
+	} else if (n=='end') {
+		// Clear previous selected item
+		for (var i=0;i<curResult.length;i++) {
+			removeElementClass(curResult[i],'itemSelected');
+		}
+		var results = getElementsByTagAndClassName('LI',null,'SearchResults');
+		addElementClass(results[results.length-1],'itemSelected');
+		results[results.length-1].firstChild.focus();
+	} else if (!isNaN(n)) {
+		//Move up/down by 1 or by 10
+		// Clear previous selected item
+		for (var i=0;i<curResult.length;i++) {
+			removeElementClass(curResult[i],'itemSelected');
+		}
+		var RowNum = parseInt(curResult[0].id.slice(4)); //Our current row number (hidden in the id)
+		var results = getElementsByTagAndClassName('LI',null,'SearchResults');
+		if (RowNum+n > results.length-1) { // We're scrolling past the end
+			if (RowNum==results.length-1) { // If we're at the end, go to the start
+				addElementClass(results[0],'itemSelected');
+				results[0].firstChild.focus();
+			} else { // If we're not at the end, then go to the end
+				addElementClass(results[results.length-1],'itemSelected');
+				results[results.length-1].firstChild.focus();			
+			}
+		} else if (RowNum+n < 0) {// We're scrolling past the start
+			if (RowNum==0) { // If we're at the start, go to the end
+				addElementClass(results[results.length-1],'itemSelected');
+				results[results.length-1].firstChild.focus();			
+			} else { // If we're not at the start, go to the start
+				addElementClass(results[0],'itemSelected');
+				results[0].firstChild.focus();
+			}
+		} else {// Scroll the results
+			var newRow = RowNum+parseInt(n);
+			addElementClass('row_'+newRow,'itemSelected');
+			getElement('row_'+newRow).firstChild.focus();
+		}
+	}
+}
+/*
+	SelectResult: Search for the result with the 'itemSelected' class in the "SearchResults" DIV
+		then load that item
+*/
+reg.SelectResult = function() {
+	var curResult = getElementsByTagAndClassName('LI','itemSelected','SearchResults');
+	if (curResult.length>0) {
+		 location = getElementsByTagAndClassName('LI','itemSelected',curResult[0])[0].href;
+	}
+}
 /* 	Call back from Ajax call initiated by reg.OpenSearch()
 	data comes from "controllers_reg.py"->"LoadPatient"
 	
@@ -245,13 +362,13 @@ reg.OpenOnLoad = function() {
 */
 reg.RenderSearchResults = function(data){
 	var HREF = function(ID){
-		var elem = createDOM('A',{'href':'RegistrationPage1?PatientID='+ID},'Select');
+		var elem = createDOM('A',{'style':'padding-right:10px','href':'RegistrationPage1?PatientID='+ID},'Select');
 		return elem;
 	}
-	var AddResultRow = function(result){
+	var AddResultRow = function(result,row){
 		var Display = result.text;
 		var ID = result.id;
-		var row = createDOM('LI',null);
+		var row = createDOM('LI',{'id':'row_'+row});
 		replaceChildNodes(row, HREF(ID),Display);
 		return row;
 	}
@@ -268,13 +385,12 @@ reg.RenderSearchResults = function(data){
 	Items = 0;
 	replaceChildNodes(listing,RecordCount+' record(s) found');
 	for (i=0; i<results.length; i++){
-		listing.appendChild(AddResultRow(results[i]));
+		listing.appendChild(AddResultRow(results[i],i));
 	}
 	//Change pending items title
 	var title = getElement('PendingItemsTitle');
 	replaceChildNodes(title,Items + " Pending Items");
 }
-
 //Configure our events using the Mochikit signal library
 /* DEFINE OUR EVENT FUNCTIONS */
 connect(document,'onkeydown', barcode.keydown);
@@ -290,7 +406,6 @@ connect(window, 'onload', function(){
 	});
 //Connect on onload for the document to open the document using javascript
 connect(window, 'onload', reg.OpenOnLoad);
-
 /*
 	Small dialog box, for entering the customer id
 */

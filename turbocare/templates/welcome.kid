@@ -16,8 +16,19 @@
     <h2>Things to do:</h2>
     <ul class="links">
 	<li py:if="tg.identity.anonymous"><a href="/login">login</a></li>
-	<li py:for="item in menuitems"><a href="${item['link']}">${item['name']}</a></li>
-	<li py:if="not tg.identity.anonymous"><a href="/logout">logout</a></li>
+	<DIV py:for="item in menuitems">
+		<a py:if="item['link']!=''" href="${item['link']}">${item['name']}</a>
+		<DIV py:if="item['link']==''">${item['name']}</DIV>
+		<DIV py:for="sub1item in item['sub_menu']" style="position:relative; left:20px">
+			<a py:if="sub1item['link']!=''" href="${sub1item['link']}">${sub1item['name']}</a>
+			<DIV py:if="sub1item['link']==''">${sub1item['name']}</DIV>
+			<DIV py:for="sub2item in sub1item['sub_menu']" style="position:relative; left:20px">
+				<a py:if="sub2item['link']!=''" href="${sub2item['link']}">${sub2item['name']}</a>
+				<DIV py:if="sub2item['link']==''">${sub2item['name']}</DIV>
+			</DIV>
+		</DIV>
+	</DIV>
+	<DIV py:if="not tg.identity.anonymous"><a href="/logout">logout</a></DIV>
     </ul>
   </div>
 

@@ -5,7 +5,6 @@
 <head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
     <LINK HREF="/static/css/table.css" TYPE="text/css" REL="stylesheet"/>
-    <SCRIPT SRC="/static/javascript/registration_search.js" TYPE="text/javascript"></SCRIPT>
     <title>${LocationName} Store</title>
 </head>
 <body>

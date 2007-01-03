@@ -51,6 +51,17 @@ input { font-size: 85%;
     cursor: pointer;
 }
 /*
+	For registration search results
+*/
+.itemSelected {
+	color: red;
+	background-color: yellow;
+}
+/* I normally don't use this next class */
+.itemNotSelected {
+	background-color: white;
+}
+/*
 	Report formatting classes
 */
 .leftjust {
