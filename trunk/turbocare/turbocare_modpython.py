@@ -1,11 +1,10 @@
 import pkg_resources
 pkg_resources.require("TurboGears")
-
 import cherrypy
 import turbogears
 
 turbogears.update_config(modulename="turbocare.config")
-turbogears.update_config(configfile="/home/devv/svn/turbocare/prod.cfg")
+turbogears.update_config(configfile="/home/david/turbocare/prod.cfg")
 
 from turbocare.controllers import Root
 
