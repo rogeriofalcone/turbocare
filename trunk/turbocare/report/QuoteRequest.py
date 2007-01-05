@@ -40,8 +40,8 @@ def FmtNum(v, minwidth=0, trailing=2):
 # image = Image.open('/home/wesley/devel/care2x/care2x/report/logo.png')
 # image.load()
 
-class PurchaseOrderPrintOut:
-	'''	Produce the specified PurchaseOrder (using the id)
+class QuoteRequestPrintOut:
+	'''	Produce the specified QuoteRequest (using the id)
 	'''
 	PAGE_HEIGHT=defaultPageSize[1]
 	PAGE_WIDTH=defaultPageSize[0]
@@ -50,22 +50,21 @@ class PurchaseOrderPrintOut:
 	PAGE_SIZE = 'A4'
 	StaticDir = '/home/wesley/svn/google/turbocare/turbocare/static/reports/' # Location for static files to be stored
 	StaticURL = '/static/reports/'
-	PO = None
 	LogoFile = '/home/wesley/devel/care2x/care2x/report/logo.png'
 	
-	def __init__(self, PO, Paper='A4', PreparedBy='', CheckedBy='', ApprovedBy='', ToAddress='',
-	FromAddress='', DeliveryInstructions='', PackingAndForwarding='', **kw):
+	def __init__(self, QR, Vendor, Paper='A4', PreparedBy='', CheckedBy='', ApprovedBy='', ToAddress='',
+	FromAddress='', Notes='', **kw):
 		'''	Initialize the report for printing
 		'''
-		self.PO = PO
+		self.QR = QR
+		self.Vendor = Vendor
 		self.PAGE_SIZE = Paper
 		self.PreparedBy=PreparedBy
 		self.CheckedBy=CheckedBy
 		self.ApprovedBy=ApprovedBy
 		self.ToAddress=ToAddress
 		self.FromAddress=FromAddress
-		self.DeliveryInstructions=DeliveryInstructions
-		self.PackingAndForwarding=PackingAndForwarding
+		self.Notes = Notes
 		self.RegularStyle = self.styles1['Normal']
 		self.RegularStyle.fontName = 'Times-Roman'
 		self.RegularStyle.leftIndent = -0.5*inch
@@ -80,9 +79,9 @@ class PurchaseOrderPrintOut:
 		'''	Create a to address box on the supplied canvas '''
 		# Get our data
 		if self.ToAddress=='':
-			Address = ["To:",str(self.PO.Vendor.Name)]
-			Address.append('Attn: %s' % str(self.PO.Vendor.ContactName))
-			Address += self.PO.Vendor.AddressLabel.splitlines()
+			Address = ["To:",str(self.Vendor.Name)]
+			Address.append('Attn: %s' % str(self.Vendor.ContactName))
+			Address += self.Vendor.AddressLabel.splitlines()
 		else:
 			Address = self.ToAddress.splitlines()
 			Address = ["To:"]+Address
@@ -96,7 +95,7 @@ class PurchaseOrderPrintOut:
 			Address = ["From:","CIHSR","4th Mile, Dimapur, NL", "123321", "Ph: 123123123"]
 		else:
 			Address = self.FromAddress.splitlines()
-			Address = ["From"]+Address
+			Address = ["From:"]+Address
 		for line, i in zip(Address, range(0,len(Address))):
 			canvas.drawString(2.5*inch, self.PAGE_HEIGHT-1*inch-9*i,line)
 	
@@ -130,13 +129,13 @@ class PurchaseOrderPrintOut:
 		for line, i in zip(Text, range(0,len(Text))):
 			canvas.drawString(3.5*inch, 1.5*inch-9*i,line)
 	
-	def PurchaseOrderNoBox(self, canvas):
-		'''	Create a from address box on the supplied canvas '''
+	def QuoteRequestNoBox(self, canvas):
+		'''	Create a No. box on the supplied canvas '''
 		# Get our data
-		if self.PO.POSentOnDate != None:
-			Text = ["Purchase No.: %#08d" % self.PO.id, "Purchase Date: %s" % self.PO.POSentOnDate.strftime('%d/%m/%Y')]
+		if self.QR.RequestDate != None:
+			Text = ["Quote Request No.: %#08d" % self.QR.id, "Request Date: %s" % self.QR.RequestDate.strftime('%d/%m/%Y')]
 		else:
-			Text = ["Purchase No.: %#08d" % self.PO.id, "Purchase Date: Unknown"]
+			Text = ["Quote Request No.: %#08d" % self.QR.id, "Request Date: Unknown"]
 		for line, i in zip(Text, range(0,len(Text))):
 			canvas.drawRightString(self.PAGE_WIDTH-1*inch, self.PAGE_HEIGHT-1*inch-9*i,line)
 
@@ -149,18 +148,17 @@ class PurchaseOrderPrintOut:
 		canvas.saveState()
 		# Print the title
 		canvas.setFont('Courier',14)
-		canvas.drawCentredString(self.PAGE_WIDTH/2.0, self.PAGE_HEIGHT-2*inch, "Purchase Order")
+		canvas.drawCentredString(self.PAGE_WIDTH/2.0, self.PAGE_HEIGHT-2*inch, "Quote Request")
 		# Add the letter head/logo
 		# self.LogoBox(canvas)
 		canvas.setFont('Courier',9)
 		# Add the Address label
 		self.ToAddressBox(canvas)
 		self.FromAddressBox(canvas)
-		self.PurchaseOrderNoBox(canvas)
+		self.QuoteRequestNoBox(canvas)
 		self.PreparedByBox(canvas)
 		self.CheckedByBox(canvas)
 		self.ApprovedByBox(canvas)
-		# Add the date
 		canvas.drawString(inch, 0.75 * inch, "Page 1")
 		canvas.restoreState()
 
@@ -168,18 +166,17 @@ class PurchaseOrderPrintOut:
 		canvas.saveState()
 		# Print the title
 		canvas.setFont('Courier',14)
-		canvas.drawCentredString(self.PAGE_WIDTH/2.0, self.PAGE_HEIGHT-1*inch, "Purchase Order")
+		canvas.drawCentredString(self.PAGE_WIDTH/2.0, self.PAGE_HEIGHT-2*inch, "Quote Request")
 		# Add the letter head/logo
 		# self.LogoBox(canvas)
 		canvas.setFont('Courier',9)
 		# Add the Address label
 		self.ToAddressBox(canvas)
 		self.FromAddressBox(canvas)
-		self.PurchaseOrderNoBox(canvas)
+		self.QuoteRequestNoBox(canvas)
 		self.PreparedByBox(canvas)
 		self.CheckedByBox(canvas)
 		self.ApprovedByBox(canvas)
-		# Add the date
 		canvas.drawString(inch, 0.75 * inch, "Page 1")
 		canvas.restoreState()
 		
@@ -190,53 +187,46 @@ class PurchaseOrderPrintOut:
 		GenericStyle = [('BACKGROUND',(0,0),(-1,0),colors.lightgrey), # First line gets a gray background
 					('ALIGN',(0,0),(-1,0),'CENTER'), # Center the first row (header)
 					('LINEABOVE', (0,1), (-1,1), 0.25, colors.black),
-					('LINEABOVE', (0,-1), (-1,-1), 0.25, colors.black),
+					# ('LINEABOVE', (0,-1), (-1,-1), 0.25, colors.black), # Line above the totals line
 					('LINEBEFORE', (0,0), (-1,-1), 0.25, colors.black),
 					('BOX', (0,0), (-1,-1), 0.25, colors.black), # Make a box around the entire table
 					('ALIGN',(0,1),(0,-1),'CENTER'),
 					('ALIGN',(1,1),(1,-1),'LEFT'),
 					('ALIGN',(2,1),(2,-1),'RIGHT'),
-					('ALIGN',(3,1),(3,-1),'RIGHT'),
-					('ALIGN',(4,1),(4,-1),'RIGHT'),
-					('ALIGN',(5,1),(5,-1),'LEFT'),
+					('ALIGN',(3,1),(3,-1),'LEFT'),
 					('FONT', (0,0),(-1,-1), 'Courier', 10)]
 		# Produce our data
-		Headers = ['SL No.','Discription','Qty','Unit Price','Total','Notes']
+		Headers = ['SL No.','Discription','Qty','Notes']
 		CUR_WIDTH = self.PAGE_WIDTH-1.5*inch
-		Widths = [0.5*inch,CUR_WIDTH*0.25,CUR_WIDTH*0.1,CUR_WIDTH*0.15,CUR_WIDTH*0.25,CUR_WIDTH*0.25]
+		Widths = [0.5*inch,CUR_WIDTH*0.4,CUR_WIDTH*0.1,CUR_WIDTH*0.5]
 		Data = []
 		Data.append(Headers)
 		fmt = '%0.2f'
 		Total = 0.0
-		for item, sl_no in zip(self.PO.Items,range(len(self.PO.Items))):
-			Data.append([sl_no, item.GetQuoteItemName(), '%0.0f' % item.QuantityRequested, FmtNum(item.QuotePrice), \
-				FmtNum(item.QuantityRequested*item.QuotePrice), item.Notes])
-			Total += item.QuantityRequested*item.QuotePrice
-		Data.append(['','Total','','',FmtNum(Total),''])
+		for item, sl_no in zip(self.QR.RequestItems,range(len(self.QR.RequestItems))):
+			Data.append([sl_no, item.CatalogItem.Name, '%0.0f' % item.Qty, item.Notes])
+#			Total += item.QuantityRequested*item.QuotePrice
+#		Data.append(['','Total','','',FmtNum(Total),''])
 		return Table(Data,style=GenericStyle,repeatRows=1,colWidths=Widths, rowHeights=None)
 
-	def MakePurchaseOrder(self):
-		'''	Produce the PurchaseOrder Print out
+	def MakePrintOut(self):
+		'''	Produce the Print out
 		'''
 		#Make the document
 		doc = SimpleDocTemplate(self.StaticDir+self.Filename)
 		#p = Paragraph(table, styles['Normal'])
 		Body = [Spacer(1,1*inch)]
 		Body.append(self.GenerateTable())
-		if self.DeliveryInstructions != '':
+		if self.Notes != '':
 			Body.append(Spacer(1,0.2*inch))
-			Body.append(Paragraph("Delivery Instructions:",self.TitleStyle))
-			Body.append(Paragraph(self.DeliveryInstructions,self.RegularStyle))
-		if self.PackingAndForwarding != '':
-			Body.append(Spacer(1,0.2*inch))
-			Body.append(Paragraph("Packing, Forwarding & Notes:",self.TitleStyle))
-			Body.append(Paragraph(self.PackingAndForwarding,self.RegularStyle))
+			Body.append(Paragraph("Notes:",self.TitleStyle))
+			Body.append(Paragraph(self.Notes,self.RegularStyle))
 		doc.build(Body, onFirstPage=self.DocFirstPage, onLaterPages=self.DocOtherPage)
 		
 	def P(self, Filename='PO.pdf'):
 		''' Print to PDF '''
-		self.Filename = 'purchase_order_%d.pdf' % self.PO.id
-		self.MakePurchaseOrder()
+		self.Filename = 'quote_request_%d_%d.pdf' % (self.QR.id,self.Vendor.id)
+		self.MakePrintOut()
 		return self.Filename
 		
 	def ReportGeneric(self):

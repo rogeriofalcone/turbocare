@@ -92,6 +92,7 @@
 						<input name="Operation" id="btnCancel" type="button" value="Cancel" ></input>
 						<input py:if="not QuoteRequestID in ['','None']" name="Operation" id="btnAddNew" type="submit" value="Copy to New" ></input>
 						<input py:if="not QuoteRequestID in ['','None']" name="Operation" id="btnDelete" type="submit" value="Delete" ></input>
+						<input py:if="not QuoteRequestID in ['','None']" name="Operation" id="btnPrint" type="submit" value="Print" ></input>
 					</div>
 				</form>
 			</div>

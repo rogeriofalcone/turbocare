@@ -14,6 +14,8 @@ import controllers_store
 import controllers_reports
 import controllers_UDReport	
 import controllers_saved_reports
+import controllers_configuration
+import controllers_user_manager
 from turbocare import json
 
 log = logging.getLogger("turbocare.controllers")
@@ -39,12 +41,12 @@ class Root(controllers.RootController):
     catwalk = CatWalk(model_userperm) #Create a user admininstrator CatWalk with the custom User Model.
     catwalk = identity.SecureObject(catwalk,identity.has_permission('admin_catwalk'))  #Securing objects is good. 
     #tempwalk = CatWalk(model_userperm) #Create a user admininstrator CatWalk with the custom User Model.
- 	
+    user_manager = controllers_user_manager.UserManager()
     billing = controllers_billing.Billing()
     billing = identity.SecureObject(billing,identity.has_permission('bill_view'))
 	
     saved = controllers_saved_reports.SavedReport()
-    
+    configuration = identity.SecureObject(controllers_configuration.Configuration(),identity.has_permission('admin_controllers_configuration'))
     
     inventory = controllers_inventory.Inventory()
     inventory = identity.SecureObject(inventory,identity.has_permission('admin_controllers_inventory'))
@@ -170,4 +172,6 @@ class Root(controllers.RootController):
             results.append(dict(link='/inventory',name='Admin Inventory',sub_menu=[]))
         if identity.has_permission("admin_catwalk"):
             results.append(dict(link='/catwalk',name='User admin',sub_menu=[]))
+        if identity.has_permission("admin_controllers_configuration"):
+            results.append(dict(link='/configuration',name='Configuration Admin',sub_menu=[]))
         return results

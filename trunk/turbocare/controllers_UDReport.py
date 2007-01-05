@@ -915,10 +915,10 @@ class UserDefinedReport(controllers.RootController):
 		# self.iteration = 0
 		QD = simplejson.loads(Query)
 		# For Debugging purposes:
-		f = open('data.py','w')
-		p = pprint.PrettyPrinter(stream=f)
-		p.pprint(QD)
-		f.close()
+		#f = open('data.py','w')
+		#p = pprint.PrettyPrinter(stream=f)
+		#p.pprint(QD)
+		#f.close()
 		if str(Query) in ['{"Tables":[]}', "{'Tables':[]}"]:
 			return dict(Data=None, Dfn=QD)
 		# End of debugging file

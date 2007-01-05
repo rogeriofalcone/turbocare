@@ -13,6 +13,7 @@ import datetime, time
 from datetime import datetime, timedelta
 from model import DATE_FORMAT
 from printer_inventory import *
+from report import PurchaseOrder, QuoteRequest
 import utils
 
 log = logging.getLogger("turbocare.controllers")
@@ -676,13 +677,44 @@ class Store(turbogears.controllers.Controller):
 			# Create a goods received record and then redirect to the Goods received editing screen
 			GR = model.InvGoodsReceived(PurchaseOrderID=PurchaseOrderID,DateReceived=model.cur_date_time())
 			raise cherrypy.HTTPRedirect('GoodsReceivedEditor?GoodsReceivedID=%d' % GR.id)
+		elif Operation == 'Print' and PurchaseOrderID!=None:
+			# Redirect the PO to the printing page
+			raise cherrypy.HTTPRedirect('PurchaseOrdersEditorPrint?PurchaseOrderID=%d' % PurchaseOrderID)
 		# Load the PurchaseOrder
 		if PurchaseOrderID != None:
 			raise cherrypy.HTTPRedirect('PurchaseOrdersEditor?PurchaseOrderID=%d' % PurchaseOrderID)
 		else:
 			raise cherrypy.HTTPRedirect('PurchaseOrdersEditor')
 			
-
+	@expose(html='turbocare.templates.store_purchaseorderprint')
+	@validate(validators={'PurchaseOrderID':validators.Int()})
+	@identity.require(identity.has_permission("stores_po_view"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
+	def PurchaseOrdersEditorPrint(self, PurchaseOrderID, Operation=None, PreparedBy='', CheckedBy='',
+	ApprovedBy='', ToAddress='', FromAddress='', DeliveryInstructions='', PackingAndForwarding='', **kw):
+		'''	Makes a printable web page for the PO.  It can be copy and pasted into
+			a word processor document for further modifications.
+		'''
+		if Operation=='Print':
+			PO = model.InvPurchaseOrder.get(PurchaseOrderID)
+			report = PurchaseOrder.PurchaseOrderPrintOut(PO=PO, PackingAndForwarding=PackingAndForwarding,
+				PreparedBy=PreparedBy,CheckedBy=CheckedBy, ApprovedBy=ApprovedBy,
+				ToAddress=ToAddress,FromAddress=FromAddress,DeliveryInstructions=DeliveryInstructions)
+			filename = report.P()
+			raise cherrypy.HTTPRedirect('/static/reports/%s' % filename)
+		else:
+			PO = model.InvPurchaseOrder.get(PurchaseOrderID)
+			PackingAndForwarding = PO.Notes
+			PreparedBy = model.cur_user_name()
+			CheckedBy = "Unknown Person"
+			ApprovedBy = "Unknown Person"
+			ToAddress = PO.Vendor.Name + '\nAttn: ' + PO.Vendor.ContactName + '\n' + PO.Vendor.AddressLabel
+			FromAddress = "CIHSR\n4th Mile Road, Dimapur, NL\n11122333\nPH: 111222333444"
+			DeliveryInstructions = PO.Vendor.DeliveryInstructions
+		return dict(PurchaseOrderID=PurchaseOrderID,PackingAndForwarding=PackingAndForwarding,
+		PreparedBy=PreparedBy,CheckedBy=CheckedBy,ApprovedBy=ApprovedBy,ToAddress=ToAddress,
+		FromAddress=FromAddress,DeliveryInstructions=DeliveryInstructions)
+		
 	@expose(format='json')
 	@identity.require(identity.has_permission("stores_po_edit"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
@@ -1173,6 +1205,74 @@ class Store(turbogears.controllers.Controller):
 		return dict(currentQRs=currentQRs, pastQRs=pastQRs, latestQs=latestQs, Name=Name, RequestDate=\
 			RequestDate, Notes=Notes, vendors=vendors, items=items, QuoteRequestID=QuoteRequestID)
 
+	@expose(html='turbocare.templates.store_quoterequestprint')
+	@validate(validators={'QuoteRequestID':validators.Int()})
+	@identity.require(identity.has_permission("stores_quoterequest_edit"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")		
+	def QuoteRequestsEditorPrint(self, QuoteRequestID, Operation=None, PreparedBy='', CheckedBy='',
+	ApprovedBy='', FromAddress='', VendorAddresses=[], VendorIDs=[], VendorNotes=[],VendorNames=[], **kw):
+		'''	Print a Quote request
+		'''
+		if Operation=='Print':
+			reports = []
+			NewVendorIDs = []
+			NewVendorNames = []
+			NewVendorNotes = []
+			NewVendorAddresses = []
+			QR = model.InvQuoteRequest.get(QuoteRequestID)
+			if isinstance(VendorIDs,basestring): # only a single entry exists
+				Vendor = model.InvVendor.get(int(VendorIDs))
+				report = QuoteRequest.QuoteRequestPrintOut(QR=QR, Vendor=Vendor, PreparedBy=PreparedBy,
+					CheckedBy=CheckedBy, ApprovedBy=ApprovedBy,	ToAddress=VendorAddresses,
+					FromAddress=FromAddress, Notes=VendorNotes)
+				filename = report.P()
+				# NEED to change this technique to something a little more secure
+				reports.append(dict(link='/static/reports/%s' % filename,name=Vendor.Name))
+				# Re-adding the names, ids, and addresses because they don't propogate properly
+				NewVendorIDs.append(VendorIDs)
+				NewVendorNames.append(Vendor.Name)
+				NewVendorNotes.append(VendorNotes)
+				NewVendorAddresses.append(VendorAddresses)
+			else:
+				for vendorid, ToAddress, Notes  in zip(VendorIDs, VendorAddresses, VendorNotes):
+					Vendor = model.InvVendor.get(int(vendorid))
+					report = QuoteRequest.QuoteRequestPrintOut(QR=QR, Vendor=Vendor, PreparedBy=PreparedBy,
+						CheckedBy=CheckedBy, ApprovedBy=ApprovedBy,	ToAddress=ToAddress,
+						FromAddress=FromAddress, Notes=Notes)
+					filename = report.P()
+					# NEED to change this technique to something a little more secure
+					reports.append(dict(link='/static/reports/%s' % filename,name=Vendor.Name))
+					# Re-adding the names, ids, and addresses because they don't propogate properly
+					NewVendorIDs.append(vendorid)
+					NewVendorNames.append(Vendor.Name)
+					NewVendorNotes.append(Notes)
+					NewVendorAddresses.append(ToAddress)
+			VendorIDs = NewVendorIDs
+			VendorNames = NewVendorNames
+			VendorNotes = NewVendorNotes
+			VendorAddresses = NewVendorAddresses
+		else:
+			QR = model.InvQuoteRequest.get(QuoteRequestID)
+			Notes = QR.Notes
+			PreparedBy = model.cur_user_name()
+			CheckedBy = "Unknown Person"
+			ApprovedBy = "Unknown Person"
+			VendorAddresses = []
+			VendorIDs = []
+			VendorNotes = []
+			VendorNames = []
+			for vendor in QR.Vendors:
+				VendorAddresses.append(vendor.Name + '\nAttn: ' + vendor.ContactName + '\n' + vendor.AddressLabel)
+				VendorIDs.append(vendor.id)
+				VendorNames.append(vendor.Name)
+				VendorNotes.append(Notes)
+			FromAddress = "CIHSR\n4th Mile Road, Dimapur, NL\n11122333\nPH: 111222333444"
+			reports = []
+		return dict(QuoteRequestID=QuoteRequestID,PreparedBy=PreparedBy,CheckedBy=CheckedBy,
+		ApprovedBy=ApprovedBy,VendorAddresses=VendorAddresses,FromAddress=FromAddress,
+		VendorNotes=VendorNotes,VendorIDs=VendorIDs, VendorNames=VendorNames,
+		reports=reports)
+
 	@expose(format='json')
 	@validate(validators={'QuickSearchText':validators.String()})
 	@identity.require(identity.has_permission("stores_quoterequest_view"))
@@ -1400,6 +1500,8 @@ class Store(turbogears.controllers.Controller):
 		elif Operation == 'Un-Delete':
 			QR.Status = ''
 			turbogears.flash('Record un-deleted.')
+		elif Operation == 'Print' and QuoteRequestID!=None:
+			raise cherrypy.HTTPRedirect('QuoteRequestsEditorPrint?QuoteRequestID=%d' % QuoteRequestID)
 		# Load the QuoteRequest
 		if QuoteRequestID != None:
 			raise cherrypy.HTTPRedirect('QuoteRequestsEditor?QuoteRequestID=%d' % QuoteRequestID)
@@ -1759,6 +1861,7 @@ class Store(turbogears.controllers.Controller):
 			EMail1 = ''
 			EMail2 = ''
 			AddressLabel = ''
+			DeliveryInstructions = ''
 			OrderDays = ''
 			Status='' # used for showing/hiding the un-delete button
 			groups = []
@@ -1776,6 +1879,7 @@ class Store(turbogears.controllers.Controller):
 			EMail1 = Vendor.EMail1
 			EMail2 = Vendor.EMail2
 			AddressLabel = Vendor.AddressLabel
+			DeliveryInstructions = Vendor.DeliveryInstructions
 			OrderDays = Vendor.OrderDays
 			Status= Vendor.Status # used for showing/hiding the un-delete button
 			# Get catalog groups
@@ -1803,7 +1907,7 @@ class Store(turbogears.controllers.Controller):
 		return dict(latestPOs=latestPOs, latestQRs=latestQRs, latestQs=latestQs,Name=Name, VendorID=VendorID, \
 			Description=Description, ContactName=ContactName, Phone1=Phone1, Phone2=Phone2, Fax=Fax, \
 			EMail1=EMail1, EMail2=EMail2, AddressLabel=AddressLabel, OrderDays=OrderDays, Status=Status,\
-			groups=groups, CityID=CityID, CityName=CityName)
+			groups=groups, CityID=CityID, CityName=CityName, DeliveryInstructions=DeliveryInstructions)
 
 	@expose(format='json')
 	@validate(validators={'QuickSearchText':validators.String()})
@@ -1856,12 +1960,12 @@ class Store(turbogears.controllers.Controller):
 	@validate(validators={'VendorID':validators.Int(),'CityID':validators.Int(),'Name':validators.String(),\
 	'Description':validators.String(),'ContactName':validators.String(),'Phone1':validators.String(),'Phone2':validators.String(),\
 	'Fax':validators.String(),'EMail1':validators.String(),'EMail2':validators.String(),'AddressLabel':validators.String(),\
-	'OrderDays':validators.Number(),'Operation':validators.String()})
+	'OrderDays':validators.Number(),'Operation':validators.String(),'DeliveryInstructions':validators.String()})
 	@identity.require(identity.has_permission("stores_vendor_edit"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")				
 	def VendorsSave(self, VendorID=None, CityID=None, Name='', Description='',ContactName='',Phone1='',\
 		Phone2='',Fax='',EMail1='',EMail2='',AddressLabel='',OrderDays=None, Operation='', Groups=[], \
-		GroupsCounter=[], **kw):
+		GroupsCounter=[], DeliveryInstructions=None, **kw):
 		'''	Delete or update (modify) an existing Vendor
 		'''
 		log.debug('VendorsSave')
@@ -1878,6 +1982,7 @@ class Store(turbogears.controllers.Controller):
 			Vendor.EMail1 =str(EMail1)
 			Vendor.EMail2 = str(EMail2)
 			Vendor.AddressLabel = str(AddressLabel)
+			Vendor.DeliveryInstructions = str(DeliveryInstructions)
 			Vendor.OrderDays = OrderDays
 			Vendor.CityID = CityID
 			# Update Groups information
@@ -1901,7 +2006,7 @@ class Store(turbogears.controllers.Controller):
 		elif Operation == "Save" and VendorID==None: # Create a new record
 			Vendor = model.InvVendor(Name=Name,Description=Description,ContactName=ContactName,Phone1=Phone1,\
 				Phone2=Phone2,Fax=Fax,EMail1=EMail1,EMail2=EMail2,AddressLabel=AddressLabel,\
-				OrderDays=OrderDays,CityID=CityID)
+				OrderDays=OrderDays,CityID=CityID,DeliveryInstructions=DeliveryInstructions)
 			if len(GroupsCounter) > 1:
 				Groups = [int(x) for x in Groups]
 			elif len(GroupsCounter) == 1:
@@ -2876,8 +2981,7 @@ class Store(turbogears.controllers.Controller):
 		log.debug('StockTransfersSave')
 		# Get our operation
 		log.debug('....Operation: %s' % Operation)
-		log.debug('....Variables: StockTransferID: %r, FromLocationID: %r, StockItemID: %r, FromStockLocationID: %r\
- ToStockLocationID: %r, StockTransferRequestItemID: %r, ToLocationID: %r' % (StockTransferID, \
+		log.debug('....Variables: StockTransferID: %r, FromLocationID: %r, StockItemID: %r, FromStockLocationID: %r ToStockLocationID: %r, StockTransferRequestItemID: %r, ToLocationID: %r' % (StockTransferID, \
 			FromLocationID, StockItemID, FromStockLocationID, ToStockLocationID, StockTransferRequestItemID, \
 			ToLocationID))
 		# Perform some validation on the date fields

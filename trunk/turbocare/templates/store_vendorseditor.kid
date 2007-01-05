@@ -53,6 +53,11 @@
 							</div>
 						</div>
 						<div class="row">
+							<div class="label">Delivery Instructions</div>
+							<div><TEXTAREA name="DeliveryInstructions" rows="4" cols="40">${DeliveryInstructions}</TEXTAREA>
+							</div>
+						</div>
+						<div class="row">
 							<div style="width:200px" class="label">Contact Name</div>
 							<div >
 								<INPUT id="ContactName" name="ContactName" type="text" value="${ContactName}" size="30"></INPUT>

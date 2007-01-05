@@ -774,6 +774,7 @@ class InvVendor(SQLObject):
 
 	Name = StringCol(length=50)
 	Description = StringCol(length=200,default=None)
+	DeliveryInstructions = StringCol(length=255,default=None)
 	OrderDays = FloatCol(default=7.0)#The time from when the purchase order is sent to when the last goods received is entered (normally an average)
 	Phone1 = StringCol(length=20,default=None)
 	Phone2 = StringCol(length=20,default=None)
