@@ -116,6 +116,7 @@
 						<input name="Operation" id="btnSave" type="submit" value="Save" ></input>
 						<input name="Operation" id="btnCancel" type="button" value="Cancel" ></input>
 						<input name="Operation" id="btnDelete" type="submit" value="Delete" ></input>
+						<input name="Operation" id="btnPrint" type="submit" value="Print" ></input>
 					</div>
 				</form>
 				<div py:if="PurchaseOrderID == None">

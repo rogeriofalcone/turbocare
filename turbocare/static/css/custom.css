@@ -124,6 +124,10 @@ INPUT { font-size: 85%;
 			background-color: #D7E5F2;
 			border: 1px solid gray;
 			}
+BUTTON { font-size: 85%;
+			background-color: #D7E5F2;
+			border: 1px solid gray;
+			}
 /* FROM TURBO GEARS */
 		#userMenu
         {

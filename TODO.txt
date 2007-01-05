@@ -1,34 +1,44 @@
 TODO list
 
-- Security model
-- Security functions
 - Add column "CustomerID" (customer_id) to the inv_stock_location table so that records can be directly linked to a customer without a receipt
+- Clean out debug prints
 
 1. Registration
 - Shortcut keys to navigate the screens
 
 2. Billing
-- Refunds
-- Modify interface to show
-	Customer Pays: Rs. 203
-	Hospital Pays: Rs. 0
-- Payment box:
-  - For new receipts, it adds up Previous balance and Current Receipt correctly but for old receipt, Previous balance includes the current receipt but it is still totalling it together.
+- Some cleanups to make it look prettier (History list)
 
 3. Dispensing
+- Make it look prettier
 
-4. Inventory
-- Stock transfers
-- When Stock Transfer Requests are saved, check the completion status and update it automatically
+4. Stores (Inventory)
+- Stock Monitor
 
 5. Reports
 -  Purchase Orders
+	- Multi-page reports
 -  Quote Requests
--  Generic data reports
--  Inventory status report
--  Consumption report
+	- Multi-page reports
+	
+6. User Manager
+- Replace Catwalk with a custom screen
+
+7. TurboGears Configuration
+- Address editor
+- Tribes editor
+- Wards, rooms, and beds editor
+- Doctors list editor
+- Insurance providers editor
+
+8. Patient manager
+- Discharge a patient
+- Move Inpatients (different wards, rooms and beds)
+- Temp Memo field on the patient record
 
   Future
   ====
   - When editing items located in another department, the form displays editable fields, but it refuses to save them
   In the future, make the form read-only for such items.
+  8. Patient Manager
+  - Medical Information

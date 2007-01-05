@@ -606,7 +606,10 @@ class Registration(turbogears.controllers.Controller):
 			patient.Religion = Religion
 			bday = time.strptime(str(DateBirth),DATE_FORMAT)
 			patient.DateBirth = datetime.datetime(bday.tm_year,bday.tm_mon,bday.tm_mday)
-			patient.EthnicOrig = int(Tribe)
+			if Tribe in ['',None]:
+				patient.EthnicOrig = None
+			else:
+				patient.EthnicOrig = int(Tribe)
 		else:
 			bday = time.strptime(str(DateBirth),DATE_FORMAT)
 			bdate = datetime.datetime(bday.tm_year,bday.tm_mon,bday.tm_mday)
