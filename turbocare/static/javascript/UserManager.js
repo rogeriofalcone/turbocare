@@ -21,7 +21,7 @@ function hasParent(id,parent_id) {
 }
 
 var um = {};
-var um.CallBackList = new Array();
+var um.NextJoinList = '';// String representation of the function to execute
 
 um.collectPostVars = function(f)
 {
@@ -423,15 +423,124 @@ um.GetJoinedIDs = function(VarName, ParentNode){
 	PermissionID - We want to filter on a Permission
 */
 um.LoadJoinedUsers = function(GroupID, PermissionID) {
-	if (GroupID!=null) {
-		var postVars = 'GroupID='+GroupID;
-	} else {
-		var postVars = 'PermissionID='+PermissionID;
+	if (GroupID==null&&PermissionID==null) {
+		if (GroupID!=null) {
+			var postVars = 'GroupID='+GroupID;
+		} else {
+			var postVars = 'PermissionID='+PermissionID;
+		}
+		var d = postJSON("FindUsers",postVars);
+		d.addCallbacks(um.RenderJoinedUsers,um.error_report);
+	} else { //clear the list
+		replaceChildNodes('JoinedUsersSelect',null);
 	}
-	var d = postJSON("FindUsers",postVars);
-	d.addCallbacks(um.RenderJoinedUsers,um.error_report);
+}
+/*
+	RenderJoinedUsers: Display the listing of joined users
+*/
+um.RenderJoinedUsers = function(d) {
+	um.toggle_message('');
+	var Listing = getElement('JoinedUsersSelect'); // The destination for our user entries
+	for (var i=0; i<d.users.length; i++) {
+		var div = createDOM('DIV',{'class':'ListBoxItem'});
+		var chk = createDOM('INPUT',{'type':'checkbox','checked':'checked'});
+		var id = createDOM('INPUT',{'type':'hidden','name':'id', 'value':d.users[i].db.id});
+		var UserName = createDOM('INPUT',{'type':'hidden','name':'UserName','value':d.users[i].db.user_name});
+		var DisplayName = createDOM('INPUT',{'type':'hidden','name':'DisplayName','value':d.users[i].db.display_name});
+		var EmailAddress = createDOM('INPUT',{'type':'hidden','name':'EmailAddress','value':d.users[i].db.email_address});
+		appendChildNodes(div,chk,d.users[i].name,id,UserName,DisplayName,EmailAddress);
+		Listing.appendChild(div);
+		connect(chk,'onclick',um.MoveUser);// When a user checks the box, it moves the item down to the join list below it
+		connect(div,'ondblclick',um.SelectUser); // When in edit mode, double clicking a user entry will hi-lite the entry and copy the values to the data entry form below
+	}
+	// For loading the joined lists, there are usually two lists to load.  Check to see if there is another list to load
+	if (!(um.NextJoinList=='')) {
+		var EvalString = um.NextJoinList;
+		um.NextJoinList = '';
+		eval(EvalString);
+	}
+}
+/*
+	LoadJoinedGroups: Populate the JoinedGroups list box div with groups
+	UserID - If we want to filter the user list on a User
+	PermissionID - We want to filter on a Permission
+*/
+um.LoadJoinedGroups = function(UserID, PermissionID) {
+	if (UserID==null&&PermissionID==null) {
+		if (UserID!=null) {
+			var postVars = 'UserID='+UserID;
+		} else {
+			var postVars = 'PermissionID='+PermissionID;
+		}
+		var d = postJSON("FindGroups",postVars);
+		d.addCallbacks(um.RenderJoinedGroups,um.error_report);
+	} else {
+		replaceChildNodes('JoinedGroupsSelect',null);
+	}
 }
 
+/*
+	RenderJoinedGroups: Display the listing of joined groups
+*/
+um.RenderJoinedGroups = function(d) {
+	um.toggle_message('');
+	var Listing = getElement('JoinedGroupsSelect'); // The destination for our group entries
+	for (var i=0; i<d.groups.length; i++) {
+		var div = createDOM('DIV',{'class':'ListBoxItem'});
+		var chk = createDOM('INPUT',{'type':'checkbox','checked':'checked'});
+		var id = createDOM('INPUT',{'type':'hidden','name':'id','value':d.groups[i].db.id});
+		var GroupName = createDOM('INPUT',{'type':'hidden','name':'GroupName','value':d.groups[i].db.group_name});
+		var DisplayName = createDOM('INPUT',{'type':'hidden','name':'DisplayName','value':d.groups[i].db.display_name});
+		appendChildNodes(div,chk,d.groups[i].name,id,GroupName,DisplayName);
+		Listing.appendChild(div);
+		connect(chk,'onclick',um.MoveGroup);// Moves the item down to the join list below it
+		connect(div,'ondblclick',um.SelectGroup); // When in edit mode, double clicking an entry will hi-lite the entry and copy the values to the data entry form below
+	}
+	// For loading the joined lists, there are usually two lists to load.  Check to see if there is another list to load
+	if (!(um.NextJoinList=='')) {
+		var EvalString = um.NextJoinList;
+		um.NextJoinList = '';
+		eval(EvalString);
+	}
+}
+/*
+	LoadJoinedPermissions: Populate the JoinedPermissions list box div with permissions
+	UserID - If we want to filter the user list on a User
+	GroupID - We want to filter on a Group
+*/
+um.LoadJoinedPermissions = function(UserID, GroupID) {
+	if (UserID!=null) {
+		var postVars = 'UserID='+UserID;
+	} else {
+		var postVars = 'GroupID='+GroupID;
+	}
+	var d = postJSON("FindPermissions",postVars);
+	d.addCallbacks(um.RenderJoinedPermissions,um.error_report);
+}
+/*
+	RenderJoinedPermissions: Display the listing of joined permissions
+*/
+um.RenderJoinedPermissions = function(d) {
+	um.toggle_message('');
+	var Listing = getElement('JoinedPermissionsSelect'); // The destination for our user entries
+	for (var i=0; i<d.permissions.length; i++) {
+		var div = createDOM('DIV',{'class':'ListBoxItem'});
+		var chk = createDOM('INPUT',{'type':'checkbox'});
+		var id = createDOM('INPUT',{'type':'hidden','name':'id','value':d.permissions[i].db.id});
+		var PermissionName = createDOM('INPUT',{'type':'hidden','name':'PermissionName','value':d.permissions[i].db.permission_name});
+		var Description = createDOM('INPUT',{'type':'hidden','name':'Description','value':d.permissions[i].db.description});
+		appendChildNodes(div,chk,d.permissions[i].name,id,PermissionName,Description);
+		Listing.appendChild(div);
+		connect(chk,'onclick',um.MovePermission);// Moves the item down to the join list below it
+		connect(div,'ondblclick',um.SelectPermission); // When in edit mode, double clicking an entry will hi-lite the entry and copy the values to the data entry form below
+	}
+	// For loading the joined lists, there are usually two lists to load.  Check to see if there is another list to load
+	if (!(um.NextJoinList=='')) {
+		var EvalString = um.NextJoinList;
+		um.NextJoinList = '';
+		eval(EvalString);
+	}
+}
 /*
 	SaveUser: Save the entry
 */
