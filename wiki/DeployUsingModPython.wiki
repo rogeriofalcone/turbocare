@@ -15,7 +15,7 @@ _sudo apt-get install apache2 libapache2-mod-python2.4_
 
 ===Install turbogears===
 
-_sudo easy_install -Z TurboGears_
+_sudo easy_install -Z TurboGears
 
 _sudo easy_install -Z SQLObject_  
 
@@ -86,6 +86,7 @@ _sudo cp modpython_gateway.py /usr/lib/python2.4/site-pakages_
 
 Copy Modpython Gateway to pythons sitepackages.  This lets us use TurboGears with mod_python. 
 
+
 ===Apache Configuration===
 
 _sudo cp apache-turbocare.conf /etc/apache2/sites-available/turbocare_
@@ -104,6 +105,7 @@ Change any references to /home/david to the home/USER where user is the user in 
 _sudo nano /etc/apache2/ports.conf_
 
 Add a new line with _Listen 443_ on it.
+
 
 ===Enable sites and modules===
 _sudo a2enmod mod_python_
@@ -139,11 +141,19 @@ Both should display first page of turbocare.
 
 ==Upgrades==
 To upgrade turbocare
+
 _cd ~/turbocare_
+
 _svn update_
+
 _sudo python setup.py install_
+
 _sudo /etc/init.d/apache2 restart_
 
+
 =References=
+My instructions are based on the following websites.  However I was able to simplify as we removed some of the work for mod_python by including necessary files in our svn version of turbocare. 
+
 [http://trac.turbogears.org/wiki/ModPythonIntegration09]
+
 [http://www.linode.com/wiki/index.php/Apache2_SSL_in_Ubuntu]
