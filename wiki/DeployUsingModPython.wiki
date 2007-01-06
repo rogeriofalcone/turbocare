@@ -35,7 +35,9 @@ _mysql -u root -p_
 
 just press enter if you have no password yet.
 
-at the prompt _create database turbocare_
+at the prompt type:
+
+_create database turbocare_
 
 press enter and then ctrl-D to exit. 
 
@@ -55,10 +57,19 @@ Check that all the variables are right. Particularly the sqlobject.dburi string.
 
 _python start-turbocare.py_ 
 
-If this loads without errors you have installed turbocare. Check it's really working by visiting http://localhost:8080/.  If it is congratulations your half way to having turbocare and mod_python installed.  Maybe you should grab a coffee.  
+If this loads without errors you have installed turbocare. 
 
-===Modpython time===
+Check it's really working by visiting http://localhost:8080/.  
+
+If it is congratulations your half way to having turbocare and mod_python installed.  
+
+Maybe you should grab a coffee now.  
+
+==Modpython time==
+
 Now to get mod_python working 
+
+===Setup Turbocare for production===
 
 _cd ~/turbocare_
 _cp sample_prod.cfg prod.cfg_
@@ -75,6 +86,7 @@ _sudo cp modpython_gateway.py /usr/lib/python2.4/site-pakages_
 
 Copy Modpython Gateway to pythons sitepackages.  This lets us use TurboGears with mod_python. 
 
+===Apache Configuration===
 
 _sudo cp apache-turbocare.conf /etc/apache2/sites-available/turbocare_
 
@@ -89,6 +101,11 @@ _sudo nano /etc/apache2/sites-available/turbocare-ssl_
 
 Change any references to /home/david to the home/USER where user is the user in which you have done the installation with.
 
+_sudo nano /etc/apache2/ports.conf_
+
+Add a new line with _Listen 443_ on it.
+
+===Enable sites and modules===
 _sudo a2enmod mod_python_
 
 Enable mod_python for apache2
@@ -109,13 +126,11 @@ _sudo a2ensite turbocare-ssl_
 
 Enable ssl version of turbocare.
 
-_sudo nano /etc/apache2/ports.conf_
-
-Add a new line with _Listen 443_ on it.
-
+===Finishing off===
 _sudo /etc/init.d/apache2 restart_
 
 Restart Apache2 to get it to load changes. 
+
 
 Go to http://localhost and https://localhost in a Web Browser. 
 
