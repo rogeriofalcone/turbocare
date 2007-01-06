@@ -5,8 +5,12 @@
 For our production system at CIHSR we are using 3 MySQL 5 Servers.  
 
 # *HIS1* - A Master MySQL server with turbocare running through Apache
+
 # *HIS2* - A Master MySQL server with turbocare running through Apache
-# *RPT1* - A Slave MySQL server with turbocare running just for reports through Apache. It also has the backup software running on it. 
+
+# *RPT1* - A Slave MySQL server with turbocare running just for reports 
+through Apache. It also has the backup software running on it. 
+
 
 ==Required Background Reading==
 It is strongly recommended if you are not familiar with MySQL Database Replication that you read the following page [http://www.onlamp.com/pub/a/onlamp/2005/06/16/MySQLian.html] in addition to the section on the topic in the MySQL manual
@@ -15,11 +19,18 @@ It is strongly recommended if you are not familiar with MySQL Database Replicati
 
 
 
+==Backups==
+
+[http://mysqlbackup.zmanda.com/]
+
 =References=
 
 
 [http://www.onlamp.com/pub/a/onlamp/2005/06/16/MySQLian.html An introduction to MySQL Replication]
+
 [http://www.onlamp.com/pub/a/onlamp/2006/04/20/advanced-mysql-replication.html A good reference on multi-master replication]
+
 [http://kjalleda.googlepages.com/mysqlprojects Some useful MySQL Projects]
 [http://dev.mysql.com/doc/refman/5.0/en/replication-howto.html Straight from the people who wrote it]
+
 
