@@ -17,11 +17,11 @@ _sudo apt-get install apache2 libapache2-mod-python2.4_
 
 _sudo easy_install -Z TurboGears_
 
-_sudo easy__install -Z SQLObject_  
+_sudo easy_install -Z SQLObject_  
 
 Note you may need to specify v0.7 as 0.8 and 0.9 have caused me some troubles 
 
-Note when using easy__install we need to specify the install as unziped eggs as this stops apache from trying to extract the eggs into its own home directory.
+Note when using easy_install we need to specify the install as unziped eggs as this stops apache from trying to extract the eggs into its own home directory.
 
 ===Install turbocare===
 _cd ~/_
@@ -48,6 +48,7 @@ _python mysqlschema.py -d turbocare -u root -o restore -f turbocarebackup.data_
 
 ===Check standalone turbocare===
 _cp dev-sample.cfg dev.cfg_
+
 _nano dev.cfg_
 
 Check that all the variables are right. Particularly the sqlobject.dburi string.
@@ -110,13 +111,14 @@ Enable ssl version of turbocare.
 
 _sudo nano /etc/apache2/ports.conf_
 
-Add a new line with ÒListen 443Ó 
+Add a new line with _Listen 443_ on it.
 
 _sudo /etc/init.d/apache2 restart_
 
 Restart Apache2 to get it to load changes. 
 
 Go to http://localhost and https://localhost in a Web Browser. 
+
 Both should display first page of turbocare.  
 
 
