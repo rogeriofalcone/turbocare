@@ -21,6 +21,7 @@ function hasParent(id,parent_id) {
 }
 
 var um = {};
+var um.CallBackList = new Array();
 
 um.collectPostVars = function(f)
 {
@@ -71,8 +72,8 @@ um.updated = function(data){
 		}
 	}
 	um.toggle_message("");
-	if (data.result_msg != null) {
-		var display = createDOM('DIV',{'class':'displaymsg','id':'last_result_msg'},data.result_msg);
+	if (data.message != null) {
+		var display = createDOM('DIV',{'class':'displaymsg','id':'last_result_msg'},data.message);
 		if (getNodeAttribute('last_result_msg','class') == null){
 			document.body.appendChild(display);
 		} else {
@@ -80,11 +81,6 @@ um.updated = function(data){
 		}
 	}
 	var d = callLater(5,remove_message);
-	if (data.result == 1) {
-		um.openObjView(um.cur_def.Read+'?id='+data.id);
-	} else {
-		um.historyBack();
-	}
 }
 
 um.error_report = function(data){
@@ -406,33 +402,224 @@ um.SelectPermission = function(e) {
 	}
 }
 /*
+	GetJoinedIDs: Looks for Inputs with the name "id" and creates a postable variable list
+	VarName: The name of the post variable, such that: &VarName=Val1&VarName=Val2&VarName=Val3...
+	ParentNode: The node to search for the inputs with the name = "id"
+	NOTE: the return value is always formatted with a starting &
+*/
+um.GetJoinedIDs = function(VarName, ParentNode){
+	var PostVars = '';
+	var inputs = getElementsByTagAndClassName('INPUT',null,ParentNode);
+	for (var i=0; i<inputs.length; i++) {
+		if (inputs[i].name=='id') {
+			PostVars += '&' + VarName + '=' + inputs[i].value;
+		}
+	}
+	return PostVars;
+}
+/*
+	LoadJoinedUsers: Populate the JoinedUsers list box div with users
+	GroupID - If we want to filter the user list on a GroupID
+	PermissionID - We want to filter on a Permission
+*/
+um.LoadJoinedUsers = function(GroupID, PermissionID) {
+	if (GroupID!=null) {
+		var postVars = 'GroupID='+GroupID;
+	} else {
+		var postVars = 'PermissionID='+PermissionID;
+	}
+	var d = postJSON("FindUsers",postVars);
+	d.addCallbacks(um.RenderJoinedUsers,um.error_report);
+}
+
+/*
 	SaveUser: Save the entry
 */
 um.SaveUser = function(e){
-	var ID = getElement("").value;
-	var UserName = getElement("").value;
-	var DisplayName = getElement("").value;
-	var EmailAddress = getElement("").value;
-	var Password = getElement("").value;
-	var PasswordVerify = getElement("").value;
+	var ID = getElement("UserEdit_id").value;
+	var UserName = getElement("UserEdit_UserName").value;
+	var DisplayName = getElement("UserEdit_DisplayName").value;
+	var EmailAddress = getElement("UserEdit_EmailAddress").value;
+	var Password = getElement("UserEdit_Password").value;
+	var PasswordVerify = getElement("UserEdit_PasswordVerify").value;
+	if ((Password != '' && PasswordVerify != '' && Password == PasswordVerify)||(Password == '' && PasswordVerify == '' && ID != '')) {
+		um.toggle_message("Saving...");
+		if (ID!='') { // Update a user
+			var postVars  = "UserID="+ID+"&UserName="+UserName+"&DisplayName="+DisplayName;
+			postVars += "&EmailAddress="+EmailAddress+"&Operation=Save&Password="+Password;
+			postVars += um.GetJoinedIDs('Groups','JoinedGroupsSelect');
+			var d = postJSON("SaveUser",postVars);
+			d.addCallbacks(um.updated,um.error_report);
+		} else { // Create a new user
+			var postVars  = "UserName="+UserName+"&DisplayName="+DisplayName;
+			postVars += "&EmailAddress="+EmailAddress+"&Operation=New&Password="+Password;
+			postVars += um.GetJoinedIDs('Groups','JoinedGroupsSelect');
+			var d = postJSON("SaveUser",postVars);
+			d.addCallbacks(um.updated,um.error_report);
+		}
+	} else {
+		alert('Error: Either the passwords do not match OR you are creating a new user without a password!');
+	}
 }
 /*
-	CancelUser: Cancel the entry, relad from the 
+	CancelUser: Cancel the entry, reload from the original entry
 */
 um.CancelUser = function(e){
-	
+	var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','UserColumn');
+	if (elems.length > 0) { // Updating a user, and we're resetting
+		var el = elems[0];
+		// Move the item values to the form below
+		getElement("UserEdit_Password").value = '';
+		getElement("UserEdit_PasswordVerify").value = '';
+		var inputs = getElementsByTagAndClassName('INPUT',null,el);
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name == "id") {
+				getElement("UserEdit_id").value = inputs[i].value;
+			} else if (inputs[i].name == "UserName") {
+				getElement("UserEdit_UserName").value = inputs[i].value;
+			} else if (inputs[i].name == "DisplayName") {
+				getElement("UserEdit_DisplayName").value = inputs[i].value;
+			} else if (inputs[i].name == "EmailAddress") {
+				getElement("UserEdit_EmailAddress").value = inputs[i].value;
+			}
+		}
+	} else { // we created a new user, now we're resetting
+		getElement("UserEdit_Password").value = '';
+		getElement("UserEdit_PasswordVerify").value = '';
+		getElement("UserEdit_id").value = '';
+		getElement("UserEdit_UserName").value = '';
+		getElement("UserEdit_DisplayName").value = '';
+		getElement("UserEdit_EmailAddress").value = '';
+	}
 }
 /*
-	NewUser: Save the entry
+	NewUser: make a blank entry
 */
 um.NewUser = function(e){
-	
+	if (confirm('Are you sure you want a new entry?')){
+		getElement("UserEdit_Password").value = '';
+		getElement("UserEdit_PasswordVerify").value = '';
+		getElement("UserEdit_id").value = '';
+		getElement("UserEdit_UserName").value = '';
+		getElement("UserEdit_DisplayName").value = '';
+		getElement("UserEdit_EmailAddress").value = '';
+	}
+}
+/*
+	DeleteUser: delete the entry
+*/
+um.DeleteUser = function(e){
+	var ID = getElement("UserEdit_id").value;
+	var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','UserColumn');
+	if (elems.length > 0) {
+		var el = elems[0];
+		var inputs = getElementsByTagAndClassName('INPUT',null,el);
+		var CheckID = null;
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name == "id") {
+				CheckID = inputs[i].value;
+				break;
+			}
+		}
+		if (CheckID == ID && ID!=null) {
+			um.toggle_message("Deleting...");
+			// Remove the DOM object because the delete will most likely succeed
+			var postVars  = "UserID="+ID+"&Operation=Delete";
+			var d = postJSON("SaveUser",postVars);
+			d.addCallbacks(um.updated,um.error_report);
+		} else {
+			alert('Error: Inconsistency match with deleting IDs - Did you hack the DOM?');
+		}
+	} else {
+		alert('Error: No user selected for deletion! (User must be slected in the top listing)');
+	}	
+}
+/*
+	SaveGroup: Save the entry
+*/
+um.SaveGroup = function(e){
+	var ID = getElement("GroupEdit_id").value;
+	var GroupName = getElement("GroupEdit_GroupName").value;
+	var DisplayName = getElement("GroupEdit_DisplayName").value;
+	um.toggle_message("Saving...");
+	if (ID!='') { // Update a group
+		var postVars  = "GroupID="+ID+"&GroupName="+GroupName+"&DisplayName="+DisplayName;
+		postVars += "&Operation=Save";
+		postVars += um.GetJoinedIDs('Users','JoinedUsersSelect');
+		postVars += um.GetJoinedIDs('Permissions','JoinedPermissionsSelect');
+		var d = postJSON("SaveGroup",postVars);
+		d.addCallbacks(um.updated,um.error_report);
+	} else { // Create a new group
+		var postVars  = "GroupID="+ID+"&GroupName="+GroupName+"&DisplayName="+DisplayName;
+		postVars += "&Operation=New";
+		postVars += um.GetJoinedIDs('Users','JoinedUsersSelect');
+		postVars += um.GetJoinedIDs('Permissions','JoinedPermissionsSelect');
+		var d = postJSON("SaveGroup",postVars);
+		d.addCallbacks(um.updated,um.error_report);
+	}
+}
+/*
+	CancelGroup: Cancel the entry, reload from the original entry
+*/
+um.CancelGroup = function(e){
+	var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','GroupColumn');
+	if (elems.length > 0) { // Updating a user, and we're resetting
+		var el = elems[0];
+		// Move the item values to the form below
+		var inputs = getElementsByTagAndClassName('INPUT',null,el);
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name == "id") {
+				getElement("GroupEdit_id").value = inputs[i].value;
+			} else if (inputs[i].name == "GroupName") {
+				getElement("GroupEdit_GroupName").value = inputs[i].value;
+			} else if (inputs[i].name == "DisplayName") {
+				getElement("GroupEdit_DisplayName").value = inputs[i].value;
+			}
+		}
+	} else { // we created a new user, now we're resetting
+		getElement("GroupEdit_id").value = '';
+		getElement("GroupEdit_GroupName").value = '';
+		getElement("GroupEdit_DisplayName").value = '';
+	}
+}
+/*
+	NewGroup: Make a blank entry
+*/
+um.NewUser = function(e){
+	if (confirm('Are you sure you want a new entry?'))
+		getElement("GroupEdit_id").value = '';
+		getElement("GroupEdit_GroupName").value = '';
+		getElement("GroupEdit_DisplayName").value = '';
+	}
 }
 /*
 	DeleteUser: Save the entry
 */
 um.DeleteUser = function(e){
-	
+	var ID = getElement("UserEdit_id").value;
+	var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','UserColumn');
+	if (elems.length > 0) {
+		var el = elems[0];
+		var inputs = getElementsByTagAndClassName('INPUT',null,el);
+		var CheckID = null;
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name == "id") {
+				CheckID = inputs[i].value;
+				break;
+			}
+		}
+		if (CheckID == ID && ID!=null) {
+			um.toggle_message("Deleting...");
+			// Remove the DOM object because the delete will most likely succeed
+			var postVars  = "UserID="+ID+"&Operation=Delete";
+			var d = postJSON("SaveUser",postVars);
+			d.addCallbacks(um.updated,um.error_report);
+		} else {
+			alert('Error: Inconsistency match with deleting IDs - Did you hack the DOM?');
+		}
+	} else {
+		alert('Error: No user selected for deletion! (User must be slected in the top listing)');
+	}	
 }
 um.showPOVendor = function(id){
 	var purchaseorders = getElement("PurchaseOrders");
