@@ -911,7 +911,7 @@ class InvCustomer(SQLObject):
 	Groups = RelatedJoin("InvGrpCustomer")
 	Sort = IntCol(default=1000)
 	# ExternalID = IntCol(default=None)
-	ExternalID = ForeignKey("Person",default=None)
+	ExternalID = ForeignKey("Person",default=None, dbName="external_id")
 	Status = StringCol(length=25,dbName="status",default="")
 	ModifyId = StringCol(length=35,dbName="modify_id",default=cur_user_id())
 	ModifyTime = DateTimeCol(default=cur_date_time(),dbName="modify_time")
@@ -1556,7 +1556,7 @@ class InvReceipt(SQLObject):
 	TotalInsurance = FloatCol(default=None) #Company insurance
 	InsuranceNotes = StringCol(length=200,default=None) #any notable details about insurance
 	# ExternalId = IntCol(default=None) #Connect the receipt to an external record, in this case, a particular encounter
-	ExternalId = ForeignKey("Encounter",default=None) #Connect the receipt to an external record, in this case, a particular encounter
+	ExternalId = ForeignKey("Encounter",default=None, dbName="external_id") #Connect the receipt to an external record, in this case, a particular encounter
 	Sort = IntCol(default=1000)
 	Status = StringCol(length=25,dbName="status",default="")
 	ModifyId = StringCol(length=35,dbName="modify_id",default=cur_user_id())

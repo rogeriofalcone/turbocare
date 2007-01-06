@@ -118,46 +118,322 @@ um.saveData = function(url,vars){
   	d.addCallbacks(um.updated,um.error_report);
 }
 
-um.loadVendors = function(id){
-	if (hasParent("listing_row_"+id,"PurchaseOrders") != true) {
-		//Select the item (exclusive) make it the only orange catalog item
-		var elems = getElementsByTagAndClassName(null,"listingrow_item",document);
-		for (var i=0;i<elems.length;i++){
-			swapElementClass(elems[i],"listingrow_item","listingrow");
-		}
-		swapElementClass("listing_row_"+id,"listingrow","listingrow_item");
-		//Load the vendors
-		um.toggle_message("Loading...");
-	  	var d = postJSON("PurchaseOrderGetVendorsForItem","CatalogItemId="+id);
-	  	d.addCallbacks(um.renderVendors,um.error_report);
-  	}
+/*
+	LoadUsers: Load the list of users.  If there is search text, then filter the list based
+	on the search text.
+*/
+um.LoadUsers = function(e){
+	var SearchText = getElement('SearchUser').value;
+	um.toggle_message("Loading...");
+	var d = postJSON("FindUsers","SearchText="+SearchText);
+	d.addCallbacks(um.renderUsers,um.error_report);
 }
-
-um.removeItem = function(id){
-	var catalogitem = getElement(id);
-	//find and remove vendor info from the catalog item
-	var elems = getElementsByTagAndClassName("input",null,catalogitem);
-	for (var i=0;i<elems.length;i++){
-		if (elems[i].name == 'Vendor'){
-			var VendorId = elems[i].value;
-			elems[i].value = "";
+/*
+	LoadGroups: Load the list of groups.  If there is search text, then filter the list based
+	on the search text.
+*/
+um.LoadGroups = function(e){
+	var SearchText = getElement('SearchGroup').value;
+	um.toggle_message("Loading...");
+	var d = postJSON("FindGroups","SearchText="+SearchText);
+	d.addCallbacks(um.renderGroups,um.error_report);
+}
+/*
+	LoadPermissions: Load the list of permissions.  If there is search text, then filter the list based
+	on the search text.
+*/
+um.LoadPermissions = function(e){
+	var SearchText = getElement('SearchPermission').value;
+	um.toggle_message("Loading...");
+	var d = postJSON("FindPermissions","SearchText="+SearchText);
+	d.addCallbacks(um.renderPermissions,um.error_report);
+}
+/*
+	renderUsers: Display the results for the search
+*/
+um.renderUsers = function(d) {
+	um.toggle_message('');
+	var Listing = getElement('UserListSelect'); // The destination for our user entries
+	for (var i=0; i<d.users.length; i++) {
+		var div = createDOM('DIV',{'class':'ListBoxItem'});
+		var chk = createDOM('INPUT',{'type':'checkbox'});
+		var id = createDOM('INPUT',{'type':'hidden','name':'id', 'value':d.users[i].db.id});
+		var UserName = createDOM('INPUT',{'type':'hidden','name':'UserName','value':d.users[i].db.user_name});
+		var DisplayName = createDOM('INPUT',{'type':'hidden','name':'DisplayName','value':d.users[i].db.display_name});
+		var EmailAddress = createDOM('INPUT',{'type':'hidden','name':'EmailAddress','value':d.users[i].db.email_address});
+		appendChildNodes(div,chk,d.users[i].name,id,UserName,DisplayName,EmailAddress);
+		Listing.appendChild(div);
+		connect(chk,'onclick',um.MoveUser);// When a user checks the box, it moves the item down to the join list below it
+		connect(div,'ondblclick',um.SelectUser); // When in edit mode, double clicking a user entry will hi-lite the entry and copy the values to the data entry form below
+	}
+}
+/*
+	renderGroups: Display the results for the search
+*/
+um.renderGroups = function(d) {
+	um.toggle_message('');
+	var Listing = getElement('GroupListSelect'); // The destination for our user entries
+	for (var i=0; i<d.groups.length; i++) {
+		var div = createDOM('DIV',{'class':'ListBoxItem'});
+		var chk = createDOM('INPUT',{'type':'checkbox'});
+		var id = createDOM('INPUT',{'type':'hidden','name':'id','value':d.groups[i].db.id});
+		var GroupName = createDOM('INPUT',{'type':'hidden','name':'GroupName','value':d.groups[i].db.group_name});
+		var DisplayName = createDOM('INPUT',{'type':'hidden','name':'DisplayName','value':d.groups[i].db.display_name});
+		appendChildNodes(div,chk,d.groups[i].name,id,GroupName,DisplayName);
+		Listing.appendChild(div);
+		connect(chk,'onclick',um.MoveGroup);// Moves the item down to the join list below it
+		connect(div,'ondblclick',um.SelectGroup); // When in edit mode, double clicking an entry will hi-lite the entry and copy the values to the data entry form below
+	}
+}
+/*
+	renderPermissions: Display the results for the search
+*/
+um.renderPermissions = function(d) {
+	um.toggle_message('');
+	var Listing = getElement('PermissionListSelect'); // The destination for our user entries
+	for (var i=0; i<d.permissions.length; i++) {
+		var div = createDOM('DIV',{'class':'ListBoxItem'});
+		var chk = createDOM('INPUT',{'type':'checkbox'});
+		var id = createDOM('INPUT',{'type':'hidden','name':'id','value':d.permissions[i].db.id});
+		var PermissionName = createDOM('INPUT',{'type':'hidden','name':'PermissionName','value':d.permissions[i].db.permission_name});
+		var Description = createDOM('INPUT',{'type':'hidden','name':'Description','value':d.permissions[i].db.description});
+		appendChildNodes(div,chk,d.permissions[i].name,id,PermissionName,Description);
+		Listing.appendChild(div);
+		connect(chk,'onclick',um.MovePermission);// Moves the item down to the join list below it
+		connect(div,'ondblclick',um.SelectPermission); // When in edit mode, double clicking an entry will hi-lite the entry and copy the values to the data entry form below
+	}
+}
+/*
+	MoveUser: Move an item from the listing to the joins listing
+	Note: This is only done when editing Groups
+*/
+um.MoveUser = function(e) {
+	if (hasElementClass("GroupColumn","Column-lite")) {
+		var el = e.src().parentNode; // select the entire div
+		// find the id for our node
+		var inputs = getElementsByTagAndClassName("INPUT",null,el);
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name=="id") {
+				var ID = inputs[i].value;
+				break;
+			}
+			var ID = null;
+			alert('ooops, cannot move the item.  Porgramming error');
 		}
-		if (elems[i].name == 'QuotePrice'){
-			elems[i].value = "";
+		var Listing = el.parentNode;
+		var JoinListing = getElement('JoinedUsersSelect');
+		// Check to make sure an item with the same id doesn't already exists, if it does, just delete the item
+		var inputs = getElementsByTagAndClassName("INPUT",null,JoinListing);
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name == "id" && inputs[i].value == ID) {
+				var Match = true;
+				break;
+			}
+			var Match = false;
+		}
+		// Move the node down to the JoinListing - check to make sure the connect events stay connected
+		if (Match) {
+			Listing.removeChild(el);
+		} else {
+			JoinListing.appendChild(Listing.removeChild(el));
 		}
 	}
-	var vendor_po = getElement('PO_vendor_'+VendorId);
-	var catalogitems = getElement("CatalogItems");
-	catalogitems.appendChild(catalogitem.cloneNode(true));
-	swapDOM(catalogitem,null);
-	swapDOM("closelink_"+id,null);
-	//remove the Vendor section from the Purchase order list if they have no more items
-	var elems = getElementsByTagAndClassName(null,"listingrow",vendor_po);
-	if (elems.length == 0){
-		swapDOM(vendor_po,null);
+}
+/*
+	MoveGroup: Move an item from the listing to the joins listing
+	Note: This is only done when editing Users or Permissions
+*/
+um.MoveGroup = function(e) {
+	if (hasElementClass("UserColumn","Column-lite")||hasElementClass("PermissionColumn","Column-lite")) {
+		var el = e.src().parentNode; // select the entire div
+		// find the id for our node
+		var inputs = getElementsByTagAndClassName("INPUT",null,el);
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name=="id") {
+				var ID = inputs[i].value;
+				break;
+			}
+			var ID = null;
+			alert('ooops, cannot move the item.  Porgramming error');
+		}
+		var Listing = el.parentNode;
+		var JoinListing = getElement('JoinedGroupsSelect');
+		// Check to make sure an item with the same id doesn't already exists, if it does, just delete the item
+		var inputs = getElementsByTagAndClassName("INPUT",null,JoinListing);
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name == "id" && inputs[i].value == ID) {
+				var Match = true;
+				break;
+			}
+			var Match = false;
+		}
+		// Move the node down to the JoinListing - check to make sure the connect events stay connected
+		if (Match) {
+			Listing.removeChild(el);
+		} else {
+			JoinListing.appendChild(Listing.removeChild(el));
+		}
 	}
 }
-
+/*
+	MovePermission: Move an item from the listing to the joins listing
+	Note: This is only done when editing Groups
+*/
+um.MovePermission = function(e) {
+	if (hasElementClass("GroupColumn","Column-lite")) {
+		var el = e.src().parentNode; // select the entire div
+		// find the id for our node
+		var inputs = getElementsByTagAndClassName("INPUT",null,el);
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name=="id") {
+				var ID = inputs[i].value;
+				break;
+			}
+			var ID = null;
+			alert('ooops, cannot move the item.  Porgramming error');
+		}
+		var Listing = el.parentNode;
+		var JoinListing = getElement('JoinedPermissionsSelect');
+		// Check to make sure an item with the same id doesn't already exists, if it does, just delete the item
+		var inputs = getElementsByTagAndClassName("INPUT",null,JoinListing);
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name == "id" && inputs[i].value == ID) {
+				var Match = true;
+				break;
+			}
+			var Match = false;
+		}
+		// Move the node down to the JoinListing - check to make sure the connect events stay connected
+		if (Match) {
+			Listing.removeChild(el);
+		} else {
+			JoinListing.appendChild(Listing.removeChild(el));
+		}
+	}
+}
+/*
+	SelectUser: When an entry is selected, copy the elements to the form below for editing
+	This is only done when the column is in edit mode
+*/
+um.SelectUser = function(e) {
+	if (hasElementClass("UserColumn","Column-lite")) {
+		var el = e.src().parentNode;
+		// Remove hi-lite from hi-lited items
+		var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','UserColumn');
+		for (var i=0; i<elems.length; i++) {
+			removeElementClass(elems[i],'ListBoxItem-Lite');
+			addElementClass(elems[i],'ListBoxItem');
+		}
+		// Add hi-lite to current item
+		removeElementClass(el,'ListBoxItem');
+		addElementClass(el,'ListBoxItem-Lite');
+		// Move the item values to the form below
+		getElement("UserEdit_Password").value = '';
+		getElement("UserEdit_PasswordVerify").value = '';
+		var inputs = getElementsByTagAndClassName('INPUT',null,el);
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name == "id") {
+				getElement("UserEdit_id").value = inputs[i].value;
+			} else if (inputs[i].name == "UserName") {
+				getElement("UserEdit_UserName").value = inputs[i].value;
+			} else if (inputs[i].name == "DisplayName") {
+				getElement("UserEdit_DisplayName").value = inputs[i].value;
+			} else if (inputs[i].name == "EmailAddress") {
+				getElement("UserEdit_EmailAddress").value = inputs[i].value;
+			}
+		}
+		
+	}
+}
+/*
+	SelectGroup: When an entry is selected, copy the elements to the form below for editing
+	This is only done when the column is in edit mode
+*/
+um.SelectGroup = function(e) {
+	if (hasElementClass("GroupColumn","Column-lite")) {
+		var el = e.src().parentNode;
+		// Remove hi-lite from hi-lited items
+		var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','GroupColumn');
+		for (var i=0; i<elems.length; i++) {
+			removeElementClass(elems[i],'ListBoxItem-Lite');
+			addElementClass(elems[i],'ListBoxItem');
+		}
+		// Add hi-lite to current item
+		removeElementClass(el,'ListBoxItem');
+		addElementClass(el,'ListBoxItem-Lite');
+		// Move the item values to the form below
+		var inputs = getElementsByTagAndClassName('INPUT',null,el);
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name == "id") {
+				getElement("GroupEdit_id").value = inputs[i].value;
+			} else if (inputs[i].name == "GroupName") {
+				getElement("GroupEdit_GroupName").value = inputs[i].value;
+			} else if (inputs[i].name == "DisplayName") {
+				getElement("GroupEdit_DisplayName").value = inputs[i].value;
+			}
+		}
+		
+	}
+}
+/*
+	SelectPermission: When an entry is selected, copy the elements to the form below for editing
+	This is only done when the column is in edit mode
+*/
+um.SelectPermission = function(e) {
+	if (hasElementClass("PermissionColumn","Column-lite")) {
+		var el = e.src().parentNode;
+		// Remove hi-lite from hi-lited items
+		var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','PermissionColumn');
+		for (var i=0; i<elems.length; i++) {
+			removeElementClass(elems[i],'ListBoxItem-Lite');
+			addElementClass(elems[i],'ListBoxItem');
+		}
+		// Add hi-lite to current item
+		removeElementClass(el,'ListBoxItem');
+		addElementClass(el,'ListBoxItem-Lite');
+		// Move the item values to the form below
+		var inputs = getElementsByTagAndClassName('INPUT',null,el);
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name == "id") {
+				getElement("PermissionEdit_id").value = inputs[i].value;
+			} else if (inputs[i].name == "PermissionName") {
+				getElement("PermissionEdit_PermissionName").value = inputs[i].value;
+			} else if (inputs[i].name == "Description") {
+				getElement("PermissionEdit_PermissionDescription").value = inputs[i].value;
+			}
+		}
+		
+	}
+}
+/*
+	SaveUser: Save the entry
+*/
+um.SaveUser = function(e){
+	var ID = getElement("").value;
+	var UserName = getElement("").value;
+	var DisplayName = getElement("").value;
+	var EmailAddress = getElement("").value;
+	var Password = getElement("").value;
+	var PasswordVerify = getElement("").value;
+}
+/*
+	CancelUser: Cancel the entry, relad from the 
+*/
+um.CancelUser = function(e){
+	
+}
+/*
+	NewUser: Save the entry
+*/
+um.NewUser = function(e){
+	
+}
+/*
+	DeleteUser: Save the entry
+*/
+um.DeleteUser = function(e){
+	
+}
 um.showPOVendor = function(id){
 	var purchaseorders = getElement("PurchaseOrders");
 	//first, hide all other Purchase order vendor lines

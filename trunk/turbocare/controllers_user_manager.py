@@ -53,17 +53,17 @@ class UserManager(controllers.RootController):
 			Users = model.User.select(OR (model.User.q.user_name.contains(SearchText),
 				model.User.q.email_address.contains(SearchText), model.User.q.display_name.contains(SearchText)),
 				orderBy=[model.User.q.user_name])
-			users = [dict(id=x.id, name="%s [%s]" % (x.user_name, x.display_name)) for x in Users]
+			users = [dict(id=x.id, name="%s [%s]" % (x.user_name, x.display_name), db=x) for x in Users]
 		elif GroupID != None:
 			Group = model.Group.get(GroupID)
-			users =  [dict(id=x.id, name="%s [%s]" % (x.user_name, x.display_name)) for x in Group.users]
+			users =  [dict(id=x.id, name="%s [%s]" % (x.user_name, x.display_name), db=x) for x in Group.users]
 		elif PermissionID != None:
 			Permission = model.Permission.get(PermissionID)
 			for group in Permission.groups:
-				users =  [dict(id=x.id, name="%s [%s]" % (x.user_name, x.display_name)) for x in group.users]
+				users =  [dict(id=x.id, name="%s [%s]" % (x.user_name, x.display_name), db=x) for x in group.users]
 		elif UserID != '':
 			User = model.User.get(UserID)
-			users = [dict(id=User.id,name="%s [%s]" % (User.user_name, User.display_name))]
+			users = [dict(id=User.id,name="%s [%s]" % (User.user_name, User.display_name), db=User)]
 		return dict(users=users)
 
 	@expose(format='json')
@@ -77,16 +77,16 @@ class UserManager(controllers.RootController):
 			Groups = model.Group.select(OR (model.Group.q.group_name.contains(SearchText),
 				model.Group.q.display_name.contains(SearchText)),
 				orderBy=[model.Group.q.group_name])
-			groups = [dict(id=x.id, name="%s [%s]" % (x.group_name, x.display_name)) for x in Groups]
+			groups = [dict(id=x.id, name="%s [%s]" % (x.group_name, x.display_name), db=x) for x in Groups]
 		elif UserID != None:
 			User = model.User.get(UserID)
-			groups =  [dict(id=x.id, name="%s [%s]" % (x.group_name, x.display_name)) for x in User.groups]
+			groups =  [dict(id=x.id, name="%s [%s]" % (x.group_name, x.display_name), db=x) for x in User.groups]
 		elif PermissionID != None:
 			Permission = model.Permission.get(PermissionID)
-			groups =  [dict(id=x.id, name="%s [%s]" % (x.group_name, x.display_name)) for x in Permission.groups]
+			groups =  [dict(id=x.id, name="%s [%s]" % (x.group_name, x.display_name), db=x) for x in Permission.groups]
 		elif GroupID != '':
 			Group = model.Group.get(GroupID)
-			groups = [dict(id=Group.id,name="%s [%s]" % (Group.group_name, Group.display_name))]
+			groups = [dict(id=Group.id,name="%s [%s]" % (Group.group_name, Group.display_name), db=Group)]
 		return dict(groups=groups)
 
 	@expose(format='json')
@@ -100,17 +100,17 @@ class UserManager(controllers.RootController):
 			Permissions = model.Permission.select(OR (model.Permission.q.permission_name.contains(SearchText),
 				model.Permission.q.description.contains(SearchText)),
 				orderBy=[model.Permission.q.permission_name])
-			permissions = [dict(id=x.id, name="%s [%s]" % (x.permission_name, x.description)) for x in Permissions]
+			permissions = [dict(id=x.id, name="%s [%s]" % (x.permission_name, x.description), db=x) for x in Permissions]
 		elif GroupID != None:
 			Group = model.Group.get(GroupID)
-			permissions =  [dict(id=x.id, name="%s [%s]" % (x.permission_name, x.description)) for x in Group.permissions]
+			permissions =  [dict(id=x.id, name="%s [%s]" % (x.permission_name, x.description), db=x) for x in Group.permissions]
 		elif UserID != None:
 			User = model.User.get(UserID)
 			for group in User.groups:
-				permissions =  [dict(id=x.id, name="%s [%s]" % (x.permission_name, x.description)) for x in group.permissions]
+				permissions =  [dict(id=x.id, name="%s [%s]" % (x.permission_name, x.description), db=x) for x in group.permissions]
 		elif PermissionID != '':
 			Permission = model.Permission.get(PermissionID)
-			permissions = [dict(id=Permission.id,name="%s [%s]" % (Permission.permission_name, Permission.description))]
+			permissions = [dict(id=Permission.id,name="%s [%s]" % (Permission.permission_name, Permission.description), db=Permission)]
 		return dict(permissions=permissions)
 		
 	@expose(format='json')
@@ -136,7 +136,8 @@ class UserManager(controllers.RootController):
 			User.user_name = UserName
 			User.display_name = DisplayName
 			User.email_address = EmailAddress
-			User.password = Password
+			if Password != '':
+				User.password = Password
 			# Make a listing of the new groups
 			if isinstance(Groups, basestring):
 				NewGroups = [int(Groups)]
