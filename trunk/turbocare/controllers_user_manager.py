@@ -42,151 +42,242 @@ class UserManager(controllers.RootController):
 			next_link = "/configuration/"
 		return dict(error_message = error, next_link=next_link)
 	
-	#Loads a patient.  We use this a number of places
-	def LoadPatientData(self, barcode='', ReceiptID=None):
-		#We have two options for loading data, a receipt id or a barcode for the customer id.  Receipt id will take precedence.
-		log.debug('CustomerID: %s, ReceiptID: %s' % (barcode, ReceiptID))
-		try:
-			CustomerID = 0
-			if not (ReceiptID in [None, 'None', 'null', '']):
-				log.debug('LOADING... using ReceiptID %s' % ReceiptID)
-				record_rcpt = model.InvReceipt.get(ReceiptID)
-				record = record_rcpt.Customer
-				CustomerID = record.id
+	@expose(format='json')
+	@validate(validators={'SearchText':validators.String(),'GroupID':validators.Int(),'UserID':validators.Int(),
+	'PermissionID':validators.Int()})
+	def FindUsers(self, SearchText='', UserID=None, GroupID=None, PermissionID=None, **kw):
+		'''	Return a list of users  '''
+		if SearchText != '':
+			# Search for the users
+			SearchText = str(SearchText)
+			Users = model.User.select(OR (model.User.q.user_name.contains(SearchText),
+				model.User.q.email_address.contains(SearchText), model.User.q.display_name.contains(SearchText)),
+				orderBy=[model.User.q.user_name])
+			users = [dict(id=x.id, name="%s [%s]" % (x.user_name, x.display_name)) for x in Users]
+		elif GroupID != None:
+			Group = model.Group.get(GroupID)
+			users =  [dict(id=x.id, name="%s [%s]" % (x.user_name, x.display_name)) for x in Group.users]
+		elif PermissionID != None:
+			Permission = model.Permission.get(PermissionID)
+			for group in Permission.groups:
+				users =  [dict(id=x.id, name="%s [%s]" % (x.user_name, x.display_name)) for x in group.users]
+		elif UserID != '':
+			User = model.User.get(UserID)
+			users = [dict(id=User.id,name="%s [%s]" % (User.user_name, User.display_name))]
+		return dict(users=users)
+
+	@expose(format='json')
+	@validate(validators={'SearchText':validators.String(),'GroupID':validators.Int(),'UserID':validators.Int(),
+	'PermissionID':validators.Int()})
+	def FindGroups(self, SearchText='', UserID=None, GroupID=None, PermissionID=None, **kw):
+		'''	Return a list of groups  '''
+		if SearchText != '':
+			# Search for the groups
+			SearchText = str(SearchText)
+			Groups = model.Group.select(OR (model.Group.q.group_name.contains(SearchText),
+				model.Group.q.display_name.contains(SearchText)),
+				orderBy=[model.Group.q.group_name])
+			groups = [dict(id=x.id, name="%s [%s]" % (x.group_name, x.display_name)) for x in Groups]
+		elif UserID != None:
+			User = model.User.get(UserID)
+			groups =  [dict(id=x.id, name="%s [%s]" % (x.group_name, x.display_name)) for x in User.groups]
+		elif PermissionID != None:
+			Permission = model.Permission.get(PermissionID)
+			groups =  [dict(id=x.id, name="%s [%s]" % (x.group_name, x.display_name)) for x in Permission.groups]
+		elif GroupID != '':
+			Group = model.Group.get(GroupID)
+			groups = [dict(id=Group.id,name="%s [%s]" % (Group.group_name, Group.display_name))]
+		return dict(groups=groups)
+
+	@expose(format='json')
+	@validate(validators={'SearchText':validators.String(),'GroupID':validators.Int(),'UserID':validators.Int(),
+	'PermissionID':validators.Int()})
+	def FindPermissions(self, SearchText='', UserID=None, GroupID=None, PermissionID=None, **kw):
+		'''	Return a list of permissions  '''
+		if SearchText != '':
+			# Search for the permissions
+			SearchText = str(SearchText)
+			Permissions = model.Permission.select(OR (model.Permission.q.permission_name.contains(SearchText),
+				model.Permission.q.description.contains(SearchText)),
+				orderBy=[model.Permission.q.permission_name])
+			permissions = [dict(id=x.id, name="%s [%s]" % (x.permission_name, x.description)) for x in Permissions]
+		elif GroupID != None:
+			Group = model.Group.get(GroupID)
+			permissions =  [dict(id=x.id, name="%s [%s]" % (x.permission_name, x.description)) for x in Group.permissions]
+		elif UserID != None:
+			User = model.User.get(UserID)
+			for group in User.groups:
+				permissions =  [dict(id=x.id, name="%s [%s]" % (x.permission_name, x.description)) for x in group.permissions]
+		elif PermissionID != '':
+			Permission = model.Permission.get(PermissionID)
+			permissions = [dict(id=Permission.id,name="%s [%s]" % (Permission.permission_name, Permission.description))]
+		return dict(permissions=permissions)
+		
+	@expose(format='json')
+	@validate(validators={'Password':validators.String(),'UserID':validators.Int(),'UserName':validators.String(),
+	'DisplayName':validators.String(),'EmailAddress':validators.String(),'Operation':validators.String()})
+	def SaveUser(self, UserID=None, Groups=[], Password='', UserName='', DisplayName='', 
+		EmailAddress='', Operation='', **kw):
+		'''	Add/Update/Delete a user  '''
+		if Operation == 'New':
+			# Create a new user linked to the groups.
+			# Note: The password is autmatically hashed when the record is saved.  This is done on the SQLObject object.
+			User = model.User(user_name=UserName, display_name=DisplayName, password=Password, 
+				email_address=EmailAddress)
+			# Add the user to the groups (by id)
+			if isinstance(Groups, basestring): # only one group was added
+				User.addGroup(int(Groups))
 			else:
-				try:
-					CustomerID = int(barcode)
-					record = model.InvCustomer.get(CustomerID)
-				except (ValueError, SQLObjectNotFound): #Normally happens with an empty barcode
-					#Return an empty record with a 'NAME NOT FOUND' title
-					return dict(customerid=None, receiptid=None, receipt_status='(no data found)', \
-						receipt_items=[], receipt_history=[], customer_name='CUSTOMER DOES NOT EXIST!', \
-						financial={}, encounterid=None)
-				PurchaseDate, ReceiptID = record.MostRecentReceipt()
-				if ReceiptID != None:
-					record_rcpt = model.InvReceipt.get(ReceiptID)
-			CustomerName = record.Name
-			if ReceiptID == None:
-				Financial = dict(type='unknown', name='Unknown', firm=None, number=None)
-				return dict(customerid=CustomerID, receiptid=None, receipt_status='No Receipts', \
-					receipt_items=[], receipt_history=[], customer_name=CustomerName, \
-					financial=Financial, encounterid=None)
-			#Current receipt status
-			ReceiptStatus = record_rcpt.StatusText()
-		except:
-			raise
-			log.debug('Barcode: %s (%d), ReceiptID: %s' % (barcode, CustomerID, str(ReceiptID)))
-			for line in sys.exc_info():
-				log.debug('Message: %s' % str(line))
-			raise cherrypy.HTTPRedirect('ProgrammingError?next_link=billing&error="%s %s"' %
-				("Bad barcode: ",sys.exc_info()[0]))
-		#Load Receipt History
-		ReceiptHistory = []
-		receipt_history = [(x.CreateTime,x.TotalPaidCalc(),x.TotalPaymentCalc(),len(x.CatalogItems),x.Name(),x.id) \
-			for x in record.Receipts]
-		receipt_history.sort()
-		receipt_history.reverse()
-		for item in receipt_history:
-			try:
-				description = "%d items purchased on %s.  Rs. %d of Rs. %d paid" % (item[3],
-					item[0].strftime(DATE_FORMAT), item[1], item[2])
-			except AttributeError:
-				description = item[4]		
-			ReceiptHistory.append(dict(description=description, receiptid=item[5]))
-		#Load the Patient data and retreive the latest financial information
-		try:
-			#some initial records had receipt not tied to Encounters, so we'll fix that here if we need to.
-			if record_rcpt.ExternalId == None:
-				record_encounter = model.Encounter.get(model.Person.get(record.ExternalID).GetLatestEncounter(record_rcpt.CreateTime))
-				record_rcpt.ExternalId = record_encounter.id
+				for group in Groups:
+					User.addGroup(int(group))
+			message = "New User Added Successfully"
+		elif Operation == 'Save' and UserID != None:
+			User = model.User.get(UserID)
+			User.user_name = UserName
+			User.display_name = DisplayName
+			User.email_address = EmailAddress
+			User.password = Password
+			# Make a listing of the new groups
+			if isinstance(Groups, basestring):
+				NewGroups = [int(Groups)]
 			else:
-				record_encounter = model.Encounter.get(record_rcpt.ExternalId)
-			EncounterDate = record_encounter.EncounterDate 
-			InsuranceType = record_encounter.InsuranceClassNr.ClassId #class_id.  e.g. self_pay, private, charity, hospital, common (state run for everyone in the state)
-			InsuranceName = record_encounter.InsuranceClassNr.Name #name
-			if InsuranceType != 'self_pay':
-				try:
-					record_firm = model.InsuranceFirm.get(record_encounter.InsuranceFirmId)
-					InsuranceFirm = 'Firm: %s' % record_firm.Name #People who provide insurance, not valid with self pay
-					InsuranceNumber = 'Number: %s' % record_encounter.InsuranceNr #Policy Number
-				except (SQLObjectNotFound, AssertionError):
-					record_firm = None
-					InsuranceFirm = 'Unknown insurance firm: Probably a registration ERROR'
-					InsuranceNumber = 'Unknown insurance number: Check registration!!'
+				NewGroups = [int(x) for x in Groups]
+			# Make a listing of our current groups
+			CurrGroups = [x.id for x in User.groups]
+			# Add new groups
+			for group in NewGroups:
+				if not group in CurrGroups:
+					User.addGroup(group)
+			# Remove deleted groups
+			for group in CurrGroups:
+				if not group in NewGroups:
+					User.removeGroup(group)
+			message = "User Updated Successfully"
+		elif Operation == 'Delete' and UserID != None:
+			User = model.User.get(UserID)
+			# Remove groups
+			for group in User.groups:
+				User.removeGroup(group)
+			# Delete the User
+			User.destroySelf()
+			message="User Deleted"
+		else:
+			message = "Operation Failed"
+		return dict(message=message)
+
+	@expose(format='json')
+	@validate(validators={'GroupID':validators.Int(),'GroupName':validators.String(),'DisplayName':validators.String(),
+	'Operation':validators.String()})
+	def SaveGroup(self, GroupID=None, Users=[], Permissions=[], GroupName='', DisplayName='', Operation='', **kw):
+		'''	Add/Update/Delete a group  '''
+		if Operation == 'New':
+			# Create a new group
+			Group = model.Group(group_name=GroupName, display_name=DisplayName)
+			# Add the user to the groups (by id)
+			if isinstance(Users, basestring): # only one user was added
+				Group.addUser(int(Users))
 			else:
-				InsuranceFirm = 'Firm: None (self pay)'
-				InsuranceNumber = 'Number: None (self pay)'
-			# Calculate the balance owing (for all receipts)
-			BalanceOwing = record.CalcBalance()
-			if BalanceOwing > 0:
-				Balance = 'Customer owes: Rs. %d' % BalanceOwing
+				for user in Users:
+					Group.addUser(int(user))
+			if isinstance(Permissions, basestring): # only one user was added
+				Group.addPermission(int(Permissions))
 			else:
-				Balance = 'Customer credit: Rs. %d' % -BalanceOwing
-			# Set a flag indicating if the current Balance includes the current receipt
-			IsCurrReceiptInBalance = not (record.CalcBalance() == record.CalcBalance(record_rcpt.id))
-			# Calculate the balance paid on the current receipt
-			CurrReceiptPaid = record_rcpt.TotalPaidCalc()
-			# Calculate the total billed (all receipts)
-			AllReceipts = 'Total billed: Rs. %d' % record.CalcPayment()
-			# Calculate the total paid
-			AllPayments = 'Total payments: Rs. %d' % record.CalcPaymentsMade()
-			Financial = dict(type=InsuranceType, name=InsuranceName, firm=InsuranceFirm, number=InsuranceNumber,\
-				balance=Balance, balance_amt=BalanceOwing, curr_receipt_paid=CurrReceiptPaid, all_receipts=\
-				AllReceipts, all_payments=AllPayments, is_curr_receipt_in_balance=IsCurrReceiptInBalance)
-		except:
-			raise
-			raise cherrypy.HTTPRedirect('ProgrammingError?next_link=billing&error="Could not retrieve \
-				patient financial information: "+%s' % sys.exc_info()[0])
-		#If the receipt is un-assigned, ie. none of the items are have a stock location, then we have to choose
-		#potential candidates.  Where assignments are obvious, make the assignment, but mark the stocklocation
-		#as not being paid.
-		ReceiptItems = [] #We return this to the javascript program
-		StockLocationsList = [] #Array of stock locations
-		#Figure out the most popular stock location for non-services
-		for item in record_rcpt.CatalogItems:
-			if (not item.CatalogItem.IsService) and (len(item.StockItems)==0):
-				StockItemID = item.CatalogItem.NextStockItemID()
-				if not (StockItemID in [None, '', 'None']):
-					record_stockitem = model.InvStockItem.get(StockItemID)
-					StockLocationsList += [x.id for x in record_stockitem.Locations]					
-		StockLocations = dict([(x, StockLocationsList.count(x)) for x in StockLocationsList])
-		#Create our dictionary for the javascript program
-		for item in record_rcpt.CatalogItems:
-			LocationOptions = {}
-			UnitPrice = 0
-			LocationName = 'Item Not Available!' #Assign this just in case
-			LocationID = None
-			Total = 0
-			#Stock location options for the particular catalog item
-			StockItemID = item.CatalogItem.NextStockItemID()
-			if StockItemID != None:
-				record_stock = model.InvStockItem.get(StockItemID)
-				LocationOptions = dict([(x.id, x.Name()) for x in record_stock.AvailableStockLocations()])
-				UnitPrice = record_stock.SalePrice
-			if len(item.StockItems) == 0: #This means the item is not assigned and we should do that now
-				if (StockItemID != None) and (len(LocationOptions)>0):
-					description = record_stock.Name
-					if item.CatalogItem.IsService: #For services, assign the first location, options for others
-						LocationName = LocationOptions[LocationOptions.keys()[0]]
-					else: #Find the first location which matches the maximum count (i.e., the preferred location)
-						tmpStockLocations = dict([(x, StockLocations[x]) for x in LocationOptions])
-						LocationName = LocationOptions[tmpStockLocations.keys()[tmpStockLocations.values().index(max([tmpStockLocations[x] for x in set(LocationOptions)]))]]
-				else:
-					description = item.CatalogItem.Name + ' (NOT IN STOCK)'
-				if item.Status == '':
-					ReceiptItems.append(dict(receiptitemid=item.id, description=description, qty=item.Quantity,\
-						locationname=LocationName, locationoptions=LocationOptions, unitprice=UnitPrice,
-						catalogitemid=item.CatalogItemID, stocklocationid='', ismodified='true'))
-			else: #The item is assigned so we don't need to set a default
-				description = item.CatalogItem.Name
-				if item.Status == '':
-					for stocklocation in item.StockItems:
-						#Get the location where it's from based on the stock transfer (can be multiple locations)
-						LocationName = stocklocation.FromName()
-						ReceiptItems.append(dict(receiptitemid=item.id, description=description, qty=item.Quantity,\
-							locationname=LocationName, locationoptions=LocationOptions, unitprice=UnitPrice,
-							catalogitemid=item.CatalogItemID, stocklocationid=stocklocation.id, ismodified='false'))
-		return dict(customerid=CustomerID, receiptid=ReceiptID, receipt_status=ReceiptStatus, \
-			receipt_items=ReceiptItems, receipt_history=ReceiptHistory, customer_name=CustomerName, \
-			financial=Financial, encounterid=record_encounter.id)	
-			
+				for permission in Permissions:
+					Group.addPermission(int(permission))
+			message = "New Group Added Successfully"
+		elif Operation == 'Save' and GroupID != None:
+			Group = model.Group.get(GroupID)
+			Group.group_name = GroupName
+			Group.display_name = DisplayName
+			# Get our New users list
+			if isinstance(Users, basestring):
+				NewUsers = [int(Users)]
+			else:
+				NewUsers = [int(x) for x in Users]
+			# Get our current user list
+			CurrUsers = [x.id for x in Group.users]
+			# Add new users
+			for user in NewUsers:
+				if not user in CurrUsers:
+					Group.addUser(user)
+			# Remove deleted users
+			for user in CurrUsers:
+				if not user in NewUsers:
+					Group.removeUser(user)
+			# Get our New Permissions list
+			if isinstance(Permissions, basestring):
+				NewPermissions = [int(Permissions)]
+			else:
+				NewPermissions = [int(x) for x in Permissions]
+			# Get our current permissions
+			CurrPermissions = [x.id for x in Group.permissions]
+			# Add new permissions
+			for permission in NewPermissions:
+				if not permission in CurrPermissions:
+					Group.addPermission(permission)
+			# Remove deleted users
+			for permission in CurrPermissions:
+				if not permission in NewPermissions:
+					Group.removePermission(permission)
+			message = "Group Updated Successfully"
+		elif Operation == 'Delete' and GroupID != None:
+			Group = model.Group.get(GroupID)
+			# Remove users
+			for user in Group.users:
+				Group.removeUser(user)
+			# Remove permission
+			for permission in Group.permissions:
+				Group.removePermission(permission)
+			# Delete the Group
+			Group.destroySelf()
+			message="Group Deleted"
+		else:
+			message = "Operation Failed"
+		return dict(message=message)
+
+	@expose(format='json')
+	@validate(validators={'PermissionID':validators.Int(),'PermissionName':validators.String(),
+	'Description':validators.String(),'Operation':validators.String()})
+	def SavePermission(self, PermissionID=None, Groups=[], PermissionName='', Description='', Operation='', **kw):
+		'''	Add/Update/Delete a permission  '''
+		if Operation == 'New':
+			# Create a new permission linked to the groups.
+			Permission = model.Permission(permission_name=PermissionName, description=Description)
+			# Add the permission to the groups (by id)
+			if isinstance(Groups, basestring): # only one group was added
+				Permission.addGroup(int(Groups))
+			else:
+				for group in Groups:
+					Permission.addGroup(int(group))
+			message = "New Permission Added Successfully"
+		elif Operation == 'Save' and PermissionID != None:
+			Permission = model.Permission.get(PermissionID)
+			Permission.permission_name = PermissionName
+			Permission.description = Description
+			# Make a listing of the new groups
+			if isinstance(Groups, basestring):
+				NewGroups = [int(Groups)]
+			else:
+				NewGroups = [int(x) for x in Groups]
+			# Make a listing of our current groups
+			CurrGroups = [x.id for x in Permission.groups]
+			# Add new groups
+			for group in NewGroups:
+				if not group in CurrGroups:
+					Permission.addGroup(group)
+			# Remove deleted groups
+			for group in CurrGroups:
+				if not group in NewGroups:
+					Permission.removeGroup(group)
+			message = "Permission Updated Successfully"
+		elif Operation == 'Delete' and PermissionID != None:
+			Permission = model.Permission.get(PermissionID)
+			# Remove groups
+			for group in Permission.groups:
+				Permission.removeGroup(group)
+			# Delete the Permission
+			Permission.destroySelf()
+			message="Permission Deleted"
+		else:
+			message = "Operation Failed"
+		return dict(message=message)
