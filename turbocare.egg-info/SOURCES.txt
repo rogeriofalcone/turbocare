@@ -4,6 +4,8 @@ care2x-bug.rtf
 dev-sample.cfg
 inv_catalog_item_test_values.sql
 mysql_schema.py
+printer_server_tdp643.py
+prod-sample.cfg
 setup.py
 start-turbocare.py
 tgsetup.py
@@ -16,13 +18,14 @@ turbocare/browse.py
 turbocare/controllers.py
 turbocare/controllers_UDReport.py
 turbocare/controllers_billing.py
+turbocare/controllers_configuration.py
 turbocare/controllers_dispensing.py
-turbocare/controllers_his.py
 turbocare/controllers_inventory.py
 turbocare/controllers_registration.py
 turbocare/controllers_reports.py
 turbocare/controllers_saved_reports.py
 turbocare/controllers_store.py
+turbocare/controllers_user_manager.py
 turbocare/field_examples.txt
 turbocare/inventory_AddressCitytown.py
 turbocare/inventory_CatalogCompound.py
@@ -68,6 +71,7 @@ turbocare/printer_tdp643.py
 turbocare/release.py
 turbocare/report_CatalogItems.py
 turbocare/report_Generic.py
+turbocare/turbocare_modpython.py
 turbocare/utils.py
 turbocare/widgets_his.py
 turbocare.egg-info/PKG-INFO
@@ -85,6 +89,7 @@ turbocare/report/AddressBox.py
 turbocare/report/LetterHead.py
 turbocare/report/PurchaseOrder.py
 turbocare/report/PurchaseOrder.pyc
+turbocare/report/QuoteRequest.py
 turbocare/report/__init__.py
 turbocare/report/__init__.pyc
 turbocare/report/logo.jpg
@@ -137,6 +142,8 @@ turbocare/static/javascript/PickList.js
 turbocare/static/javascript/QueryBoxes.js
 turbocare/static/javascript/RenderReport.js
 turbocare/static/javascript/UDReport.js
+turbocare/static/javascript/UDReportEditQuery.js
+turbocare/static/javascript/UDReportView.js
 turbocare/static/javascript/billing.js
 turbocare/static/javascript/billing_receiptitemsadd.js
 turbocare/static/javascript/browse.js
@@ -160,6 +167,7 @@ turbocare/static/javascript/stores_CatalogItemsEditor.js
 turbocare/static/javascript/stores_GoodsReceivedEditor.js
 turbocare/static/javascript/stores_PurchaseOrdersEditor.js
 turbocare/static/javascript/stores_QuoteRequestsEditor.js
+turbocare/static/javascript/stores_QuoteRequestsPrint.js
 turbocare/static/javascript/stores_QuotesEditor.js
 turbocare/static/javascript/stores_StockItemsEditor.js
 turbocare/static/javascript/stores_StockTransferRequestsEditor.js
@@ -342,12 +350,16 @@ turbocare/static/user_reports/warehouse_main_view/Blah
 turbocare/static/user_reports/warehouse_store_view/blah
 turbocare/static/user_reports/warehouse_store_view/inv_report
 turbocare/templates/UDReport.kid
+turbocare/templates/UDReportBuilder.kid
+turbocare/templates/UDReportEditor.kid
+turbocare/templates/UDReportViewer.kid
 turbocare/templates/__init__.py
 turbocare/templates/billing.kid
 turbocare/templates/billing_receiptitemsadd.kid
 turbocare/templates/browse_grid.kid
 turbocare/templates/catwalk.kid
 turbocare/templates/columns.kid
+turbocare/templates/configuration_menu.kid
 turbocare/templates/dataentryerror.kid
 turbocare/templates/dispensing.kid
 turbocare/templates/form.kid
@@ -372,7 +384,9 @@ turbocare/templates/stocktransfer.kid
 turbocare/templates/store_catalogitemseditor.kid
 turbocare/templates/store_goodsreceivededitor.kid
 turbocare/templates/store_menu.kid
+turbocare/templates/store_purchaseorderprint.kid
 turbocare/templates/store_purchaseorderseditor.kid
+turbocare/templates/store_quoterequestprint.kid
 turbocare/templates/store_quoterequestseditor.kid
 turbocare/templates/store_quoteseditor.kid
 turbocare/templates/store_stockitemseditor.kid
@@ -380,4 +394,5 @@ turbocare/templates/store_stocktransferrequestseditor.kid
 turbocare/templates/store_stocktransferseditor.kid
 turbocare/templates/store_vendorseditor.kid
 turbocare/templates/three_column.kid
+turbocare/templates/usermanager.kid
 turbocare/templates/welcome.kid
