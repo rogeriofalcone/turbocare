@@ -12,6 +12,7 @@ from sqlobject import *
 import turbogears
 from turbogears import  controllers, expose, validate, redirect, widgets, validators, flash
 from turbogears import identity
+from turbogears import config
 from turbogears.toolbox.catwalk import CatWalk 
 import model
 import model_inventory
@@ -34,8 +35,7 @@ MAX_LEVELS = 1 # The maximum depth that we search for sub-tables
 RD = ReportDefinition.ReportDefinition
 CS = 'ColumnSort'
 CD = 'ColumnDefinitions'
-ReportBaseDir = 'turbocare/static/user_reports/'
-
+ReportBaseDir = config.get('turbocare.reportdir','turbocare/static/user_reports')
 class UserDefinedReport(controllers.RootController):
 	'''	User defined reports.  This gives the greatest amount of flexibility to the user for reporting.
 		A simplified user interface to perform simple ad-hoc queries against the database which

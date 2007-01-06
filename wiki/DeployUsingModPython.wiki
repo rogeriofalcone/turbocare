@@ -138,6 +138,19 @@ Go to http://localhost and https://localhost in a Web Browser.
 
 Both should display first page of turbocare.  
 
+==Reports==
+_nano ~/prod.cfg_
+
+Add turbocare.reportdir=/pathtoreportsdirectory
+
+chown -R www-data /pathtoreports directory
+
+e.g.
+
+_chown -R www-data /home/david/turbocare/turbocare/start/user_reports_
+
+
+edit base report directory
 
 ==Upgrades==
 To upgrade turbocare
