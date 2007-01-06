@@ -8,20 +8,9 @@ function postJSON(url, postVars) {
     return d.addCallback(evalJSONRequest);
 }
 
-function hasParent(id,parent_id) {
-	var node = getElement(id);
-	var ret_val = false;
-	while (node.parentNode != null) {
-		if (node.parentNode.id == parent_id){
-			ret_val = true;
-		}
-		node = node.parentNode;
-	}
-	return ret_val;
-}
 
 var um = {};
-var um.NextJoinList = '';// String representation of the function to execute
+um.NextJoinList = '';// String representation of the function to execute
 
 um.collectPostVars = function(f)
 {
@@ -312,16 +301,15 @@ um.MovePermission = function(e) {
 	This is only done when the column is in edit mode
 */
 um.SelectUser = function(e) {
+	e.stop();
 	if (hasElementClass("UserColumn","Column-lite")) {
-		var el = e.src().parentNode;
+		var el = e.target();
 		// Remove hi-lite from hi-lited items
 		var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','UserColumn');
 		for (var i=0; i<elems.length; i++) {
 			removeElementClass(elems[i],'ListBoxItem-Lite');
-			addElementClass(elems[i],'ListBoxItem');
 		}
 		// Add hi-lite to current item
-		removeElementClass(el,'ListBoxItem');
 		addElementClass(el,'ListBoxItem-Lite');
 		// Move the item values to the form below
 		getElement("UserEdit_Password").value = '';
@@ -329,7 +317,8 @@ um.SelectUser = function(e) {
 		var inputs = getElementsByTagAndClassName('INPUT',null,el);
 		for (var i=0; i<inputs.length; i++) {
 			if (inputs[i].name == "id") {
-				getElement("UserEdit_id").value = inputs[i].value;
+				var ID = inputs[i].value;
+				getElement("UserEdit_id").value = ID;
 			} else if (inputs[i].name == "UserName") {
 				getElement("UserEdit_UserName").value = inputs[i].value;
 			} else if (inputs[i].name == "DisplayName") {
@@ -338,7 +327,9 @@ um.SelectUser = function(e) {
 				getElement("UserEdit_EmailAddress").value = inputs[i].value;
 			}
 		}
-		
+		// Render the list of joined groups and permissions
+		um.NextJoinList = 'um.LoadJoindPermissions('+ID+',null)';
+		um.LoadJoinedGroups(ID,null);
 	}
 }
 /*
@@ -346,29 +337,31 @@ um.SelectUser = function(e) {
 	This is only done when the column is in edit mode
 */
 um.SelectGroup = function(e) {
+	e.stop();
 	if (hasElementClass("GroupColumn","Column-lite")) {
-		var el = e.src().parentNode;
+		var el = e.target();
 		// Remove hi-lite from hi-lited items
 		var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','GroupColumn');
 		for (var i=0; i<elems.length; i++) {
 			removeElementClass(elems[i],'ListBoxItem-Lite');
-			addElementClass(elems[i],'ListBoxItem');
 		}
 		// Add hi-lite to current item
-		removeElementClass(el,'ListBoxItem');
 		addElementClass(el,'ListBoxItem-Lite');
 		// Move the item values to the form below
 		var inputs = getElementsByTagAndClassName('INPUT',null,el);
 		for (var i=0; i<inputs.length; i++) {
 			if (inputs[i].name == "id") {
-				getElement("GroupEdit_id").value = inputs[i].value;
+				var ID = inputs[i].value;
+				getElement("GroupEdit_id").value = ID;
 			} else if (inputs[i].name == "GroupName") {
 				getElement("GroupEdit_GroupName").value = inputs[i].value;
 			} else if (inputs[i].name == "DisplayName") {
 				getElement("GroupEdit_DisplayName").value = inputs[i].value;
 			}
 		}
-		
+		// Render the list of joined users and permissions
+		um.NextJoinList = 'um.LoadJoindPermissions(null,'+ID+')';
+		um.LoadJoinedUsers(ID,null);		
 	}
 }
 /*
@@ -376,16 +369,15 @@ um.SelectGroup = function(e) {
 	This is only done when the column is in edit mode
 */
 um.SelectPermission = function(e) {
+	e.stop();
 	if (hasElementClass("PermissionColumn","Column-lite")) {
-		var el = e.src().parentNode;
+		var el = e.target();
 		// Remove hi-lite from hi-lited items
 		var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','PermissionColumn');
 		for (var i=0; i<elems.length; i++) {
 			removeElementClass(elems[i],'ListBoxItem-Lite');
-			addElementClass(elems[i],'ListBoxItem');
 		}
 		// Add hi-lite to current item
-		removeElementClass(el,'ListBoxItem');
 		addElementClass(el,'ListBoxItem-Lite');
 		// Move the item values to the form below
 		var inputs = getElementsByTagAndClassName('INPUT',null,el);
@@ -398,7 +390,9 @@ um.SelectPermission = function(e) {
 				getElement("PermissionEdit_PermissionDescription").value = inputs[i].value;
 			}
 		}
-		
+		// Render the list of joined groups and users
+		um.NextJoinList = 'um.LoadJoindUsers(null,'+ID+')';
+		um.LoadJoinedGroups(null,ID);				
 	}
 }
 /*
@@ -423,7 +417,7 @@ um.GetJoinedIDs = function(VarName, ParentNode){
 	PermissionID - We want to filter on a Permission
 */
 um.LoadJoinedUsers = function(GroupID, PermissionID) {
-	if (GroupID==null&&PermissionID==null) {
+	if (GroupID!=null||PermissionID!=null) {
 		if (GroupID!=null) {
 			var postVars = 'GroupID='+GroupID;
 		} else {
@@ -466,7 +460,7 @@ um.RenderJoinedUsers = function(d) {
 	PermissionID - We want to filter on a Permission
 */
 um.LoadJoinedGroups = function(UserID, PermissionID) {
-	if (UserID==null&&PermissionID==null) {
+	if (UserID!=null||PermissionID!=null) {
 		if (UserID!=null) {
 			var postVars = 'UserID='+UserID;
 		} else {
@@ -509,13 +503,17 @@ um.RenderJoinedGroups = function(d) {
 	GroupID - We want to filter on a Group
 */
 um.LoadJoinedPermissions = function(UserID, GroupID) {
-	if (UserID!=null) {
-		var postVars = 'UserID='+UserID;
+	if (UserID!=null||GroupID!=null) {
+		if (UserID!=null) {
+			var postVars = 'UserID='+UserID;
+		} else {
+			var postVars = 'GroupID='+GroupID;
+		}
+		var d = postJSON("FindPermissions",postVars);
+		d.addCallbacks(um.RenderJoinedPermissions,um.error_report);
 	} else {
-		var postVars = 'GroupID='+GroupID;
+		replaceChildNodes('JoinedPermissionsSelect',null);
 	}
-	var d = postJSON("FindPermissions",postVars);
-	d.addCallbacks(um.RenderJoinedPermissions,um.error_report);
 }
 /*
 	RenderJoinedPermissions: Display the listing of joined permissions
@@ -583,7 +581,8 @@ um.CancelUser = function(e){
 		var inputs = getElementsByTagAndClassName('INPUT',null,el);
 		for (var i=0; i<inputs.length; i++) {
 			if (inputs[i].name == "id") {
-				getElement("UserEdit_id").value = inputs[i].value;
+				var ID = inputs[i].value
+				getElement("UserEdit_id").value = ID;
 			} else if (inputs[i].name == "UserName") {
 				getElement("UserEdit_UserName").value = inputs[i].value;
 			} else if (inputs[i].name == "DisplayName") {
@@ -592,6 +591,9 @@ um.CancelUser = function(e){
 				getElement("UserEdit_EmailAddress").value = inputs[i].value;
 			}
 		}
+		// Render the list of joined groups and permissions
+		um.NextJoinList = 'um.LoadJoindPermissions('+ID+',null)';
+		um.LoadJoinedGroups(ID,null);
 	} else { // we created a new user, now we're resetting
 		getElement("UserEdit_Password").value = '';
 		getElement("UserEdit_PasswordVerify").value = '';
@@ -599,6 +601,8 @@ um.CancelUser = function(e){
 		getElement("UserEdit_UserName").value = '';
 		getElement("UserEdit_DisplayName").value = '';
 		getElement("UserEdit_EmailAddress").value = '';
+		um.LoadJoinedGroups(null,null);
+		um.LoadJoindPermissions(null,null);
 	}
 }
 /*
@@ -606,42 +610,69 @@ um.CancelUser = function(e){
 */
 um.NewUser = function(e){
 	if (confirm('Are you sure you want a new entry?')){
+		// Remove hi-lite from hi-lited items
+		var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','UserColumn');
+		for (var i=0; i<elems.length; i++) {
+			removeElementClass(elems[i],'ListBoxItem-Lite');
+		}
 		getElement("UserEdit_Password").value = '';
 		getElement("UserEdit_PasswordVerify").value = '';
 		getElement("UserEdit_id").value = '';
 		getElement("UserEdit_UserName").value = '';
 		getElement("UserEdit_DisplayName").value = '';
 		getElement("UserEdit_EmailAddress").value = '';
+		um.LoadJoinedGroups(null,null);
+		um.LoadJoindPermissions(null,null);
 	}
 }
 /*
 	DeleteUser: delete the entry
 */
 um.DeleteUser = function(e){
-	var ID = getElement("UserEdit_id").value;
+	if (confirm('Are you sure you want to delete?')) {
+		var ID = getElement("UserEdit_id").value;
+		var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','UserColumn');
+		if (elems.length > 0) {
+			var el = elems[0];
+			var inputs = getElementsByTagAndClassName('INPUT',null,el);
+			var CheckID = null;
+			for (var i=0; i<inputs.length; i++) {
+				if (inputs[i].name == "id") {
+					CheckID = inputs[i].value;
+					break;
+				}
+			}
+			if (CheckID == ID && ID!=null) {
+				um.toggle_message("Deleting...");
+				var postVars  = "UserID="+ID+"&Operation=Delete";
+				var d = postJSON("SaveUser",postVars);
+				d.addCallbacks(um.DeleteUserClean,um.error_report);
+			} else {
+				alert('Error: Inconsistency match with deleting IDs - Did you hack the DOM?');
+			}
+		} else {
+			alert('Error: No user selected for deletion! (User must be selected in the top listing)');
+		}
+	}
+}
+/*
+	DeleteUserClean: remove the object from DOM and clean up the joined lists
+*/
+um.DeleteUserClean = function(d) {
+	um.toggle_message('');
+	um.LoadJoinedGroups(null,null);
+	um.LoadJoindPermissions(null,null);
+	getElement("UserEdit_Password").value = '';
+	getElement("UserEdit_PasswordVerify").value = '';
+	getElement("UserEdit_id").value = '';
+	getElement("UserEdit_UserName").value = '';
+	getElement("UserEdit_DisplayName").value = '';
+	getElement("UserEdit_EmailAddress").value = '';
 	var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','UserColumn');
 	if (elems.length > 0) {
 		var el = elems[0];
-		var inputs = getElementsByTagAndClassName('INPUT',null,el);
-		var CheckID = null;
-		for (var i=0; i<inputs.length; i++) {
-			if (inputs[i].name == "id") {
-				CheckID = inputs[i].value;
-				break;
-			}
-		}
-		if (CheckID == ID && ID!=null) {
-			um.toggle_message("Deleting...");
-			// Remove the DOM object because the delete will most likely succeed
-			var postVars  = "UserID="+ID+"&Operation=Delete";
-			var d = postJSON("SaveUser",postVars);
-			d.addCallbacks(um.updated,um.error_report);
-		} else {
-			alert('Error: Inconsistency match with deleting IDs - Did you hack the DOM?');
-		}
-	} else {
-		alert('Error: No user selected for deletion! (User must be slected in the top listing)');
-	}	
+		swapDOM(el,null);
+	}
 }
 /*
 	SaveGroup: Save the entry
@@ -659,7 +690,7 @@ um.SaveGroup = function(e){
 		var d = postJSON("SaveGroup",postVars);
 		d.addCallbacks(um.updated,um.error_report);
 	} else { // Create a new group
-		var postVars  = "GroupID="+ID+"&GroupName="+GroupName+"&DisplayName="+DisplayName;
+		var postVars  = "GroupName="+GroupName+"&DisplayName="+DisplayName;
 		postVars += "&Operation=New";
 		postVars += um.GetJoinedIDs('Users','JoinedUsersSelect');
 		postVars += um.GetJoinedIDs('Permissions','JoinedPermissionsSelect');
@@ -678,242 +709,290 @@ um.CancelGroup = function(e){
 		var inputs = getElementsByTagAndClassName('INPUT',null,el);
 		for (var i=0; i<inputs.length; i++) {
 			if (inputs[i].name == "id") {
-				getElement("GroupEdit_id").value = inputs[i].value;
+				var ID = inputs[i].value;
+				getElement("GroupEdit_id").value = ID;
 			} else if (inputs[i].name == "GroupName") {
 				getElement("GroupEdit_GroupName").value = inputs[i].value;
 			} else if (inputs[i].name == "DisplayName") {
 				getElement("GroupEdit_DisplayName").value = inputs[i].value;
 			}
 		}
+		um.NextJoinList = 'um.LoadJoindPermissions(null,'+ID+')';
+		um.LoadJoinedUsers(ID,null);		
 	} else { // we created a new user, now we're resetting
 		getElement("GroupEdit_id").value = '';
 		getElement("GroupEdit_GroupName").value = '';
 		getElement("GroupEdit_DisplayName").value = '';
+		um.LoadJoinedUsers(null,null);		
+		um.LoadJoindPermissions(null,null);		
 	}
 }
 /*
 	NewGroup: Make a blank entry
 */
-um.NewUser = function(e){
-	if (confirm('Are you sure you want a new entry?'))
+um.NewGroup = function(e){
+	if (confirm('Are you sure you want a new entry?')){
+		// Remove hi-lite from hi-lited items
+		var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','GroupColumn');
+		for (var i=0; i<elems.length; i++) {
+			removeElementClass(elems[i],'ListBoxItem-Lite');
+		}
 		getElement("GroupEdit_id").value = '';
 		getElement("GroupEdit_GroupName").value = '';
 		getElement("GroupEdit_DisplayName").value = '';
+		um.LoadJoinedUsers(null,null);		
+		um.LoadJoindPermissions(null,null);		
 	}
 }
 /*
-	DeleteUser: Save the entry
+	DeleteGroup: Delete the entry
 */
-um.DeleteUser = function(e){
-	var ID = getElement("UserEdit_id").value;
-	var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','UserColumn');
-	if (elems.length > 0) {
-		var el = elems[0];
-		var inputs = getElementsByTagAndClassName('INPUT',null,el);
-		var CheckID = null;
-		for (var i=0; i<inputs.length; i++) {
-			if (inputs[i].name == "id") {
-				CheckID = inputs[i].value;
-				break;
-			}
-		}
-		if (CheckID == ID && ID!=null) {
-			um.toggle_message("Deleting...");
-			// Remove the DOM object because the delete will most likely succeed
-			var postVars  = "UserID="+ID+"&Operation=Delete";
-			var d = postJSON("SaveUser",postVars);
-			d.addCallbacks(um.updated,um.error_report);
-		} else {
-			alert('Error: Inconsistency match with deleting IDs - Did you hack the DOM?');
-		}
-	} else {
-		alert('Error: No user selected for deletion! (User must be slected in the top listing)');
-	}	
-}
-um.showPOVendor = function(id){
-	var purchaseorders = getElement("PurchaseOrders");
-	//first, hide all other Purchase order vendor lines
-	var elems = getElementsByTagAndClassName(null,"listingrowcontain_show",purchaseorders);
-	if (elems.length > 0) {
-		for (var i=0;i<elems.length;i++){
-			swapElementClass(elems[i],"listingrowcontain_show","listingrowcontain");
-			//removeEmptyTextNodes(elems[i]);
-			//var sub_elems = getElementsByTagAndClassName(null, "listingrow", elems[i]);
-			var sub_elems = getElementsByTagAndClassName('DIV',null, elems[i]);
-			for (var j=0;j<sub_elems.length;j++){
-				//alert(sub_elems[j].id);
-				//swapElementClass(sub_elems[j],"listingrow","listingrow_hidden");
-				setNodeAttribute(sub_elems[j],'style','display:none');
-			}
-		}
-	}
-	//Now show our selected line
-	var elem = getElement(id);
-	if (getNodeAttribute(elem,"class") == null){
-		alert('help me, i am stuck in the computer, let me out.');
-	} else {
-		swapElementClass(elem,"listingrowcontain","listingrowcontain_show");
-		//var elems = getElementsByTagAndClassName(null, "listingrow_hidden", elem);
-		var elems = getElementsByTagAndClassName('DIV',null, elem);
-		for (var i=0;i<elems.length;i++){
-			//	alert(elems[j].id);
-			//swapElementClass(elems[i],"listingrow_hidden", "listingrow");
-			setNodeAttribute(elems[i],'style','display:block');
-		}
-	}
-}
-
-um.hidePOVendor = function(id){
-	elem = getElement(id);
-	for (var i=1;i<elem.childNodes.length;i++){
-		makeInvisible(elem.childNodes[i]);
-	}
-}
-
-um.moveItem = function(){
-	var purchaseorders = getElement("PurchaseOrders");
-	//get the vendor
-	var elems = getElementsByTagAndClassName(null,"listingrow_vendor",document);
-	var vendor = elems[0];
-	for (var i=0;i<elems.length;i++){
-		swapElementClass(elems[i],"listingrow_vendor","listingrow");
-	}
-	//get the catalogitem
-	var elems = getElementsByTagAndClassName(null,"listingrow_item",document);
-	if (elems.length < 1) {
-		alert('There is a problem with the javascript.');
-	}
-	var catalogitem = elems[0];
-	for (var i=0;i<elems.length;i++){
-		swapElementClass(elems[i],"listingrow_item","listingrow");
-	}
-	if ((vendor == null) || (catalogitem == null)){
-		alert("First, choose a catalog item and a vendor.");
-	} else {
-		//look for vendor in purchase order list
-		var vendor_po = getElement("PO_"+vendor.id);
-		var linkdiv = createDOM('DIV',{'id':'closelink_'+catalogitem.id, 'class':'listingrow'});
-		var closelink = createDOM('A',{'href':'javascript:um.removeItem("'+catalogitem.id+'")'}, "Remove");
-		linkdiv.appendChild(closelink);
-		if (getNodeAttribute(vendor_po,"class") == null) {
-			elems = getElementsByTagAndClassName("input",null,vendor);
-			for (i=0;i<elems.length;i++){
-				if (elems[i].name == "vendorname"){
-					var VendorName = elems[i].value;
+um.DeleteGroup = function(e){
+	if (confirm('Are you sure you want to delete?')) {
+		var ID = getElement("GroupEdit_id").value;
+		var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','GroupColumn');
+		if (elems.length > 0) {
+			var el = elems[0];
+			var inputs = getElementsByTagAndClassName('INPUT',null,el);
+			var CheckID = null;
+			for (var i=0; i<inputs.length; i++) {
+				if (inputs[i].name == "id") {
+					CheckID = inputs[i].value;
+					break;
 				}
 			}
-			var vendor_po = createDOM('DIV',{'id':'PO_'+vendor.id, 'class':'listingrowcontain', 'onclick':'um.showPOVendor("PO_'+vendor.id+'")'},VendorName);
-			vendor_po.appendChild(linkdiv);
-			vendor_po.appendChild(catalogitem.cloneNode(true));
-			swapDOM(catalogitem,null);
-			purchaseorders.appendChild(vendor_po);
+			if (CheckID == ID && ID!=null) {
+				um.toggle_message("Deleting...");
+				var postVars  = "GroupID="+ID+"&Operation=Delete";
+				var d = postJSON("SaveGroup",postVars);
+				d.addCallbacks(um.DeleteGroupClean,um.error_report);
+			} else {
+				alert('Error: Inconsistency match with deleting IDs - Did you hack the DOM?');
+			}
 		} else {
-			vendor_po.appendChild(linkdiv);
-			vendor_po.appendChild(catalogitem.cloneNode(true));
-			swapDOM(catalogitem,null);
+			alert('Error: No group selected for deletion! (Group must be selected in the top listing)');
 		}
-		//show our current po vendor line
-		um.showPOVendor('PO_'+vendor.id);
-		um.clearVendors();
 	}
 }
-
-um.selectVendor = function(id){
-	//deselect any previous vendor and select current vendor
-	var elems = getElementsByTagAndClassName(null,"listingrow_vendor",document);
-	for (var i=0;i<elems.length;i++){
-		swapElementClass(elems[i],"listingrow_vendor","listingrow");
+/*
+	DeleteGroupClean: remove the object from DOM and clean up the joined lists
+*/
+um.DeleteGroupClean = function(d) {
+	um.toggle_message('');
+	getElement("GroupEdit_id").value = '';
+	getElement("GroupEdit_GroupName").value = '';
+	getElement("GroupEdit_DisplayName").value = '';
+	um.LoadJoinedUsers(null,null);		
+	um.LoadJoindPermissions(null,null);		
+	var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','GroupColumn');
+	if (elems.length > 0) {
+		var el = elems[0];
+		swapDOM(el,null);
 	}
-	vendor = getElement("vendor_"+id);
-	swapElementClass(vendor,"listingrow","listingrow_vendor");
-	//Find the current quote price
-	for (var i=0;i<vendor.childNodes.length;i++){
-		if (vendor.childNodes[i].name == 'QuotePrice'){
-			var QuotePrice = vendor.childNodes[i].value;
-		}
-		if (vendor.childNodes[i].name == 'id'){
-			var VendorId = vendor.childNodes[i].value;
-		}
-	}	
-	//find the selected catalog item and change the quote price
-	var elems = getElementsByTagAndClassName(null,"listingrow_item",document);
-	var catalogitem = elems[0];
-	if (getNodeAttribute(catalogitem,"class") == "listingrow_item"){
-		elems = getElementsByTagAndClassName("input",null,catalogitem);
-		for (var i=0;i<elems.length;i++){
-			if (elems[i].name == 'QuotePrice'){
-				elems[i].value = QuotePrice;
+}
+/*
+	SavePermission: Save the entry
+*/
+um.SavePermission = function(e){
+	var ID = getElement("PermissionEdit_id").value;
+	var PermissionName = getElement("PermissionEdit_PermissionName").value;
+	var Description = getElement("PermissionEdit_PermissionDescription").value;
+	um.toggle_message("Saving...");
+	if (ID!='') { // Update a group
+		var postVars  = "PermissionID="+ID+"&PermissionName="+PermissionName+"&Description="+Description;
+		postVars += "&Operation=Save";
+		postVars += um.GetJoinedIDs('Groups','JoinedGroupsSelect');
+		var d = postJSON("SavePermission",postVars);
+		d.addCallbacks(um.updated,um.error_report);
+	} else { // Create a new group
+		var postVars  = "PermissionName="+PermissionName+"&Description="+Description;
+		postVars += "&Operation=New";
+		postVars += um.GetJoinedIDs('Groups','JoinedGroupsSelect');
+		var d = postJSON("SavePermission",postVars);
+		d.addCallbacks(um.updated,um.error_report);
+	}
+}
+/*
+	CancelPermission: Cancel the entry, reload from the original entry
+*/
+um.CancelPermission = function(e){
+	var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','PermissionColumn');
+	if (elems.length > 0) { // Updating a user, and we're resetting
+		var el = elems[0];
+		// reload values
+		var inputs = getElementsByTagAndClassName('INPUT',null,el);
+		for (var i=0; i<inputs.length; i++) {
+			if (inputs[i].name == "id") {
+				var ID = inputs[i].value;
+				getElement("PermissionEdit_id").value = ID;
+			} else if (inputs[i].name == "PermissionName") {
+				getElement("PermissionEdit_PermissionName").value = inputs[i].value;
+			} else if (inputs[i].name == "Description") {
+				getElement("PermissionEdit_PermissionDescription").value = inputs[i].value;
 			}
-			if (elems[i].name == 'Vendor'){
-				elems[i].value = VendorId;
+		}
+		um.NextJoinList = 'um.LoadJoindUsers(null,'+ID+')';
+		um.LoadJoinedGroups(null,ID);				
+	} else { // we created a new user, now we're resetting
+		getElement("PermissionEdit_id").value = '';
+		getElement("PermissionEdit_PermissionName").value = '';
+		getElement("PermissionEdit_PermissionDescription").value = '';
+		um.LoadJoinedUsers(null,null);		
+		um.LoadJoinedGroups(null,null);		
+	}
+}
+/*
+	NewPermission: Make a blank entry
+*/
+um.NewPermission = function(e){
+	if (confirm('Are you sure you want a new entry?')){
+		// Remove hi-lite from hi-lited items
+		var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','PermissionColumn');
+		for (var i=0; i<elems.length; i++) {
+			removeElementClass(elems[i],'ListBoxItem-Lite');
+		}		
+		getElement("PermissionEdit_id").value = '';
+		getElement("PermissionEdit_PermissionName").value = '';
+		getElement("PermissionEdit_PermissionDescription").value = '';
+		um.LoadJoinedUsers(null,null);		
+		um.LoadJoinedGroups(null,null);		
+	}
+}
+/*
+	DeletePermission: Delete the entry
+*/
+um.DeletePermission = function(e){
+	if (confirm('Are you sure you want to delete?')) {
+		var ID = getElement("PermissionEdit_id").value;
+		var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','PermissionColumn');
+		if (elems.length > 0) {
+			var el = elems[0];
+			var inputs = getElementsByTagAndClassName('INPUT',null,el);
+			var CheckID = null;
+			for (var i=0; i<inputs.length; i++) {
+				if (inputs[i].name == "id") {
+					CheckID = inputs[i].value;
+					break;
+				}
 			}
+			if (CheckID == ID && ID!=null) {
+				um.toggle_message("Deleting...");
+				var postVars  = "PermissionID="+ID+"&Operation=Delete";
+				var d = postJSON("SavePermission",postVars);
+				d.addCallbacks(um.DeletePermissionClean,um.error_report);
+			} else {
+				alert('Error: Inconsistency match with deleting IDs - Did you hack the DOM?');
+			}
+		} else {
+			alert('Error: No permission selected for deletion! (Permission must be selected in the top listing)');
 		}
 	}
 }
-
-um.openListing = function(url,dest){
-	//This also does a search like above
-	//url: Where to get the data; dest: where to place the result object, defaults to main location
-	if (dest != null){
-		um.list_dest = dest;
-	} else {
-		um.list_dest = null;
-	}
-	if (url != null){
-		um.toggle_message("Loading...");
-	 	var d = loadJSONDoc(url);
-	  	d.addCallback(um.renderListing);
-	}
-}
-
-um.openPickList = function(url){
-	if (url != null){
-		um.toggle_message("Loading...");
-	 	var d = loadJSONDoc(url);
-	  	d.addCallback(um.pickList);
+/*
+	DeleteGroupClean: remove the object from DOM and clean up the joined lists
+*/
+um.DeletePermissionClean = function(d) {
+	um.toggle_message('');
+	getElement("PermissionEdit_id").value = '';
+	getElement("PermissionEdit_PermissionName").value = '';
+	getElement("PermissionEdit_PermissionDescription").value = '';
+	um.LoadJoinedUsers(null,null);		
+	um.LoadJoinedGroups(null,null);		
+	var elems = getElementsByTagAndClassName('DIV','ListBoxItem-Lite','PermissionColumn');
+	if (elems.length > 0) {
+		var el = elems[0];
+		swapDOM(el,null);
 	}
 }
-
-// load view/form data =========
-
-um.clearVendors = function() {
-	var vendors = createDOM('DIV',{'id':'vendors', 'style':'overflow:auto;'});
-	swapDOM('vendors',vendors);
+/*
+	SelectColumn: Select either the User, Group or Permission column
+	show and hide various sections depending on choice.
+*/
+um.SelectColumn = function(e){
+	var el = e.src();//or is it src();
+	// Remove the Column-Lite class
+	var cols = getElementsByTagAndClassName('DIV','Column-lite',document);
+	for (var i=0; i<cols.length; i++) {
+		removeElementClass(cols[i],'Column-lite');
+	}
+	// Remove the ListBoxItem-Lite class
+	var cols = getElementsByTagAndClassName('DIV','ListBoxItem-Lite',document);
+	for (var i=0; i<cols.length; i++) {
+		removeElementClass(cols[i],'ListBoxItem-Lite');
+	}
+	addElementClass(el,'Column-lite');
+	// Modify the columns
+	if (el.id=='UserColumn') {
+		getElement('JoinedUsers').style.display = 'none';
+		getElement('UserEditor').style.display = '';
+		getElement('JoinedGroups').style.display = '';
+		getElement('GroupEditor').style.display = 'none';
+		getElement('JoinedPermissions').style.display = '';
+		getElement('PermissionEditor').style.display = 'none';
+	} else if (el.id=='GroupColumn') {
+		getElement('JoinedUsers').style.display = '';
+		getElement('UserEditor').style.display = 'none';
+		getElement('JoinedGroups').style.display = 'none';
+		getElement('GroupEditor').style.display = '';
+		getElement('JoinedPermissions').style.display = '';
+		getElement('PermissionEditor').style.display = 'none';
+	} else if (el.id=='PermissionColumn') {
+		getElement('JoinedUsers').style.display = '';
+		getElement('UserEditor').style.display = 'none';
+		getElement('JoinedGroups').style.display = '';
+		getElement('GroupEditor').style.display = 'none';
+		getElement('JoinedPermissions').style.display = 'none';
+		getElement('PermissionEditor').style.display = '';
+	}
 }
-um.renderVendors = function(data){
-	var tr = function(label, data){
-		var row = createDOM('TR',null);
-		var label = createDOM('TD',label);
-		var data = createDOM('TD',data);
-		row.appendChild(label);
-		row.appendChild(data);
-		return row;
-	}
-	var vendorDiv = function(record){
-		var br = createDOM('BR',null);
-		var div = createDOM('DIV',{'class':'listingrow','id':'vendor_'+record.id, 'ondblclick':'um.selectVendor('+record.id+')'});
-		var vendorname = createDOM('INPUT',{'type':'hidden', 'name':'vendorname', 'value':record.Name + ", " + record.Description});
-		var vendorid = createDOM('INPUT',{'type':'hidden', 'name':'id', 'value':record.id});
-		var quoteprice = createDOM('INPUT',{'type':'hidden', 'name':'QuotePrice', 'value':record.Price});
-		var table = createDOM('TABLE',{'class':'minimal'});
-		var tbody = createDOM('TBODY',null);
-		appendChildNodes(tbody, tr("Name",record.Name + ", " + record.Description), tr("Ranking",record.Ranking), tr("Product",record.Product), tr("Price","Rs. " + record.Price), tr("Notes",record.Notes), tr("Valid starting",record.ValidOn));
-		table.appendChild(tbody);
-		div.appendChild(vendorname);
-		div.appendChild(vendorid);
-		div.appendChild(quoteprice);
-		div.appendChild(table);
-		return div;
-	}
-	um.toggle_message();
-	var vendors = createDOM('DIV',{'id':'vendors', 'style':'overflow:auto;'});
-	for (var i=0; i<data.items.length;i++){
-		var record = data.items[i];
-		if (record.Status != 'deleted'){
-			vendors.appendChild(vendorDiv(record));
+/*
+	SearchBoxKeydown: Detects a key down event for all the search boxes
+*/
+um.SearchBoxKeydown = function(e) {
+	if (e.key()['string']=='KEY_ENTER') {
+		e.stop();
+		var el = e.src();
+		if (el.id == 'SearchUser') {
+			um.LoadUsers();
+		} else if (el.id == 'SearchGroup') {
+			um.LoadGroups();
+		} else if (el.id == 'SearchPermission') {
+			um.LoadPermissions();
 		}
 	}
-	swapDOM('vendors',vendors);
 }
-
-connect(document,'onload',um.OnLoad);
+/*
+	OnLoad: Attache events when the document is loaded
+*/
+um.OnLoad = function(e) {
+	connect('btnSearchUser','onclick',um.LoadUsers);
+	connect('btnSearchGroup','onclick',um.LoadGroups);
+	connect('btnSearchPermission','onclick',um.LoadPermissions);
+	connect('UserEdit_btnNew','onclick',um.NewUser);
+	connect('UserEdit_btnSave','onclick',um.SaveUser);
+	connect('UserEdit_btnCancel','onclick',um.CancelUser);
+	connect('UserEdit_btnDelete','onclick',um.DeleteUser);
+	connect('GroupEdit_btnNew','onclick',um.NewGroup);
+	connect('GroupEdit_btnSave','onclick',um.SaveGroup);
+	connect('GroupEdit_btnCancel','onclick',um.CancelGroup);
+	connect('GroupEdit_btnDelete','onclick',um.DeleteGroup);
+	connect('PermissionEdit_btnNew','onclick',um.NewPermission);
+	connect('PermissionEdit_btnSave','onclick',um.SavePermission);
+	connect('PermissionEdit_btnCancel','onclick',um.CancelPermission);
+	connect('PermissionEdit_btnDelete','onclick',um.DeletePermission);
+	connect('SearchUser','onkeydown',um.SearchBoxKeydown);
+	connect('SearchGroup','onkeydown',um.SearchBoxKeydown);
+	connect('SearchPermission','onkeydown',um.SearchBoxKeydown);
+	connect('UserColumn','ondblclick',um.SelectColumn);
+	connect('GroupColumn','ondblclick',um.SelectColumn);
+	connect('PermissionColumn','ondblclick',um.SelectColumn);
+	// Initialize our screen for users
+	getElement('JoinedUsers').style.display = 'none';
+	getElement('UserEditor').style.display = '';
+	getElement('JoinedGroups').style.display = '';
+	getElement('GroupEditor').style.display = 'none';
+	getElement('JoinedPermissions').style.display = '';
+	getElement('PermissionEditor').style.display = 'none';
+	um.LoadUsers();
+}
+connect(window,'onload',um.OnLoad);
