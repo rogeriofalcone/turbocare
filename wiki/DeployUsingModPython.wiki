@@ -2,7 +2,7 @@
 
 = Introduction =
 
-This is a quick guide to installing turbocare using mod_python on Ubuntu.  Using Apache to serve the static content makes things nice and fast.
+This is a quick guide to installing turbocare using mod_python on Ubuntu.  Using Apache to serve the static content makes things nice and fast.  This is very much designed as a step by step documenting one way of setting things up.  There are other ways to do most things in here.  
 
 
 = Steps =
@@ -17,21 +17,86 @@ _sudo apt-get install python-pysqlite2 python-mysqldb python-imaging  python-dev
 _sudo apt-get install apache2 libapache2-mod-python2.4_
 
 ===Install turbogears===
-_sudo easyinstall -Z TurboGears_
 
-_sudo easyinstall -Z sqlobject_  (Note you may need to specify v0.7)
+_sudo easy'_'install -Z TurboGears_
+
+_sudo easy'_'install -Z sqlobject_  (Note you may need to specify v0.7 as 0.8 and 0.9 have caused me some troubles) 
+
+Note when using easy'_'install we need to specify the install as unziped eggs as this stops apache from trying to extract the eggs into its own home directory.
 
 ===Install turbocare===
 _cd ~/_
 
 _svn checkout http://turbocare.googlecode.com/svn/trunk/ turbocare_
 
+===Setup database===
+We should add a password to MySQL's root user but I will add that later. 
+
+_mysql -u root -p_
+press enter as no password yet.
+
+at the prompt _create database care2x_
+
+press enter and then ctrl-D to exit. 
 
 
+_cd ~/turbocare_
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+_python mysqlschema.py -d care2x -u root -o schemaupdt -f turbocareschema.data_ 
 
+_python mysqlschema.py -d care2x -u root -o restore -f turbocarebackup.data_ 
 
+===Check standalone turbocare===
+_cp dev-sample.cfg dev.cfg_
+_nano dev.cfg_
+Check that all the variables are right. Particularly the sqlobject.dburi string.
+
+_python start-turbocare.py_ 
+
+If this loads without errors you have installed turbocare. Start working using 127.0.0.1:8080.
+
+===Modpython time===
+_cd ~/turbocare_
+_cp sample_prod.cfg prod.cfg_
+_nano prod.cfg_
+(Update the database variable and change log files if you want to)
+
+_sudo python setup.py install_
+(We need to install the files for apache to be able to find them.  After every update you need to run this command.)
+
+Copy Modpython Gateway to sitepackages.
+_sudo cp modpython_gateway.py /usr/lib/python2.4/site-pakages_
+
+Copy Apache def files
+_sudo cp apache-turbocare.conf /etc/apache2/sites-available/turbocare_
+
+_sudo cp apache-ssl-turbocare.conf /etc/apache2/sites-available/turbocare-ssl_
+
+_sudo nano /etc/apache2/sites-available/turbocare_
+(Change any references to /home/david to the home/USER where user is the user in which you have done the installation with)
+_sudo nano /etc/apache2/sites-available/turbocare-ssl_
+(Change any references to /home/david to the home/USER where user is the user in which you have done the installation with)
+
+_sudo a2enmod mod_python_
+_sudo a2enmod  ssl_
+
+_sudo a2dissite default_
+_sudo a2ensite turbocare_
+_sudo a2ensite turbocare-ssl_
+_sudo nano /etc/apache2/ports.conf_
+(Add line ÒListen 443Ó)
+
+_sudo /etc/init.d/apache2 restart_
+
+Go to http://localhost and https://localhost in a webbrowser. Both should display first page of turbocare.  
+
+==Upgrades==
+To upgrade turbocare
+_cd ~/turbocare_
+_svn update_
+_sudo python setup.py install_
+_sudo /etc/init.d/apache2 restart_
+
+=References=
+[http://trac.turbogears.org/wiki/ModPythonIntegration09]
+[http://www.linode.com/wiki/index.php/Apache2_SSL_in_Ubuntu]
