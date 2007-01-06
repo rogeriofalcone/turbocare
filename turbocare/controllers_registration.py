@@ -433,7 +433,7 @@ class Registration(turbogears.controllers.Controller):
 			SelectedCity = '(id:%s) %s in %s, %s (%s)' % (AddrCitytownNrID, Block, CityTownName, \
 				District, PostOffice)
 		# Figure out the age
-		if DateBirth=='':
+		if DateBirth=='' or DateBirth==None:
 			Age = None
 		else:
 			Age = int(((datetime.datetime.now().date() - patient.DateBirth).days+0.5)/365.25)
