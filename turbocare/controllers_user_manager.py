@@ -61,9 +61,13 @@ class UserManager(controllers.RootController):
 			Permission = model.Permission.get(PermissionID)
 			for group in Permission.groups:
 				users =  [dict(id=x.id, name="%s [%s]" % (x.user_name, x.display_name), db=x) for x in group.users]
-		elif UserID != '':
+		elif UserID != None:
 			User = model.User.get(UserID)
 			users = [dict(id=User.id,name="%s [%s]" % (User.user_name, User.display_name), db=User)]
+		else:
+			# Search for all users
+			Users = model.User.select(orderBy=[model.User.q.user_name])
+			users = [dict(id=x.id, name="%s [%s]" % (x.user_name, x.display_name), db=x) for x in Users]			
 		return dict(users=users)
 
 	@expose(format='json')
@@ -84,9 +88,13 @@ class UserManager(controllers.RootController):
 		elif PermissionID != None:
 			Permission = model.Permission.get(PermissionID)
 			groups =  [dict(id=x.id, name="%s [%s]" % (x.group_name, x.display_name), db=x) for x in Permission.groups]
-		elif GroupID != '':
+		elif GroupID != None:
 			Group = model.Group.get(GroupID)
 			groups = [dict(id=Group.id,name="%s [%s]" % (Group.group_name, Group.display_name), db=Group)]
+		else:
+			# Search for all groups
+			Groups = model.Group.select(orderBy=[model.Group.q.group_name])
+			groups = [dict(id=x.id, name="%s [%s]" % (x.group_name, x.display_name), db=x) for x in Groups]
 		return dict(groups=groups)
 
 	@expose(format='json')
@@ -108,9 +116,13 @@ class UserManager(controllers.RootController):
 			User = model.User.get(UserID)
 			for group in User.groups:
 				permissions =  [dict(id=x.id, name="%s [%s]" % (x.permission_name, x.description), db=x) for x in group.permissions]
-		elif PermissionID != '':
+		elif PermissionID != None:
 			Permission = model.Permission.get(PermissionID)
 			permissions = [dict(id=Permission.id,name="%s [%s]" % (Permission.permission_name, Permission.description), db=Permission)]
+		else:
+			# Search for all permissions
+			Permissions = model.Permission.select(orderBy=[model.Permission.q.permission_name])
+			permissions = [dict(id=x.id, name="%s [%s]" % (x.permission_name, x.description), db=x) for x in Permissions]
 		return dict(permissions=permissions)
 		
 	@expose(format='json')

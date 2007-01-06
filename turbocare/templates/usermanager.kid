@@ -17,14 +17,7 @@
 			width: 250px;
 			border: 1px solid gray;
 			font-size: 10px;}
-		.Column-lite { position: relative;
-			display: table-cell;
-			padding: 5px 5px 5px 5px;
-			margin: 5px 5px 5px 5px;
-			width: 250px;
-			border: 1px solid gray;
-			background-color: yellow;
-			font-size: 10px;}
+		.Column-lite { background-color: yellow;}
 		.ListingBox { position: relative;
 			padding: 1px 1px 1px 1px;
 			margin: 1px 1px 1px 1px;
@@ -35,23 +28,18 @@
 			background-color: lightgray;
 			font-size: 10px;
 			overflow: auto;}
-		.ListBoxItem {text-align: center;
+		.ListBoxItem {text-align: left;
 			color: black;
-			background-color: #FFEEEE;
 			border: thin inset black;
 			padding: 1px;
 			margin: 1px;}
-		.ListBoxItem-Lite {text-align: center;
-			color: black;
-			background-color: #yellow;
-			border: thin inset black;
-			padding: 1px;
-			margin: 1px;}
+		.ListBoxItem-Lite {background-color: #FFEEEE;}
 	</style>
+	<SCRIPT SRC="/static/javascript/UserManager.js" TYPE="text/javascript"></SCRIPT>
 </head>
 <body>
 	<DIV style="text-align:center; width:100%; left:10%; position:relative">
-		<DIV id="UserColumn" class="Column-lite">
+		<DIV id="UserColumn" class="Column Column-lite">
 			<div class="ColumnTitle">Users</div>
 			<Table>
 				<TBODY>
@@ -160,7 +148,7 @@
 						<TD><INPUT type="text" id="SearchPermission" name="SearchPermission" value="" /></TD>
 					</TR>
 					<TR>
-						<TD colspan="2" style="text-align:right"><BUTTON type="button" id="btnSearchPermissions" name="btnSearchPermissions" value="Search">Search</BUTTON></TD>
+						<TD colspan="2" style="text-align:right"><BUTTON type="button" id="btnSearchPermission" name="btnSearchPermissions" value="Search">Search</BUTTON></TD>
 					</TR>
 				</TBODY>
 			</Table>
@@ -187,7 +175,7 @@
 					</TBODY>
 				</Table>
 				<DIV style="text-align:center">
-					<INPUT type="text" id="PermissionEdit_id" name="id" value="" />
+					<INPUT type="hidden" id="PermissionEdit_id" name="id" value="" />
 					<BUTTON type="button" id="PermissionEdit_btnNew" name="btnNew" value="New">New</BUTTON>
 					<BUTTON type="button" id="PermissionEdit_btnSave" name="btnSave" value="Save">Save</BUTTON>
 					<BUTTON type="button" id="PermissionEdit_btnCancel" name="btnCancel" value="Cancel">Cancel</BUTTON>
