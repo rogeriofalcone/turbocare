@@ -708,7 +708,8 @@ class Registration(turbogears.controllers.Controller):
 		FinancialClassNr = 'common'
 		if encounter != None:
 			FinancialClassNr = patient.GetLatestEncounterVar(VarName='FinancialClassNrID')
-		items=[x[0] for x in conn.queryAll('select distinct name from care_class_financial')]
+		#items=[x[0] for x in conn.queryAll('select distinct name from care_class_financial')]
+		items = [x.Name for x in model.ClassFinancial.select(distinct=True)]
 		financialclassnrs=[]
 		for financialclassnr in items:
 			if financialclassnr == Occupation:
