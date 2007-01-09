@@ -19,6 +19,7 @@
     </SCRIPT>
     <SCRIPT SRC="/tg_static/js/widget.js" TYPE="text/javascript">
     </SCRIPT>
+     <SCRIPT SRC="/static/javascript/stores_QuickMenu.js" TYPE="text/javascript"></SCRIPT>
   </head>
 
 <body>
@@ -49,12 +50,12 @@
 						</div>
 						<div class="row">
 							<div class="label">Description</div>
-							<div><TEXTAREA name="Description" rows="4" cols="40">${Description}</TEXTAREA>
+							<div><TEXTAREA name="Description" rows="3" cols="40">${Description}</TEXTAREA>
 							</div>
 						</div>
 						<div class="row">
 							<div class="label">Delivery Instructions</div>
-							<div><TEXTAREA name="DeliveryInstructions" rows="4" cols="40">${DeliveryInstructions}</TEXTAREA>
+							<div><TEXTAREA name="DeliveryInstructions" rows="3" cols="40">${DeliveryInstructions}</TEXTAREA>
 							</div>
 						</div>
 						<div class="row">

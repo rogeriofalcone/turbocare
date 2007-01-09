@@ -1069,13 +1069,22 @@ class InvStockLocation(SQLObject):
 		if self.Status == 'deleted':
 			value += 1000
 		if self.Status != '':
-			value += 300
-		if self.IsConsumed or self.IsSold:
 			value += 200
-		if self.Status == '':
-			value -= int(self.Quantity)
-		# self.Sort = value
+		if self.QtyAvailable() > 0:
+			if self.StockItem.ExpireDate == None:
+				value += 500
+			elif (self.StockItem.ExpireDate + timedelta(days=7)) < cur_date_time():
+				value -= 500
+			else:
+				value += (cur_date_time() - self.ExpireDate).days
+		else:
+			value += 1000
+		self.Sort = value
 		return value
+		
+	def RateOfConsumption(self):
+		'''	The number of items consumed per day for the last 365 days '''
+		return float(self.StockItem.CatalogItem.Consumption(datetime.now()-timedelta(days=365))/float(365))
 
 #	def _set_IsConsumed(self, value):
 #		try:

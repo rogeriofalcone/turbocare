@@ -18,6 +18,7 @@
     </SCRIPT>
     <SCRIPT SRC="/tg_static/js/widget.js" TYPE="text/javascript">
     </SCRIPT>
+      <SCRIPT SRC="/static/javascript/stores_QuickMenu.js" TYPE="text/javascript"></SCRIPT>
   </head>
 
 <body>

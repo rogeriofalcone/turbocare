@@ -19,7 +19,8 @@
     </SCRIPT>
     <SCRIPT SRC="/tg_static/js/widget.js" TYPE="text/javascript">
     </SCRIPT>
-  </head>
+     <SCRIPT SRC="/static/javascript/stores_QuickMenu.js" TYPE="text/javascript"></SCRIPT>
+   </head>
 
 <body>
 	<DIV style="position:relative; width:100%; left:0px; font-size:12px" class="divtable">

@@ -22,7 +22,7 @@ TODO list
 	- Multi-page reports
 	
 6. User Manager
-- Replace Catwalk with a custom screen
+- Debug new user manager
 
 7. TurboGears Configuration
 - Address editor

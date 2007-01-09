@@ -20,7 +20,6 @@ log = logging.getLogger("turbocare.controllers")
 conn = model.hub.getConnection()
 
 class Registration(turbogears.controllers.Controller):
-#===== Inventory App Stuff ====================================================
 	@expose(html='turbocare.templates.registration_search')
 	def index(self, **kw):
 		return dict(title="Registration Search")
@@ -719,7 +718,8 @@ class Registration(turbogears.controllers.Controller):
 				financialclassnrs.append(dict(id=model.CLASS_FIN[financialclassnr], name=financialclassnr, selected=None))
 		#EncounterType Configuration
 		EncounterType = 'Walk-in'
-		items=[x[0] for x in conn.queryAll('select distinct name from care_type_encounter')]
+		#items=[x[0] for x in conn.queryAll('select distinct name from care_type_encounter')]
+		items = [x.Name for x in model.TypeEncounter.select(distinct=True)]
 		encountertypes=[]
 		for encountertype in items:
 			if encountertype == EncounterType:
@@ -755,7 +755,8 @@ class Registration(turbogears.controllers.Controller):
 		'''	Type ahead lookup for occupations
 		'''
 		Occupation = Occupation.lower()
-		items=[x[0] for x in conn.queryAll('select distinct occupation from care_person')]
+		#items=[x[0] for x in conn.queryAll('select distinct occupation from care_person')]
+		items = [x.Occupation for x in model.Person.select(distinct=True)]
 		if len(items)>0:
 			return dict(occupations=filter(lambda item: item != None and Occupation in item.lower(), items))
 		else:
@@ -766,7 +767,8 @@ class Registration(turbogears.controllers.Controller):
 		'''	Type ahead lookup for relationships
 		'''
 		Relationship = Relationship.lower()
-		items=[x[0] for x in conn.queryAll('select distinct contact_relation from care_person')]
+		#items=[x[0] for x in conn.queryAll('select distinct contact_relation from care_person')]
+		items = [x.ContactRelation for x in model.Person.select(distinct=True)]
 		if len(items) > 0:
 			return dict(relationships=filter(lambda item: item != None and Relationship in item.lower(), items))
 		else:

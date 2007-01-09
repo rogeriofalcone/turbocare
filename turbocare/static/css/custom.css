@@ -115,6 +115,23 @@ input { font-size: 85%;
 	position: relative;
 	left: 5px;
 }
+/* Left Pop Up menu */
+.PopUpMenuTopLeft {
+	cursor: pointer;
+	float: left;
+	font-size: 10px;
+	font-family: verdana;
+	border: thin groove #102132;
+	background-color: lightgray;
+	left: 10px;
+	top: 30px;
+	position: absolute;
+	text-align: center;
+	z-index: 5;
+}
+.PopUpMenuHide {
+	background-color: green;
+}
 SELECT { font-size: 85%;
 			background-color: #D7E5F2;
 			border: 1px solid gray;

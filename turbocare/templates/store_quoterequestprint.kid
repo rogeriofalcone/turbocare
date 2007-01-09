@@ -18,7 +18,8 @@
     </SCRIPT>
   <SCRIPT SRC="/static/javascript/stores_QuoteRequestsPrint.js" TYPE="text/javascript">
     </SCRIPT>
-</head>
+     <SCRIPT SRC="/static/javascript/stores_QuickMenu.js" TYPE="text/javascript"></SCRIPT>
+ </head>
 
 <body>
 	<DIV style="position:relative; width:100%; left:0px; font-size:12px" class="divtable">

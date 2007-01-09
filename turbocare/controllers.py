@@ -37,11 +37,13 @@ class Root(controllers.RootController):
 			    if getattr(self,name_disp,None) == None:
 				    setattr(self,name_disp,eval('identity.SecureObject(controllers_dispensing.Dispensing(%d),identity.has_permission("%s_view"))' % (location.id, name_disp)))
 	    
-     #catwalk = CatWalk(model,allowedHosts=['127.0.0.1','192.168.11.3','192.168.11.120'])
-    catwalk = CatWalk(model_userperm) #Create a user admininstrator CatWalk with the custom User Model.
-    catwalk = identity.SecureObject(catwalk,identity.has_permission('admin_catwalk'))  #Securing objects is good. 
+    # NOTE: CatWalk is no longer required to manager user accounts
+    #catwalk = CatWalk(model,allowedHosts=['127.0.0.1','192.168.11.3','192.168.11.120'])
+    #catwalk = CatWalk(model_userperm) #Create a user admininstrator CatWalk with the custom User Model.
+    #catwalk = identity.SecureObject(catwalk,identity.has_permission('admin_catwalk'))  #Securing objects is good. 
     #tempwalk = CatWalk(model_userperm) #Create a user admininstrator CatWalk with the custom User Model.
     user_manager = controllers_user_manager.UserManager()
+    user_manager = identity.SecureObject(user_manager,identity.has_permission('admin_users'))
     billing = controllers_billing.Billing()
     billing = identity.SecureObject(billing,identity.has_permission('bill_view'))
 	
@@ -146,14 +148,14 @@ class Root(controllers.RootController):
 		    if getattr(self,name_disp,None) != None and identity.has_permission('%s_view' % name_disp):
 			    for group in location.Groups:
 				    if LocationDispGroups.has_key(group.Name):
-					    LocationDispGroups[group.Name].append(dict(link='/%s' % name_store, name='%s Dispensing' % location.Name,sub_menu=[]))
+					    LocationDispGroups[group.Name].append(dict(link='/%s' % name_disp, name='%s Dispensing' % location.Name,sub_menu=[]))
 				    else:
-					    LocationDispGroups[group.Name] = [dict(link='/%s' % name_store, name='%s Dispensing' % location.Name,sub_menu=[])]
+					    LocationDispGroups[group.Name] = [dict(link='/%s' % name_disp, name='%s Dispensing' % location.Name,sub_menu=[])]
 			    if len(location.Groups) == 0:
 				    if LocationDispGroups.has_key('Other'):
-					    LocationDispGroups['Other'].append(dict(link='/%s' % name_store, name='%s Dispensing' % location.Name,sub_menu=[]))
+					    LocationDispGroups['Other'].append(dict(link='/%s' % name_disp, name='%s Dispensing' % location.Name,sub_menu=[]))
 				    else:
-					    LocationDispGroups['Other'] = [dict(link='/%s' % name_store, name='%s Dispensing' % location.Name,sub_menu=[])]
+					    LocationDispGroups['Other'] = [dict(link='/%s' % name_disp, name='%s Dispensing' % location.Name,sub_menu=[])]
         if len(LocationStoreGroups) > 0:
 		SubMenu = []
 		keys = LocationStoreGroups.keys()
@@ -170,8 +172,8 @@ class Root(controllers.RootController):
 		results.append(dict(link='', name='Dispensing', sub_menu=SubMenu))
         if identity.has_permission("admin_controllers_inventory"):
             results.append(dict(link='/inventory',name='Admin Inventory',sub_menu=[]))
-        if identity.has_permission("admin_catwalk"):
-            results.append(dict(link='/catwalk',name='User admin',sub_menu=[]))
+        if identity.has_permission("admin_users"):
+            results.append(dict(link='/user_manager',name='User admin',sub_menu=[]))
         if identity.has_permission("admin_controllers_configuration"):
             results.append(dict(link='/configuration',name='Configuration Admin',sub_menu=[]))
         return results

@@ -6,7 +6,8 @@
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
     <LINK HREF="/static/css/table.css" TYPE="text/css" REL="stylesheet"/>
     <title>${LocationName} Store</title>
-</head>
+     <SCRIPT SRC="/static/javascript/stores_QuickMenu.js" TYPE="text/javascript"></SCRIPT>
+ </head>
 <body>
  	<DIV class="big_text_1">${LocationName} Store
 		<DIV class="big_text_2">Menu</DIV>
