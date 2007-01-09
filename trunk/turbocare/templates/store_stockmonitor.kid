@@ -24,60 +24,58 @@
 <body>
 	<DIV style="position:relative; width:100%; left:0px; font-size:12px" class="divtable">
 		<div class="row">
-			<div style="display:table;width:600px">
-				<div style="display:table-row;">
-					<div style="display:table-cell;">
-						<form name="StockItemSearchForm" id="StockItemSearchForm">
-							<div style="border:1px solid black; padding:2px;" class="divtable_input">
-								<div class="row">
-									<div style="vertical-align:top;" >Item Name</div>
-									<div><INPUT type="text" id="CatalogItemName" name="CatalogItemName" size="25" value="" /></div>
-								</div>
-								<div class="row">
-									<div style="vertical-align:top;" >Item Groups</div>
-									<div>
-										<SELECT id="CatalogItemGroups" name="CatalogItemGroups" multiple="multiple" size="4">
-											<OPTION py:for="item in cataloggroups" value="${item['id']}">${item['name']}</OPTION>
-										</SELECT>
-									</div>
-								</div>
-								<div class="row">
-									<div></div>
-									<div style="text-align:right">
-										<INPUT type="reset"  />
-										<INPUT id="btnCatalogItemSearch" type="button" value="Search" name="btnCatalogItemSearch" />
-									</div>
-								</div>
-							</div> 
-						</form>
+			<form name="StockItemSearchForm" id="StockItemSearchForm" action="StockMonitor" method="post">
+				<div style="border:1px solid black; padding:2px;" class="divtable_input">
+					<div class="row">
+						<div style="vertical-align:top;" >Item Name</div>
+						<div><INPUT type="text" id="SearchText" name="SearchText" size="25" value="${SearchText}" /></div>
 					</div>
-					<div style="display:table-cell; padding:2px;">
-						<form action="PurchaseOrderCreate" name="PurchaseOrderCreate" id="PurchaseOrderCreate">
-						<div style="display:inline-table">
-							<div id="PurchaseOrderItemList" style="display:block; background-color:pink; width:350px;height:125px;overflow:auto">
-							</div>
+					<div class="row">
+						<div style="vertical-align:top;" >Item Groups</div>
+						<div>
+							<SELECT id="Groups" name="Groups" multiple="multiple" size="4">
+								<OPTION py:for="item in CatalogItemGroups" value="${item['id']}" selected="${item['selected']}">${item['name']}</OPTION>
+							</SELECT>
 						</div>
-						<div id="buttons" style="display:table;text-align:right; width:350px" class="topbuttons">
-							<input name="Operation" id="btnPurchaseOrderCreate" type="submit" value="Create" ></input>
+					</div>
+					<div class="row">
+						<div></div>
+						<div style="text-align:right">
+							<INPUT type="reset"  />
+							<INPUT id="btnStockItemSearch" type="submit" value="Search" name="btnStockItemSearch" />
 						</div>
-						</form>
+					</div>
+				</div> 
+			</form>
+		</div>
+		<br />
+		<div class="row">
+			Displaying ${len(results)} of ${ResultCount} Stock Items from ${LocationName}
+		</div>
+		<br />
+		<div class="row">
+			<div style="font-size:12px; border:1px solid black" id="StockItemsList" class="divtable_input">
+				<div class="row">
+					<div py:for="item in ColumnTitles" style="text-align:center; padding-left: 5px; border-left:1px solid gray; border-bottom:1px solid black">
+						${item}
 					</div>
 				</div>
-			</div>
-			<br />
-			<div style="font-size:12px; border:1px solid black" id="CatalogItemsList" class="divtable_input">
-				<div py:for="item in catalogitems" class="row">
-					<INPUT type="hidden" name="CatalogItemID" value="${item['id']}" />
-					<INPUT type="hidden" name="Counter" value="1" />
-					<div style="text-align:left; padding: 0px 1px 0px 1px">
-						<INPUT type="checkbox" name="CatalogItemCheck" />
+				<div py:for="item in results" class="row" style="">
+					<div style="text-align:left; padding-left: 5px; border-left:1px solid gray; border-bottom:3px solid white;">
+						<a href="StockItemsEditor?StockItemID=${item['StockItemID']}">${item['StockItemName']}</a>
 					</div>
-					<div style="text-align:left; padding-left: 5px; border-left:1px solid gray;">
-						<a href="CatalogItemsEditor?CatalogItemID=${item['id']}">${item['name']}</a>
+					<div style="text-align:left; padding-left: 5px; border-left:1px solid gray; border-bottom:3px solid white;">
+						<a href="CatalogItemsEditor?CatalogItemID=${item['CatalogItemID']}">${item['CatalogItemName']}</a>
 					</div>
-					<div style="text-align:left; padding-left: 5px; border-left:1px solid gray;">${item['stock']}</div>
-					<div style="text-align:left; padding-left: 5px; border-left:1px solid gray;">${item['reorder']}</div>
-					<div style="text-align:left; padding-left: 5px; border-left:1px solid gray;">${item['lastpo']}</div>
+					<div style="text-align:right; padding-left: 5px; border-left:1px solid gray; border-bottom:3px solid white">${item['QtyAvailable']}</div>
+					<div style="text-align:right; padding-left: 5px; border-left:1px solid gray; border-bottom:3px solid white;">${item['RateOfConsumption']}</div>
+					<div style="text-align:right; padding-left: 5px; border-left:1px solid gray; border-bottom:3px solid white;">${item['QtyAvailableLocation']}</div>
+					<div style="text-align:right; padding-left: 5px; border-left:1px solid gray; border-bottom:3px solid white;">${item['QtyConsumedLocation']}</div>
+					<div style="text-align:right; padding-left: 5px; border-left:1px solid gray; border-bottom:3px solid white;">${item['QtyTransferredToLocation']}</div>
+					<div style="text-align:right; padding-left: 5px; border-left:1px solid gray; border-bottom:3px solid white;">${item['QtyTransferredFromLocation']}</div>
+					<div style="text-align:right; padding-left: 5px; border-left:1px solid gray; border-bottom:3px solid white;">${item['QtyTransferringToLocation']}</div>
+					<div style="text-align:right; padding-left: 5px; border-left:1px solid gray; border-bottom:3px solid white;">${item['QtyTransferringFromLocation']}</div>
+					<div style="text-align:right; padding-left: 5px; border-left:1px solid gray; border-bottom:3px solid white;">${item['QtyCreatedAtLocation']}</div>
 				</div>
 			</div>
 		</div>

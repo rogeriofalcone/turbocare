@@ -539,6 +539,10 @@ class InvStockItem(SQLObject):
 		self.Sort = value
 		return value
 					
+	def RateOfConsumption(self):
+		'''	The number of items consumed per day for the last 365 days '''
+		return float(self.CatalogItem.Consumption(datetime.now()-timedelta(days=365))/float(365))
+		
 	def QtyReceived(self):
 		sum = 0
 		for item in self.Locations:
