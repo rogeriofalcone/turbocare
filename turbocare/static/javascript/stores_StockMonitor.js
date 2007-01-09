@@ -1,8 +1,4 @@
-/*
-	IMPORT vars
 
-import pick.*;
-*/
 //Document wide variables
 var barcode = {};//The barcode object
 //The barcode value
