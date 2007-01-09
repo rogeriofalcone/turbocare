@@ -559,6 +559,63 @@ class InvStockItem(SQLObject):
 				sum += item.Quantity
 		return sum
 		
+	def QtyAvailableAtLocationID(self,LocationID):
+		'''	Calculate the amount of stock available at the specified location id'''
+		sum = 0.0
+		for item in self.Locations:
+			if item.LocationID==int(LocationID):
+				if not (item.IsConsumed or item.IsSold):
+					sum += item.Quantity
+		return sum
+		
+	def QtyConsumedAtLocationID(self,LocationID):
+		'''	Calculate the amount of stock consumed at the specified location id'''
+		sum = 0.0
+		for item in self.Locations:
+			if item.LocationID==int(LocationID) and item.IsConsumed:
+				sum += item.Quantity
+		return sum
+	
+	def QtyTransferredToLocationID(self,LocationID):
+		'''	Calculate the amount of stock transferred to the specified location id'''
+		sum = 0.0
+		for item in self.Locations:
+			if item.LocationID==int(LocationID):
+				sum += item.QtyTransferredHere()
+		return sum
+		
+	def QtyTransferringToLocationID(self,LocationID):
+		'''	Calculate the amount of stock transferring (not complete) to the specified location id'''
+		sum = 0.0
+		for item in self.Locations:
+			if item.LocationID==int(LocationID):
+				sum += item.QtyTransferringHere()
+		return sum
+		
+	def QtyTransferredFromLocationID(self,LocationID):
+		'''	Calculate the amount of stock transferred from the specified location id'''
+		sum = 0.0
+		for item in self.Locations:
+			if item.LocationID==int(LocationID):
+				sum += item.QtyTransferredAway()
+		return sum
+	
+	def QtyTransferringFromLocationID(self,LocationID):
+		'''	Calculate the amount of stock transferring (not complete) from the specified location id'''
+		sum = 0.0
+		for item in self.Locations:
+			if item.LocationID==int(LocationID):
+				sum += item.QtyTransferringAway()
+		return sum
+	
+	def QtyCreatedAtLocationID(self,LocationID):
+		'''	Calculate the amount of stock created at the specified location id'''
+		sum = 0.0
+		for item in self.Locations:
+			if item.LocationID==int(LocationID):
+				sum += item.QtyStockCreatedHere()
+		return sum
+		
 	def ValueAvailablePurchase(self):
 		sum = 0.0
 		for item in self.Locations:
@@ -1081,6 +1138,42 @@ class InvStockLocation(SQLObject):
 			value += 1000
 		self.Sort = value
 		return value
+		
+	def QtyTransferredHere(self):
+		'''	Calculate the total of stock transferred to this location (completed)'''
+		sum = 0.0
+		for transfer in self.TransfersToHere:
+			if transfer.IsComplete:
+				sum+=transfer.Qty
+		return sum
+	
+	def QtyTransferredAway(self):
+		'''	Calculate the total of stock transferred from this location (completed)'''
+		sum = 0.0
+		for transfer in self.TransfersFromHere:
+			if transfer.IsComplete:
+				sum+=transfer.Qty
+		return sum
+	
+	def QtyTransferringHere(self):
+		'''	Calculate the total of stock transferred to this location but not completed'''
+		sum = 0.0
+		for transfer in self.TransfersToHere:
+			if not transfer.IsComplete:
+				sum+=transfer.Qty
+		return sum
+		
+	def QtyTransferringAway(self):
+		'''	Calculate the total of stock transferred from this location but not completed'''
+		sum = 0.0
+		for transfer in self.TransfersFromHere:
+			if not transfer.IsComplete:
+				sum+=transfer.Qty
+		return sum
+		
+	def QtyStockCreatedHere(self):
+		'''	This is stock that was created at this location, either received here or a stock adjustment '''
+		return self.Quantity - self.QtyTransferredHere() + self.QtyTransferredAway()
 		
 	def RateOfConsumption(self):
 		'''	The number of items consumed per day for the last 365 days '''

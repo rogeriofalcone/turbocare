@@ -3200,33 +3200,47 @@ class Store(turbogears.controllers.Controller):
 		'''
 		log.debug('StockMonitor')
 		qArgs = ""
-		if CatalogItemName != '':
-			qArgs+="model.InvCatalogItem.q.Name.contains('"+ CatalogItemName + "'),"
-		qArgs+="model.InvCatalogItem.q.IsSelectable == True,"
-		qArgs+="model.InvCatalogItem.q.Status != 'deleted',"
-		if len(CatalogItemGroups)>0:
-			CatalogItemGroups = set(CatalogItemGroups.split(","))
-			# log.debug(CatalogItemGroups)
+		qArgs+="model.InvStockItem.q.id==model.InvStockLocation.q.StockItemID,"
+		qArgs+="model.InvStockLocation.q.LocationID==%s," % self.LocationID
+		if SearchText!='' or len(Groups)>0:
+			qArgs+="model.InvCatalogItem.q.id==model.InvStockItem.q.CatalogItemID,"
+		if SearchText != '':
+			qArgs+="OR ("
+			qArgs+="model.InvCatalogItem.q.Name.contains('"+ SearchText + "'),"
+			qArgs+="model.InvStockItem.q.Name.contains('"+ SearchText + "'))"
+		if len(Groups)>0:
+			Groups = set(Groups.split(","))
 			orArgs = ''
-			for group in CatalogItemGroups:
+			for group in Groups:
 				orArgs+="model.InvGrpStock.q.id == '"+group+"',"
 			qArgs+= "OR ("+orArgs[0:len(orArgs)-1]+"),"
 			qArgs+="model.InvGrpStock.q.id == model.InvViewJoinCatalogItemGrpStock.q.GrpStockId,"
 			qArgs+="model.InvCatalogItem.q.id == model.InvViewJoinCatalogItemGrpStock.q.CatalogItemId,"
-			#qArgs+="model.InvCatalogItem.q.id == table.inv_catalog_item_inv_grp_stock.inv_catalog_item_id,"
-			#clauseTables.append("inv_catalog_item_inv_grp_stock")
 		log.debug('....qArgs %s' % qArgs)
 		if len(qArgs) > 0:
-			#log.debug("!!!!!!!!!!!!!!!! " + qArgs)
-			catalogitems = eval('model.InvCatalogItem.select(AND ('+qArgs[0:len(qArgs)-1]+'),\
-				orderBy=[model.InvCatalogItem.q.Sort])')
+			stockitems = eval('model.InvStockItem.select(AND ('+qArgs[0:len(qArgs)-1]+'),\
+				orderBy=[model.InvStockItem.q.Sort])')
 		else:
-			catalogitems = model.InvCatalogItem.select(orderBy=[model.InvCatalogItem.q.Sort])
+			stockitems = model.InvStockItem.select(orderBy=[model.InvStockItem.q.Sort])
+		result_count = stockitems.count()
+		ColumnTitles = ['Stock Name','Item Master Name','Qty Available','Avg. Daily Consumption',
+			'Qty Available Here','Qty Consumed','Qty Transferred Here', 'Qty Transferred Away',
+			'Qty Transferring Here', 'Qty Transferring Away','Qty Created Here']
+		ColumnKeys = ['StockItemName','CatalogItemName','QtyAvailable','QtyAvailableLocation','QtyConsumedLocation',
+			'QtyTransferredToLocation','','','','','']
 		results = []
-		for item in catalogitems:
-			POInfo = item.LatestPO()
-			name = item.Name
-			stock = "In Stock: %d" % item.QtyAvailable()
+		for item in stockitems:
+			row = {}
+			row['StockItemName'] = item.Name
+			row['CatalogItemName'] = item.CatalogItem.Name
+			row['QtyAvailable'] = item.QtyAvailable()
+			row['QtyAvailableLocation'] = item.QtyAvailableAtLocationID(self.LocationID)
+			row['QtyConsumedLocation'] = item.QtyConsumedAtLocationID(self.LocationID)
+			row['QtyTransferredToLocation'] = item.QtyTransferredToLocationID(self.LocationID)
+			row['QtyTransferringToLocation'] = item.QtyTransferringToLocationID(self.LocationID)
+			row['QtyTransferredFromLocation'] = item.QtyTransferredFromLocationID(self.LocationID)
+			row['QtyTransferringFromLocation'] = item.QtyTransferringFromLocationID(self.LocationID)
+			row['QtyCreatedAtLocation'] = item.QtyCreatedAtLocationID(self.LocationID)
 			reorder = "Reorder in %d days" % item.DaysUntilReorder()
 			if POInfo['POSentOnDate'] != None:
 				lastpo = "Last PO on %s (%r%%)" % (POInfo['POSentOnDate'].strftime(DATE_FORMAT),	\
