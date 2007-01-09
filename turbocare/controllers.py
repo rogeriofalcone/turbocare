@@ -119,8 +119,7 @@ class Root(controllers.RootController):
         log.debug('UserMenu')
         results = []
         #Display top menu based on permissions of user. 
-	if identity.not_anonymous():
-		results.append(dict(link='/user_reports',name='User Reports',sub_menu=[]))
+	results.append(dict(link='/',name='Main Menu',sub_menu=[]))
         if identity.has_permission("reg_view"):    
             results.append(dict(link='/registration',name='Registration',sub_menu=[]))
         if identity.has_permission("bill_view"):
@@ -176,4 +175,6 @@ class Root(controllers.RootController):
             results.append(dict(link='/user_manager',name='User admin',sub_menu=[]))
         if identity.has_permission("admin_controllers_configuration"):
             results.append(dict(link='/configuration',name='Configuration Admin',sub_menu=[]))
+	if identity.not_anonymous():
+		results.append(dict(link='/user_reports',name='User Reports',sub_menu=[]))
         return results

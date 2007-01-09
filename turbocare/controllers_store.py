@@ -3199,6 +3199,9 @@ class Store(turbogears.controllers.Controller):
 			The display is limited to 100 items
 		'''
 		log.debug('StockMonitor')
+		# Prepare our catalog item groups for the list box
+		CatalogItemGroups = [dict(id=x.id,name=x.Name,selected=None) for x in model.InvGrpStock.select(orderBy=[model.InvGrpStock.q.Name])]
+		# Search for our items
 		qArgs = ""
 		qArgs+="model.InvStockItem.q.id==model.InvStockLocation.q.StockItemID,"
 		qArgs+="model.InvStockLocation.q.LocationID==%s," % self.LocationID
@@ -3207,45 +3210,49 @@ class Store(turbogears.controllers.Controller):
 		if SearchText != '':
 			qArgs+="OR ("
 			qArgs+="model.InvCatalogItem.q.Name.contains('"+ SearchText + "'),"
-			qArgs+="model.InvStockItem.q.Name.contains('"+ SearchText + "'))"
-		if len(Groups)>0:
-			Groups = set(Groups.split(","))
+			qArgs+="model.InvStockItem.q.Name.contains('"+ SearchText + "')),"
+		# Process our groups
+		if len(Groups) > 0:
+			if isinstance(Groups,basestring):
+				Groups = [Groups]
+			# For our group list box on the web page, set the checked property
+			for group in CatalogItemGroups:
+				if str(group['id']) in Groups:
+					group['selected'] = 'selected'
+			# Create a filter for searching for the groups
 			orArgs = ''
 			for group in Groups:
 				orArgs+="model.InvGrpStock.q.id == '"+group+"',"
 			qArgs+= "OR ("+orArgs[0:len(orArgs)-1]+"),"
 			qArgs+="model.InvGrpStock.q.id == model.InvViewJoinCatalogItemGrpStock.q.GrpStockId,"
 			qArgs+="model.InvCatalogItem.q.id == model.InvViewJoinCatalogItemGrpStock.q.CatalogItemId,"
-		log.debug('....qArgs %s' % qArgs)
+			#log.debug('....qArgs %s' % qArgs)
 		if len(qArgs) > 0:
 			stockitems = eval('model.InvStockItem.select(AND ('+qArgs[0:len(qArgs)-1]+'),\
 				orderBy=[model.InvStockItem.q.Sort])')
 		else:
 			stockitems = model.InvStockItem.select(orderBy=[model.InvStockItem.q.Sort])
 		result_count = stockitems.count()
+		# Prepare our table presentation
 		ColumnTitles = ['Stock Name','Item Master Name','Qty Available','Avg. Daily Consumption',
 			'Qty Available Here','Qty Consumed','Qty Transferred Here', 'Qty Transferred Away',
 			'Qty Transferring Here', 'Qty Transferring Away','Qty Created Here']
-		ColumnKeys = ['StockItemName','CatalogItemName','QtyAvailable','QtyAvailableLocation','QtyConsumedLocation',
-			'QtyTransferredToLocation','','','','','']
 		results = []
-		for item in stockitems:
+		for item in stockitems[0:100]:
 			row = {}
+			row['StockItemID'] = item.id
+			row['CatalogItemID'] = item.CatalogItemID
 			row['StockItemName'] = item.Name
 			row['CatalogItemName'] = item.CatalogItem.Name
-			row['QtyAvailable'] = item.QtyAvailable()
-			row['QtyAvailableLocation'] = item.QtyAvailableAtLocationID(self.LocationID)
-			row['QtyConsumedLocation'] = item.QtyConsumedAtLocationID(self.LocationID)
-			row['QtyTransferredToLocation'] = item.QtyTransferredToLocationID(self.LocationID)
-			row['QtyTransferringToLocation'] = item.QtyTransferringToLocationID(self.LocationID)
-			row['QtyTransferredFromLocation'] = item.QtyTransferredFromLocationID(self.LocationID)
-			row['QtyTransferringFromLocation'] = item.QtyTransferringFromLocationID(self.LocationID)
-			row['QtyCreatedAtLocation'] = item.QtyCreatedAtLocationID(self.LocationID)
-			reorder = "Reorder in %d days" % item.DaysUntilReorder()
-			if POInfo['POSentOnDate'] != None:
-				lastpo = "Last PO on %s (%r%%)" % (POInfo['POSentOnDate'].strftime(DATE_FORMAT),	\
-					POInfo['QuantityReceived']/POInfo['QuantityRequested']*100)
-			else:
-				lastpo = ''
-			results.append(dict(id=item.id, name=name, stock=stock, reorder=reorder, lastpo=lastpo))		
-		
+			row['QtyAvailable'] = "%.1f" % item.QtyAvailable()
+			row['RateOfConsumption'] = "%.2f" % item.RateOfConsumption()
+			row['QtyAvailableLocation'] = "%.1f" % item.QtyAvailableAtLocationID(self.LocationID)
+			row['QtyConsumedLocation'] = "%d" % item.QtyConsumedAtLocationID(self.LocationID)
+			row['QtyTransferredToLocation'] = "%d" % item.QtyTransferredToLocationID(self.LocationID)
+			row['QtyTransferringToLocation'] = "%d" % item.QtyTransferringToLocationID(self.LocationID)
+			row['QtyTransferredFromLocation'] = "%d" % item.QtyTransferredFromLocationID(self.LocationID)
+			row['QtyTransferringFromLocation'] = "%d" % item.QtyTransferringFromLocationID(self.LocationID)
+			row['QtyCreatedAtLocation'] = "%d" % item.QtyCreatedAtLocationID(self.LocationID)
+			results.append(row)
+		return dict(LocationName=self.LocationName, ColumnTitles=ColumnTitles, results=results, 
+		SearchText=SearchText, Groups=Groups, CatalogItemGroups=CatalogItemGroups, ResultCount=result_count)
