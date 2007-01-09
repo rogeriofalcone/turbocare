@@ -13,6 +13,35 @@
 </head>
 
 <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">
+	<div id="LeftMenu" class="PopUpMenuTopLeft PopUpMenuHide" >
+		<div id="LeftMenuTitle"></div>
+	</div>
+	<script type="text/javascript" >
+	var ShowMenu = function(e){
+		if (hasElementClass('LeftMenu','PopUpMenuHide')){
+			removeElementClass('LeftMenu','PopUpMenuHide');
+			var divs = getElementsByTagAndClassName('DIV',null,'LeftMenu');
+			forEach (divs, function(div) {
+				if (div.id!="LeftMenuTitle") {
+					div.style.display = '';
+				}
+			});
+		}
+	}
+	var HideMenu = function(e){
+		if (!hasElementClass('LeftMenu','PopUpMenuHide')){
+			addElementClass('LeftMenu','PopUpMenuHide');
+			var divs = getElementsByTagAndClassName('DIV',null,'LeftMenu');
+			forEach (divs, function(div) {
+				if (div.id!="LeftMenuTitle") {
+					div.style.display = 'none';
+				}
+			});
+		}
+	}
+	connect('LeftMenu','onmouseover',ShowMenu);
+	connect('LeftMenu','onmouseout',HideMenu);
+	</script>
     <div py:if="tg.config('identity.on',False) and not 'logging_in' in locals()"
         id="pageLogin">
         <span py:if="tg.identity.anonymous">

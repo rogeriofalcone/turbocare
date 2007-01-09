@@ -142,24 +142,6 @@ store.FkDivID = ''; //Use this to track which DIV we need to update later
 // utility functions ===========
 
 /*
-	When someone enters an age, modify the DateBirth
-	entry to match the age to the date.
-*/
-store.AgePickUpdate = function(dom_obj){
-	var Age = getElement('Age').value;
-	if (Age == '') {
-		return false;
-	} else if (isNaN(Age)){
-		getElement('Age').value = '';
-	} else if (Age != store.Age) {
-		var Today = new Date();
-		var DateBirth = new Date(Today.getFullYear() - Age, Today.getMonth(), Today.getDate());
-		getElement('DateBirth').value = toISODate(DateBirth);
-		store.Age = Age;
-		store.DateBirth = toISODate(DateBirth);
-	}
-}
-/*
 	Open a date entry javascript box
 */
 store.DatePick = function(dom_obj){
@@ -168,21 +150,6 @@ store.DatePick = function(dom_obj){
 //			dom_obj.stop();
 //		}
 		Widget.pickDateTime(dom_obj.src().id);
-	}
-}
-/*
-	When a date has been entered, update
-	the age box
-*/
-store.DatePickUpdate = function(dom_obj){
-	var DateBirth = isoDate((getElement("DateBirth").value).slice(0,10));
-	getElement('DateBirth').value = toISODate(DateBirth);
-	if (getElement('DateBirth').value != store.DateBirth) {
-		var Today = new Date();
-		var diff = Today.getTime() - DateBirth.getTime();
-		getElement('Age').value = parseInt((diff + 43200000)/(31557600000));
-		store.Age = getElement('Age').value;
-		store.DateBirth = toISODate(DateBirth);
 	}
 }
 /*
@@ -318,7 +285,7 @@ store.QuickSearch = function(dom_obj){
 		store.toggle_message("Searching...");
 		var postVars = 'QuickSearchText='+getElement('QuickSearch').value;
 		// The following line needs to point to the function which is used for the quick search in your context
-		var d = postJSON('VendorsEditorQuickSearch',postVars);
+		var d = postJSON('StockItemsEditorQuickSearch',postVars);
 		d.addCallbacks(store.RenderQuickSearch,store.error_report);
 	}
 }
@@ -334,16 +301,16 @@ store.CheckDelete = function(dom_obj){
 	CheckAddNew: Confirm that the user wants to make a new record
 */
 store.CheckAddNew = function(dom_obj){
-	//if (!(confirm("Are you sure you want to continue?  Un-saved changes to the current record will be lost."))){
-	//	dom_obj.stop();
-	//}
+	if (!(confirm("Are you sure you want to continue?  Un-saved changes to the current record will be lost."))){
+		dom_obj.stop();
+	}
 }
 
 /*
 	CancelChanges:  basically, reload the page
 */
 store.CancelChanges = function(dom_obj){
-	location = "VendorsEditor?VendorID="+getElement("VendorID").value;
+	location = "StockItemsEditor?StockItemID="+getElement("StockItemID").value;
 }
 /*
 	ForeignKey Select box
@@ -351,22 +318,30 @@ store.CancelChanges = function(dom_obj){
 */
 store.FkSelect = function(dom_obj) {
 	store.toggle_message("Loading...");
-	if (dom_obj.src().id == 'btnPickCityID') {
-		store.FkDivID = 'CityID';
-		var d = postJSON('VendorsEditorCitySelect',null);
+	if (dom_obj.src().id == 'btnPickCatalogItemID') {
+		store.FkDivID = 'CatalogItemID';
+		var d = postJSON('StockItemsEditorCatalogItemSelect',null);
 	}
 	d.addCallbacks(store.RenderFkSelect,store.error_report);
 }
 /*
-	Groups
-	Similar to any related join type selection
+	TransferItem: Find the StockLocationID for the selected item
+	and then redirect the user to the StockTransfersEditor page
 */
-store.Groups = function(dom_obj){
-	store.toggle_message("Loading...");
-	var postVars = 'VendorID='+getElement('VendorID').value;
-	// The following line needs to point to the function which is used for the quick search in your context
-	var d = postJSON('VendorsEditorVendorSelect',postVars);
-	d.addCallbacks(store.RenderGroups,store.error_report);
+store.TransferItem = function(dom_obj) {
+	var row = dom_obj.src().parentNode.parentNode;
+	var inputs = getElementsByTagAndClassName('INPUT',null,row);
+	var ItemID = '';
+	for (i=0;i<inputs.length;i++) {
+		if (getNodeAttribute(inputs[i],'name')=='ItemID') {
+			ItemID = inputs[i].value;
+		}
+	}
+	if (ItemID!=''){
+		location = 'StockTransfersEditor?StockLocationID='+ItemID;
+	} else {
+		alert('There is a page error so the transfer cannot be completed');
+	}
 }
 /*
 	If the Quick Search has the default text:
@@ -400,6 +375,11 @@ store.OpenOnLoad = function() {
 	var delButtons = getElementsByTagAndClassName('INPUT',"delItem",document);
 	for (i=0;i<delButtons.length; i++){
 		connect(delButtons[i],"onclick",store.DeleteItem);
+	}
+	//Link the "Transfer" buttons
+	var transferButtons = getElementsByTagAndClassName('INPUT',"Transfer",document);
+	for (i=0;i<transferButtons.length; i++){
+		connect(transferButtons[i],"onclick",store.TransferItem);
 	}
 }
 /*
@@ -458,7 +438,7 @@ store.RenderQuickSearch = function(data){
 	var results = data.results;
 	QuickSearchResults.appendChild(AddResultRow(null,null,'There are '+results.length+' result(s)'));
 	for (i=0; i<results.length; i++) {
-		QuickSearchResults.appendChild(AddResultRow('VendorsEditor','VendorID='+results[i].id,results[i].text));
+		QuickSearchResults.appendChild(AddResultRow('StockItemsEditor','StockItemID='+results[i].id,results[i].text));
 	}
 }
 /*
@@ -588,73 +568,6 @@ store.FkSelect_select = function(dom_obj){
 	store.FkDivID = '';
 	store.FkSelect_remove();
 }
-/* 	
-	Vendor box functions
-	(this is a typical RelatedJoin editor)
-*/
-//Render the box
-store.RenderGroups = function(data){
-	var AddResultRow = function(value){
-		//Each row needs: id, text, and selected
-		var row = createDOM('DIV',{'class':'divtable'});
-		if (value.selected) {
-			var Check = createDOM('INPUT',{'type':'checkbox', 'checked':'checked','value':value.id,'name':'GroupID'});
-		} else {
-			var Check = createDOM('INPUT',{'type':'checkbox','value':value.id,'name':'GroupID'});
-		}
-		var text = createDOM('INPUT',{'id':'GroupName'+value.id,'type':'text','readonly':'readonly','value':value.text,'name':'GroupName'});
-		//replaceChildNodes(Check, value.text);
-		row.appendChild(Check);
-		row.appendChild(text);
-		return row;
-	}
-	//Reset the message
-	store.toggle_message("");
-	//This is the big div box that surrounds the entire selection process
-	var dialog = createDOM('DIV',{'class':'dialogbox','id':'relatedjoin_dialog','style':'height:200px; overflow:auto'});
-	var shadow = createDOM('DIV',{'class':'dialogbox_shadow','id':'relatedjoin_shadow','style':'height:210px'});
-	//Close link
-	var close_link = createDOM('A',{'href':'javascript:store.Groups_remove()'},"Close");
-	dialog.appendChild(close_link);
-	document.body.appendChild(shadow);
-	setOpacity(shadow,0.5);
-	document.body.appendChild(dialog);
-	//Make our listing
-	var results = data.results;
-	for (i=0; i<results.length; i++) {
-		dialog.appendChild(AddResultRow(results[i]));
-	}
-	//Put our OK button at the end
-	var btnRow = createDOM('DIV',{'style':'text-align:right'});
-	btnRow.appendChild(createDOM('INPUT',{'name':'btnSelectGroups','id':'btnSelectGroups','type':'BUTTON','value':'OK'}));
-	dialog.appendChild(btnRow);
-	//Attach an event to the button
-	connect('btnSelectGroups','onclick',store.GroupsSelect);
-}
-store.Groups_remove = function(){
-	swapDOM('relatedjoin_dialog',null);
-	swapDOM('relatedjoin_shadow',null);
-}
-store.GroupsSelect = function(dom_obj){
-	var dialog = getElement('relatedjoin_dialog');
-	var listing = getElement('Groups');
-	//Clear our current listing
-	replaceChildNodes(listing,null);
-	var checkboxes = getElementsByTagAndClassName('INPUT',null,dialog);
-	// For every input box line, append an entry
-	for (i=0; i<checkboxes.length;i++) {
-		if (checkboxes[i].checked) {
-			var text = getElement('GroupName'+checkboxes[i].value).value;
-			var value = checkboxes[i].value;
-			listing.appendChild(createDOM('LI',null,text));
-			listing.appendChild(createDOM('INPUT',{'name':'Groups','type':'hidden','value':value}));
-			listing.appendChild(createDOM('INPUT',{'name':'GroupsCounter','type':'hidden','value':'1'}));
-		}
-	}
-	//Close the dialog
-	store.Groups_remove();
-}
-
 //Configure our events using the Mochikit signal library
 /* DEFINE OUR EVENT FUNCTIONS */
 connect(document,'onkeydown', barcode.keydown);
@@ -671,11 +584,8 @@ connect(window, 'onload', function(){
 			connect("QuickSearch",'onkeydown',store.QuickSearch);
 			connect("QuickSearch",'onclick',store.QuickSearchClear);
 		}
-		if (getElement("btnPickCityID")!=null) {
-			connect("btnPickCityID",'onclick',store.FkSelect);
-		}
-		if (getElement("btnEditGroups")!=null) {
-			connect("btnEditGroups",'onclick',store.Groups);
+		if (getElement("btnPickCatalogItemID")!=null) {
+			connect("btnPickCatalogItemID",'onclick',store.FkSelect);
 		}
 		if (getElement("btnCancel")!=null){
 			// cancel changes by reloading the page ** This is not a proper cancel

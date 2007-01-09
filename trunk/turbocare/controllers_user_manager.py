@@ -13,8 +13,53 @@ from model import DATE_FORMAT
 
 log = logging.getLogger("turbocare.controllers")
 
+# Lists of users, groups and permissions which the program will refuse to delete
+mandatory_users = ['admin']
+mandatory_groups = ['admin', 'superuser']
+mandatory_permissions =  ['admin_users']
+mandatory_user_group = [('admin','admin'),('admin','superuser')]
+mandatory_group_permission = [('admin','admin_users'),('superuser','admin_users')]
+
 class UserManager(controllers.RootController):
-#===== Inventory App Stuff ====================================================
+	
+	def __init__(self):
+		'''	Make sure the mandatory users, groups and permissions exist '''
+		# Check the users
+		for user in mandatory_users:
+			users = model.User.select(model.User.q.user_name==user)
+			if users.count() == 0:
+				User = model.User(user_name=user, display_name=user, password=user)
+		# Check groups
+		for group in mandatory_groups:
+			groups = model.Group.select(model.Group.q.group_name==group)
+			if groups.count() == 0:
+				Group = model.Group(group_name=group, display_name=group)
+		# Check permissions
+		for permission in mandatory_permissions:
+			permissions = model.Permission.select(model.Permission.q.permission_name==permission)
+			if permissions.count() == 0:
+				Permission = model.Permission(permission_name=permission, description=permission)		
+		# Check the user groups
+		for ug in mandatory_user_group:
+			try:
+				user = model.User.select(model.User.q.user_name==ug[0])[0]
+				group = model.Group.select(model.Group.q.group_name==ug[1])[0].id
+				CurrGroups = [x.id for x in user.groups]
+				if not group in CurrGroups:
+					user.addGroup(group)
+			except:
+				log.debug('The user/group combo %r generated an error' % ug)
+		# Check the group permissions
+		for gp in mandatory_group_permission:
+			try:
+				group = model.Group.select(model.Group.q.group_name==gp[0])[0]
+				permission = model.Permission.select(model.Permission.q.permission_name==gp[1])[0].id
+				CurrPermissions = [x.id for x in group.permissions]
+				if not permission in CurrPermissions:
+					group.addPermission(permission)
+			except:
+				log.debug('The group/permission combo %r generated an error' % gp)
+				
 	@expose(html='turbocare.templates.usermanager')
 	def index(self, **kw):
 		return dict()
@@ -59,8 +104,13 @@ class UserManager(controllers.RootController):
 			users =  [dict(id=x.id, name="%s [%s]" % (x.user_name, x.display_name), db=x) for x in Group.users]
 		elif PermissionID != None:
 			Permission = model.Permission.get(PermissionID)
+			users = [] 
+			userids = []
 			for group in Permission.groups:
-				users =  [dict(id=x.id, name="%s [%s]" % (x.user_name, x.display_name), db=x) for x in group.users]
+				for user in group.users:
+					if not user.id in userids:
+						users.append(dict(id=user.id, name="%s [%s]" % (user.user_name, user.display_name), db=user))
+						userids.append(user.id)
 		elif UserID != None:
 			User = model.User.get(UserID)
 			users = [dict(id=User.id,name="%s [%s]" % (User.user_name, User.display_name), db=User)]
@@ -114,8 +164,14 @@ class UserManager(controllers.RootController):
 			permissions =  [dict(id=x.id, name="%s [%s]" % (x.permission_name, x.description), db=x) for x in Group.permissions]
 		elif UserID != None:
 			User = model.User.get(UserID)
+			permissions = [] 
+			permissionids = []
 			for group in User.groups:
-				permissions =  [dict(id=x.id, name="%s [%s]" % (x.permission_name, x.description), db=x) for x in group.permissions]
+				for permission in group.permissions:
+					if not permission.id in permissionids:
+						permissionids.append(permission.id)
+						permissions.append(dict(id=permission.id,
+							name="%s [%s]" % (permission.permission_name, permission.description), db=permission) )
 		elif PermissionID != None:
 			Permission = model.Permission.get(PermissionID)
 			permissions = [dict(id=Permission.id,name="%s [%s]" % (Permission.permission_name, Permission.description), db=Permission)]
@@ -133,19 +189,30 @@ class UserManager(controllers.RootController):
 		'''	Add/Update/Delete a user  '''
 		if Operation == 'New':
 			# Create a new user linked to the groups.
-			# Note: The password is autmatically hashed when the record is saved.  This is done on the SQLObject object.
-			User = model.User(user_name=UserName, display_name=DisplayName, password=Password, 
-				email_address=EmailAddress)
-			# Add the user to the groups (by id)
-			if isinstance(Groups, basestring): # only one group was added
-				User.addGroup(int(Groups))
+			# First, check to see that no other user with the login id exists
+			checkusers = model.User.select(model.User.q.user_name==str(UserName))
+			if checkusers.count() == 0:
+				# Note: The password is autmatically hashed when the record is saved.  This is done on the SQLObject object.
+				User = model.User(user_name=UserName, display_name=DisplayName, password=Password, 
+					email_address=EmailAddress)
+				# Add the user to the groups (by id)
+				if isinstance(Groups, basestring): # only one group was added
+					User.addGroup(int(Groups))
+				else:
+					for group in Groups:
+						User.addGroup(int(group))
+				message = "New User Added Successfully"
+				UserID = User.id
 			else:
-				for group in Groups:
-					User.addGroup(int(group))
-			message = "New User Added Successfully"
+				message = "Failed! User with that id already exists"
+				UserID = checkusers[0].id
 		elif Operation == 'Save' and UserID != None:
+			message = ''
 			User = model.User.get(UserID)
-			User.user_name = UserName
+			if User.user_name in mandatory_users and UserName!=User.user_name:
+				message = 'Cannot change the user name for this user.'
+			else:
+				User.user_name = UserName
 			User.display_name = DisplayName
 			User.email_address = EmailAddress
 			if Password != '':
@@ -165,18 +232,24 @@ class UserManager(controllers.RootController):
 			for group in CurrGroups:
 				if not group in NewGroups:
 					User.removeGroup(group)
-			message = "User Updated Successfully"
+			if message == '':
+				message = "User Updated Successfully"
+			UserID = User.id
 		elif Operation == 'Delete' and UserID != None:
 			User = model.User.get(UserID)
-			# Remove groups
-			for group in User.groups:
-				User.removeGroup(group)
-			# Delete the User
-			User.destroySelf()
-			message="User Deleted"
+			UserID = None
+			if User.user_name in mandatory_users:
+				message = "ERROR: Cannot delete this user, operation failed"
+			else:
+				# Remove groups
+				for group in User.groups:
+					User.removeGroup(group)
+				# Delete the User
+				User.destroySelf()
+				message="User Deleted"
 		else:
 			message = "Operation Failed"
-		return dict(message=message)
+		return dict(message=message,UserID=UserID)
 
 	@expose(format='json')
 	@validate(validators={'GroupID':validators.Int(),'GroupName':validators.String(),'DisplayName':validators.String(),
@@ -185,22 +258,33 @@ class UserManager(controllers.RootController):
 		'''	Add/Update/Delete a group  '''
 		if Operation == 'New':
 			# Create a new group
-			Group = model.Group(group_name=GroupName, display_name=DisplayName)
-			# Add the user to the groups (by id)
-			if isinstance(Users, basestring): # only one user was added
-				Group.addUser(int(Users))
+			# Make sure we're not adding a duplicate group
+			checkgroups = model.Group.select(model.Group.q.group_name==str(GroupName))
+			if checkgroups.count() == 0:
+				Group = model.Group(group_name=GroupName, display_name=DisplayName)
+				# Add the user to the groups (by id)
+				if isinstance(Users, basestring): # only one user was added
+					Group.addUser(int(Users))
+				else:
+					for user in Users:
+						Group.addUser(int(user))
+				if isinstance(Permissions, basestring): # only one user was added
+					Group.addPermission(int(Permissions))
+				else:
+					for permission in Permissions:
+						Group.addPermission(int(permission))
+				message = "New Group Added Successfully"
+				GroupID = Group.id
 			else:
-				for user in Users:
-					Group.addUser(int(user))
-			if isinstance(Permissions, basestring): # only one user was added
-				Group.addPermission(int(Permissions))
-			else:
-				for permission in Permissions:
-					Group.addPermission(int(permission))
-			message = "New Group Added Successfully"
+				message = "Failed! At least one group with that name already exists"
+				GroupID = checkgrups[0].id
 		elif Operation == 'Save' and GroupID != None:
+			message = ''
 			Group = model.Group.get(GroupID)
-			Group.group_name = GroupName
+			if Group.group_name in mandatory_groups and Group.group_name!=GroupName:
+				message = "Cannot change the group name for this group"
+			else:
+				Group.group_name = GroupName
 			Group.display_name = DisplayName
 			# Get our New users list
 			if isinstance(Users, basestring):
@@ -232,21 +316,26 @@ class UserManager(controllers.RootController):
 			for permission in CurrPermissions:
 				if not permission in NewPermissions:
 					Group.removePermission(permission)
-			message = "Group Updated Successfully"
+			if message == '':
+				message = "Group Updated Successfully"
 		elif Operation == 'Delete' and GroupID != None:
 			Group = model.Group.get(GroupID)
-			# Remove users
-			for user in Group.users:
-				Group.removeUser(user)
-			# Remove permission
-			for permission in Group.permissions:
-				Group.removePermission(permission)
-			# Delete the Group
-			Group.destroySelf()
-			message="Group Deleted"
+			GroupID = None
+			if Group.group_name in mandatory_groups:
+				message = "ERROR: Cannot delete this group, operation failed"
+			else:
+				# Remove users
+				for user in Group.users:
+					Group.removeUser(user)
+				# Remove permission
+				for permission in Group.permissions:
+					Group.removePermission(permission)
+				# Delete the Group
+				Group.destroySelf()
+				message="Group Deleted"
 		else:
 			message = "Operation Failed"
-		return dict(message=message)
+		return dict(message=message, GroupID=GroupID)
 
 	@expose(format='json')
 	@validate(validators={'PermissionID':validators.Int(),'PermissionName':validators.String(),
@@ -255,17 +344,28 @@ class UserManager(controllers.RootController):
 		'''	Add/Update/Delete a permission  '''
 		if Operation == 'New':
 			# Create a new permission linked to the groups.
-			Permission = model.Permission(permission_name=PermissionName, description=Description)
-			# Add the permission to the groups (by id)
-			if isinstance(Groups, basestring): # only one group was added
-				Permission.addGroup(int(Groups))
+			# Make sure we're not adding a duplicate permission
+			checkpermissions = model.Permission.select(model.Permission.q.permission_name==str(PermissionName))
+			if checkpermissions.count() == 0:
+				Permission = model.Permission(permission_name=PermissionName, description=Description)
+				# Add the permission to the groups (by id)
+				if isinstance(Groups, basestring): # only one group was added
+					Permission.addGroup(int(Groups))
+				else:
+					for group in Groups:
+						Permission.addGroup(int(group))
+				message = "New Permission Added Successfully"
+				PermissionID = Permission.id
 			else:
-				for group in Groups:
-					Permission.addGroup(int(group))
-			message = "New Permission Added Successfully"
+				message = "Failed! At least one permission with that name already exists."
+				PermissionID = checkpermissions[0].id
 		elif Operation == 'Save' and PermissionID != None:
+			message = ''
 			Permission = model.Permission.get(PermissionID)
-			Permission.permission_name = PermissionName
+			if Permission.permission_name in mandatory_permissions and Permission.permission_name!=PermissionName:
+				message = 'Cannot change the name of this permission'
+			else:
+				Permission.permission_name = PermissionName
 			Permission.description = Description
 			# Make a listing of the new groups
 			if isinstance(Groups, basestring):
@@ -282,15 +382,20 @@ class UserManager(controllers.RootController):
 			for group in CurrGroups:
 				if not group in NewGroups:
 					Permission.removeGroup(group)
-			message = "Permission Updated Successfully"
+			if message == '':
+				message = "Permission Updated Successfully"
 		elif Operation == 'Delete' and PermissionID != None:
 			Permission = model.Permission.get(PermissionID)
-			# Remove groups
-			for group in Permission.groups:
-				Permission.removeGroup(group)
-			# Delete the Permission
-			Permission.destroySelf()
-			message="Permission Deleted"
+			PermissionID=None
+			if Permission.permission_name in mandatory_permissions:
+				message = "ERROR: Cannot delete this permission, operation failed."
+			else:
+				# Remove groups
+				for group in Permission.groups:
+					Permission.removeGroup(group)
+				# Delete the Permission
+				Permission.destroySelf()
+				message="Permission Deleted"
 		else:
 			message = "Operation Failed"
-		return dict(message=message)
+		return dict(message=message,PermissionID=PermissionID)

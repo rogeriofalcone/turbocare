@@ -45,6 +45,35 @@ class Store(turbogears.controllers.Controller):
 		Location = model.InvLocation.get(int(self.LocationID))
 		return dict(LocationName=self.LocationName, IsStore=Location.IsStore, CanReceive=Location.CanReceive)
 	
+	@expose(format='json')
+	def PopUpMenu(self, **kw):
+		''' Return information about the current location for the pop up menu '''
+		Location = model.InvLocation.get(int(self.LocationID))
+		results = {}
+		results['LocationName'] = self.LocationName
+		results['StockMonitor'] = True
+		if Location.IsStore:
+			if identity.has_permission("stores_catalog_view"):
+				results['CatalogItemsEditor'] = True
+			if identity.has_permission("stores_po_view"):
+				results['PurchaseOrdersEditor'] = True
+			if Location.CanReceive:
+				if identity.has_permission("stores_gr_view"):
+					results['GoodsReceivedEditor'] = True
+			if identity.has_permission("stores_quoterequest_view"):
+				results['QuoteRequestsEditor'] = True
+			if identity.has_permission("stores_quote_view"):
+				results['QuotesEditor'] = True
+			if identity.has_permission("stores_stock_view"):
+				results['StockItemsEditor'] = True
+			if identity.has_permission("stores_stocktransferrequest_view"):
+				results['StockTransferRequestsEditor'] = True
+			if identity.has_permission("stores_vendor_view"):
+				results['VendorsEditor'] = True
+		if identity.has_permission("stores_stocktransfer_view"):
+			results['StockTransfersEditor'] = True
+		return results
+	
 	@expose(html='turbocare.templates.programmingerror')
 	def ProgrammingError(self, error='', next_link = '', **kw):
 		if error == '':
@@ -110,7 +139,7 @@ class Store(turbogears.controllers.Controller):
 		if CatalogItemID == None: # Initial screen when no item is selected
 			#Get childitems
 			catalogitems = model.InvCatalogItem.select(AND (model.InvCatalogItem.q.ParentItemID==None, \
-				model.InvCatalogItem.q.Status != 'deleted'))
+				model.InvCatalogItem.q.Status != 'deleted'),orderBy=[model.InvCatalogItem.q.Name])
 			for item in catalogitems:
 				childitems.append(dict(id=item.id, name=item.Name))
 			# Make a blank entry
@@ -136,7 +165,7 @@ class Store(turbogears.controllers.Controller):
 			catalogitem = model.InvCatalogItem.get(CatalogItemID)
 			# Get childitems
 			catalogitems = model.InvCatalogItem.select(AND (model.InvCatalogItem.q.ParentItemID==CatalogItemID, \
-				model.InvCatalogItem.q.Status != 'deleted'))
+				model.InvCatalogItem.q.Status != 'deleted'),orderBy=[model.InvCatalogItem.q.Name])
 			for item in catalogitems:
 				childitems.append(dict(id=item.id, name=item.Name))
 			# Get parent items list
@@ -307,7 +336,8 @@ class Store(turbogears.controllers.Controller):
 	def CatalogItemsEditorQuickSearch(self, QuickSearchText='', **kw):
 		'''	Find CatalogItems who's name partially matches the QuickSearchText
 		'''
-		catalogitems = model.InvCatalogItem.select(model.InvCatalogItem.q.Name.contains(str(QuickSearchText)))
+		catalogitems = model.InvCatalogItem.select(model.InvCatalogItem.q.Name.contains(str(QuickSearchText)),
+			orderBy=[model.InvCatalogItem.q.Name])
 		results = []
 		for item in catalogitems:
 			results.append(dict(id=item.id, text=item.Name))
@@ -326,7 +356,7 @@ class Store(turbogears.controllers.Controller):
 			catalogitem = model.InvCatalogItem.get(CatalogItemID)
 			for group in catalogitem.CatalogGroups:
 				cur_groups.append(group.id)
-		groups = model.InvGrpStock.select()
+		groups = model.InvGrpStock.select(orderBy=[model.InvGrpStock.q.Name])
 		results = []
 		for group in groups:
 			results.append(dict(id=group.id, text=group.Name, selected=(group.id in cur_groups)))
@@ -339,7 +369,8 @@ class Store(turbogears.controllers.Controller):
 		'''	Load the CatalogItem Options
 		'''
 		SearchText = str(SearchText)
-		items = model.InvCatalogItem.select(model.InvCatalogItem.q.Name.contains(SearchText))
+		items = model.InvCatalogItem.select(model.InvCatalogItem.q.Name.contains(SearchText),
+			orderBy=[model.InvCatalogItem.q.Name])
 		results = []
 		for item in items:
 			results.append(dict(id=item.id, text='%s (%d)' % (item.Name,item.id)))
@@ -352,7 +383,8 @@ class Store(turbogears.controllers.Controller):
 		'''	Load the Compound options
 		'''
 		SearchText = str(SearchText)
-		items = model.InvCatalogCompound.select(model.InvCatalogCompound.q.Name.contains(SearchText))
+		items = model.InvCatalogCompound.select(model.InvCatalogCompound.q.Name.contains(SearchText),
+			orderBy=[model.InvCatalogCompound.q.Name])
 		results = []
 		for item in items:
 			results.append(dict(id=item.id, text='%s (%d)' % (item.Name,item.id)))
@@ -365,7 +397,8 @@ class Store(turbogears.controllers.Controller):
 		'''	Load the Packaging Options
 		'''
 		SearchText = str(SearchText)
-		items = model.InvPackaging.select(model.InvPackaging.q.Name.contains(SearchText))
+		items = model.InvPackaging.select(model.InvPackaging.q.Name.contains(SearchText),
+			orderBy=[model.InvPackaging.q.Name])
 		results = []
 		for item in items:
 			results.append(dict(id=item.id, text='%s (%d)' % (item.Name,item.id)))
@@ -459,7 +492,8 @@ class Store(turbogears.controllers.Controller):
 			if len(catalogitems) > 20:
 				break
 		# Get a list of CatalogGroups (InvGrpStock)
-		cataloggroupsList = model.InvGrpStock.select(model.InvGrpStock.q.Status != 'deleted')
+		cataloggroupsList = model.InvGrpStock.select(model.InvGrpStock.q.Status != 'deleted',
+			orderBy=[model.InvGrpStock.q.Name])
 		cataloggroups = []
 		for group in cataloggroupsList:
 			cataloggroups.append(dict(id=group.id,name=group.Name))
@@ -591,7 +625,7 @@ class Store(turbogears.controllers.Controller):
 	def PurchaseOrderGetVendorsForItem(self, CatalogItemId=None, **kw):
 		items = []
 		if CatalogItemId != None:
-			vendors = model.InvVendor.select(AND (model.InvQuote.q.VendorID == model.InvVendor.q.id, model.InvQuoteItems.q.QuoteID == model.InvQuote.q.id, model.InvQuoteItems.q.CatalogItemID == model.InvCatalogItem.q.id, model.InvCatalogItem.q.id == int(CatalogItemId)),distinct=True)
+			vendors = model.InvVendor.select(AND (model.InvQuote.q.VendorID == model.InvVendor.q.id, model.InvQuoteItems.q.QuoteID == model.InvQuote.q.id, model.InvQuoteItems.q.CatalogItemID == model.InvCatalogItem.q.id, model.InvCatalogItem.q.id == int(CatalogItemId)),distinct=True,orderBy=[model.InvVendor.q.Name])
 			for vendor in vendors:
 				quote_items = model.InvQuoteItems.select(AND (model.InvQuoteItems.q.CatalogItemID == int(CatalogItemId), model.InvQuoteItems.q.QuoteID == model.InvQuote.q.id, model.InvQuote.q.VendorID == vendor.id),orderBy=-model.InvQuote.q.ValidOn)
 				quote_item = quote_items[0]
@@ -726,7 +760,7 @@ class Store(turbogears.controllers.Controller):
 		# Search fields
 		Name = dict(id="qri_Name", name="Name", label="Name", type="String", attr=dict(length=25), data='')
 		# Select box data
-		InvGrpStockNames = [x.Name for x in model.InvGrpStock.select()]
+		InvGrpStockNames = [x.Name for x in model.InvGrpStock.select(orderBy=[model.InvGrpStock.q.Name])]
 		SrchCatalogGroups = dict(id="po_SrchCatalogGroups", name="Groups", label="Groups", type="MultiSelect", attr=dict(Groups=InvGrpStockNames), data='')
 		return dict(id=id, Name='AddItems', Label='Select items from the item master',\
 			FieldsSrch=[Name, SrchCatalogGroups], Inputs=[], SrchUrl='PurchaseOrdersEditorAddItemsStep2', \
@@ -754,9 +788,9 @@ class Store(turbogears.controllers.Controller):
 			qArgs+="model.InvCatalogItem.q.id == model.InvViewJoinCatalogItemGrpStock.q.CatalogItemId,"
 		if len(qArgs) > 0:
 			#log.debug("!!!!!!!!!!!!!!!! " + qArgs)
-			items = eval('model.InvCatalogItem.select(AND ('+qArgs[0:len(qArgs)-1]+'))')
+			items = eval('model.InvCatalogItem.select(AND ('+qArgs[0:len(qArgs)-1]+'),orderBy=[model.InvCatalogItem.q.Name])')
 		else:
-			items = model.InvCatalogItem.select()
+			items = model.InvCatalogItem.select(orderBy=[model.InvCatalogItem.q.Name])
 		results = []
 		for item in items:
 			results.append({'id':item.id, 'text':item.DisplayName(), 'Name':item.Name, 'Description':item.Description})
@@ -962,7 +996,7 @@ class Store(turbogears.controllers.Controller):
 			# Modify the quantity in case we have some stock already
 			goodsreceived = model.InvStockItem.select(AND (model.InvGoodsReceived.q.PurchaseOrderID == PurchaseOrderID,\
 				model.InvGoodsReceived.q.id == model.InvStockItem.q.PurchaseOrderID,model.InvStockItem.q.CatalogItemID == \
-				item.CatalogItemID))
+				item.CatalogItemID),orderBy=[model.InvStockItem.q.Name])
 			Quantity = 0.0
 			for gritem in goodsreceived:
 				Quantity += gritem.Quantity
@@ -1015,7 +1049,7 @@ class Store(turbogears.controllers.Controller):
 					model.InvPOItems.q.CatalogItemID==StockItem.CatalogItemID))[0]
 				stockitems = model.InvStockItem.select(AND (model.InvStockItem.q.PurchaseOrderID==model.InvGoodsReceived.q.id, \
 					model.InvGoodsReceived.q.PurchaseOrderID==GR.PurchaseOrderID,model.InvStockItem.q.CatalogItemID==\
-					StockItem.CatalogItemID))
+					StockItem.CatalogItemID),orderBy=[model.InvStockItem.q.Name])
 				ActualPrice, TotalQuantity = 0.0, 0.0
 				for item in stockitems:
 					ActualPrice = item.PurchasePrice
@@ -1300,7 +1334,7 @@ class Store(turbogears.controllers.Controller):
 		# Search fields
 		Name = dict(id="pl_Name", name="Name", label="Name", type="String", attr=dict(length=25), data='')
 		# Select box data
-		InvGrpStockNames = [x.Name for x in model.InvGrpStock.select()]
+		InvGrpStockNames = [x.Name for x in model.InvGrpStock.select(orderBy=[model.InvGrpStock.q.Name])]
 		SrchCatalogGroups = dict(id="pl_SrchCatalogGroups", name="Groups", label="Groups", type="MultiSelect", attr=dict(Groups=InvGrpStockNames), data='')
 		return dict(id=id, Name='AddItems', Label='Select items from the item master',\
 			FieldsSrch=[Name, SrchCatalogGroups], Inputs=[], SrchUrl='QuoteRequestsEditorAddItemsStep2', \
@@ -1328,9 +1362,9 @@ class Store(turbogears.controllers.Controller):
 			qArgs+="model.InvGrpStock.q.id == model.InvViewJoinCatalogItemGrpStock.q.GrpStockId,"
 			qArgs+="model.InvCatalogItem.q.id == model.InvViewJoinCatalogItemGrpStock.q.CatalogItemId,"
 		if len(qArgs) > 0:
-			items = eval('model.InvCatalogItem.select(AND ('+qArgs[0:len(qArgs)-1]+'))')
+			items = eval('model.InvCatalogItem.select(AND ('+qArgs[0:len(qArgs)-1]+'),orderBy=[model.InvCatalogItem.q.Name])')
 		else:
-			items = model.InvCatalogItem.select()
+			items = model.InvCatalogItem.select(orderBy=[model.InvCatalogItem.q.Name])
 		results = []
 		for item in items:
 			results.append({'id':item.id, 'text':item.Name, 'Name':item.Name, 'Description':item.Description})
@@ -1389,7 +1423,7 @@ class Store(turbogears.controllers.Controller):
 			quoterequest = model.InvQuoteRequest.get(QuoteRequestID)
 			for vendor in quoterequest.Vendors:
 				cur_vendors.append(vendor.id)
-		vendors = model.InvVendor.select()
+		vendors = model.InvVendor.select(orderBy=[model.InvVendor.q.Name])
 		results = []
 		for vendor in vendors:
 			results.append(dict(id=vendor.id, text=vendor.Name, selected=(vendor.id in cur_vendors)))
@@ -1606,7 +1640,7 @@ class Store(turbogears.controllers.Controller):
 		# Search fields
 		Name = dict(id="pl_Name", name="Name", label="Name", type="String", attr=dict(length=25), data='')
 		# Select box data
-		InvGrpStockNames = [x.Name for x in model.InvGrpStock.select()]
+		InvGrpStockNames = [x.Name for x in model.InvGrpStock.select(orderBy=[model.InvGrpStock.q.Name])]
 		SrchCatalogGroups = dict(id="pl_SrchCatalogGroups", name="Groups", label="Groups", type="MultiSelect", attr=dict(Groups=InvGrpStockNames), data='')
 		return dict(id=id, Name='AddItems', Label='Select items from the item master',\
 			FieldsSrch=[Name, SrchCatalogGroups], Inputs=[], SrchUrl='QuotesEditorAddItemsStep2', \
@@ -1633,9 +1667,9 @@ class Store(turbogears.controllers.Controller):
 			qArgs+="model.InvGrpStock.q.id == model.InvViewJoinCatalogItemGrpStock.q.GrpStockId,"
 			qArgs+="model.InvCatalogItem.q.id == model.InvViewJoinCatalogItemGrpStock.q.CatalogItemId,"
 		if len(qArgs) > 0:
-			items = eval('model.InvCatalogItem.select(AND ('+qArgs[0:len(qArgs)-1]+'))')
+			items = eval('model.InvCatalogItem.select(AND ('+qArgs[0:len(qArgs)-1]+'),orderBy=[model.InvCatalogItem.q.Name])')
 		else:
-			items = model.InvCatalogItem.select()
+			items = model.InvCatalogItem.select(orderBy=[model.InvCatalogItem.q.Name])
 		results = []
 		for item in items:
 			results.append({'id':item.id, 'text':item.Name, 'Name':item.Name, 'Description':item.Description})
@@ -1686,7 +1720,7 @@ class Store(turbogears.controllers.Controller):
 		'''	Load the Vendor Options
 		'''
 		SearchText = str(SearchText)
-		items = model.InvVendor.select(model.InvVendor.q.Name.contains(SearchText))
+		items = model.InvVendor.select(model.InvVendor.q.Name.contains(SearchText),orderBy=[model.InvVendor.q.Name])
 		results = []
 		for item in items:
 			if item.Status != 'deleted':
@@ -1711,7 +1745,7 @@ class Store(turbogears.controllers.Controller):
 		# If no quote requests match with the catalog item name, then try the vendor name
 		if quoterequests.count() == 0:# This is computationally instense for the server
 			searchVendors = [x.Name for x in model.InvVendor.select(AND (model.InvVendor.q.Name.contains(SearchText),\
-				model.InvVendor.q.Status!='deleted'))]
+				model.InvVendor.q.Status!='deleted'),orderBy=[model.InvVendor.q.Name])]
 			searchVendors = set(searchVendors)
 			quoterequests = []
 			select = model.InvQuoteRequest.select(model.InvQuoteRequest.q.Status!='deleted',\
@@ -1930,7 +1964,8 @@ class Store(turbogears.controllers.Controller):
 		'''	Load the City Options
 		'''
 		SearchText = str(SearchText)
-		items = model.InvAddressCitytown.select(model.InvAddressCitytown.q.Name.contains(SearchText))
+		items = model.InvAddressCitytown.select(model.InvAddressCitytown.q.Name.contains(SearchText),
+			orderBy=[model.InvAddressCitytown.q.Name])
 		results = []
 		for item in items:
 			if item.Status != 'deleted':
@@ -1950,7 +1985,7 @@ class Store(turbogears.controllers.Controller):
 			vendor = model.InvVendor.get(VendorID)
 			for group in vendor.Groups:
 				cur_groups.append(group.id)
-		groups = model.InvGrpVendor.select()
+		groups = model.InvGrpVendor.select(orderBy=[model.InvGrpVendor.q.Name])
 		results = []
 		for group in groups:
 			results.append(dict(id=group.id, text=group.Name, selected=(group.id in cur_groups)))
@@ -2183,7 +2218,8 @@ class Store(turbogears.controllers.Controller):
 			items = []
 		else:
 			items = model.InvCatalogItem.select(AND (model.InvCatalogItem.q.Name.contains(SearchText),\
-				model.InvCatalogItem.q.Status!='deleted',model.InvCatalogItem.q.IsSelectable==True))
+				model.InvCatalogItem.q.Status!='deleted',model.InvCatalogItem.q.IsSelectable==True),
+				orderBy=[model.InvCatalogItem.q.Name])
 		results = []
 		for item in items:
 				results.append(dict(id=item.id, text=item.Name, linkurl="CatalogItemsEditor?CatalogItemID=%d" % item.id))
@@ -2460,7 +2496,7 @@ class Store(turbogears.controllers.Controller):
 		# Search fields
 		Name = dict(id="pl_Name", name="Name", label="Item master name", type="String", attr=dict(length=25), data='')
 		# Select box data
-		InvGrpStockNames = [x.Name for x in model.InvGrpStock.select()]
+		InvGrpStockNames = [x.Name for x in model.InvGrpStock.select(orderBy=[model.InvGrpStock.q.Name])]
 		SrchCatalogGroups = dict(id="pl_SrchCatalogGroups", name="Groups", label="Groups", type="MultiSelect", attr=dict(Groups=InvGrpStockNames), data='')
 		return dict(id=id, Name='AddItems', Label='Select items from the item master',\
 			FieldsSrch=[Name, SrchCatalogGroups], Inputs=[], SrchUrl='StockTransferRequestsEditorAddItemsStep2', \
@@ -2488,9 +2524,9 @@ class Store(turbogears.controllers.Controller):
 			qArgs+="model.InvGrpStock.q.id == model.InvViewJoinCatalogItemGrpStock.q.GrpStockId,"
 			qArgs+="model.InvCatalogItem.q.id == model.InvViewJoinCatalogItemGrpStock.q.CatalogItemId,"
 		if len(qArgs) > 0:
-			items = eval('model.InvCatalogItem.select(AND ('+qArgs[0:len(qArgs)-1]+'))')
+			items = eval('model.InvCatalogItem.select(AND ('+qArgs[0:len(qArgs)-1]+'),orderBy=[model.InvCatalogItem.q.Name])')
 		else:
-			items = model.InvCatalogItem.select()
+			items = model.InvCatalogItem.select(orderBy=[model.InvCatalogItem.q.Name])
 		results = []
 		for item in items:
 			results.append({'id':item.id, 'text':item.Name, 'Name':item.Name, 'Description':item.Description})
@@ -2957,10 +2993,10 @@ class Store(turbogears.controllers.Controller):
 		'''
 		SearchText = str(SearchText)
 		if SearchText=='':
-			items = model.InvLocation.select(model.InvLocation.q.id!=int(self.LocationID))
+			items = model.InvLocation.select(model.InvLocation.q.id!=int(self.LocationID),orderBy=[model.InvLocation.q.Name])
 		else:
 			items = model.InvLocation.select(AND (model.InvLocation.q.id!=int(self.LocationID), \
-				model.InvLocation.q.Name.contains(SearchText)))
+				model.InvLocation.q.Name.contains(SearchText)),orderBy=[model.InvLocation.q.Name])
 		results = []
 		for item in items:
 				results.append(dict(id=item.id, text=item.Name))
@@ -3151,3 +3187,51 @@ class Store(turbogears.controllers.Controller):
 			raise cherrypy.HTTPRedirect('StockTransfersEditor?StockTransferID=%d' % StockTransferID)
 		else:
 			raise cherrypy.HTTPRedirect('StockTransfersEditor')
+			
+	
+	@expose(html='turbocare.templates.store_stockmonitor')
+	@validate(validators={'PurchaseOrderID':validators.Int()})
+	@identity.require(identity.has_permission("stores_po_view"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
+	def StockMonitor(self, Groups=[], SearchText='', **kw):
+		'''	Displays a list of stock items for this location (only)
+			Displays information on Stock Quantities (here and the hospital overall)
+			The display is limited to 100 items
+		'''
+		log.debug('StockMonitor')
+		qArgs = ""
+		if CatalogItemName != '':
+			qArgs+="model.InvCatalogItem.q.Name.contains('"+ CatalogItemName + "'),"
+		qArgs+="model.InvCatalogItem.q.IsSelectable == True,"
+		qArgs+="model.InvCatalogItem.q.Status != 'deleted',"
+		if len(CatalogItemGroups)>0:
+			CatalogItemGroups = set(CatalogItemGroups.split(","))
+			# log.debug(CatalogItemGroups)
+			orArgs = ''
+			for group in CatalogItemGroups:
+				orArgs+="model.InvGrpStock.q.id == '"+group+"',"
+			qArgs+= "OR ("+orArgs[0:len(orArgs)-1]+"),"
+			qArgs+="model.InvGrpStock.q.id == model.InvViewJoinCatalogItemGrpStock.q.GrpStockId,"
+			qArgs+="model.InvCatalogItem.q.id == model.InvViewJoinCatalogItemGrpStock.q.CatalogItemId,"
+			#qArgs+="model.InvCatalogItem.q.id == table.inv_catalog_item_inv_grp_stock.inv_catalog_item_id,"
+			#clauseTables.append("inv_catalog_item_inv_grp_stock")
+		log.debug('....qArgs %s' % qArgs)
+		if len(qArgs) > 0:
+			#log.debug("!!!!!!!!!!!!!!!! " + qArgs)
+			catalogitems = eval('model.InvCatalogItem.select(AND ('+qArgs[0:len(qArgs)-1]+'),\
+				orderBy=[model.InvCatalogItem.q.Sort])')
+		else:
+			catalogitems = model.InvCatalogItem.select(orderBy=[model.InvCatalogItem.q.Sort])
+		results = []
+		for item in catalogitems:
+			POInfo = item.LatestPO()
+			name = item.Name
+			stock = "In Stock: %d" % item.QtyAvailable()
+			reorder = "Reorder in %d days" % item.DaysUntilReorder()
+			if POInfo['POSentOnDate'] != None:
+				lastpo = "Last PO on %s (%r%%)" % (POInfo['POSentOnDate'].strftime(DATE_FORMAT),	\
+					POInfo['QuantityReceived']/POInfo['QuantityRequested']*100)
+			else:
+				lastpo = ''
+			results.append(dict(id=item.id, name=name, stock=stock, reorder=reorder, lastpo=lastpo))		
+		

@@ -22,6 +22,7 @@
     <style type="text/css">
 	FillRequest {color: red}
     </style>
+      <SCRIPT SRC="/static/javascript/stores_QuickMenu.js" TYPE="text/javascript"></SCRIPT>
   </head>
 
 <body>

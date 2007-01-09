@@ -13,9 +13,10 @@
 			font-size: 14px;}
 		.Column { position: relative;
 			display: table-cell;
-			padding: 5px 5px 5px 5px;
+			margin: 5px 5px 5px 5px;
+			padding: 5px 5px 15px 5px;
 			width: 250px;
-			border: 1px solid gray;
+			border: 1px solid lightgray;
 			font-size: 10px;}
 		.Column-lite { background-color: yellow;}
 		.ListingBox { position: relative;
@@ -28,6 +29,7 @@
 			background-color: lightgray;
 			font-size: 10px;
 			overflow: auto;}
+		.ListBox-Long {height: 350px;}
 		.ListBoxItem {text-align: left;
 			color: black;
 			border: thin inset black;
@@ -38,24 +40,27 @@
 	<SCRIPT SRC="/static/javascript/UserManager.js" TYPE="text/javascript"></SCRIPT>
 </head>
 <body>
-	<DIV style="text-align:center; width:100%; left:10%; position:relative">
+	<DIV style="text-align:center; top: 10px; width:100%; position:relative;display:table">
+		<div class="Column" style="width:10px; border:0px none white"></div>
 		<DIV id="UserColumn" class="Column Column-lite">
 			<div class="ColumnTitle">Users</div>
-			<Table>
-				<TBODY>
-					<TR>
-						<TD>Search</TD>
-						<TD><INPUT type="text" id="SearchUser" name="SearchUser" value="" /></TD>
-					</TR>
-					<TR>
-						<TD colspan="2" style="text-align:right"><BUTTON type="button" id="btnSearchUser" name="btnSearchUser" value="Search">Search</BUTTON></TD>
-					</TR>
-				</TBODY>
-			</Table>
-			<div id="UserList" style="text-align:center">
-				<DIV id="UserListSelect" class="ListingBox">
-				</DIV>
-			</div>
+			<DIV id="UserSearchArea">
+				<Table>
+					<TBODY>
+						<TR>
+							<TD>Search</TD>
+							<TD><INPUT type="text" id="SearchUser" name="SearchUser" value="" /></TD>
+						</TR>
+						<TR>
+							<TD colspan="2" style="text-align:right"><BUTTON type="button" id="btnSearchUser" name="btnSearchUser" value="Search">Search</BUTTON></TD>
+						</TR>
+					</TBODY>
+				</Table>
+				<div id="UserList" style="text-align:center">
+					<DIV id="UserListSelect" class="ListingBox">
+					</DIV>
+				</div>
+			</DIV>
 			<div id="JoinedUsers" style="text-align:center">
 				<div>Linked Users</div>
 				<DIV id="JoinedUsersSelect" class="ListingBox">
@@ -65,24 +70,24 @@
 				<Table>
 					<TBODY>
 						<TR>
-							<TD>Login ID</TD>
+							<TD style="text-align:right">Login ID</TD>
 							<TD><INPUT type="text" id="UserEdit_UserName" name="UserName" value="" /></TD>
 						</TR>
 						<TR>
-							<TD>Display name</TD>
+							<TD style="text-align:right">Display name</TD>
 							<TD><INPUT type="text" id="UserEdit_DisplayName" name="DisplayName" value="" /></TD>
 						</TR>
 						<TR>
-							<TD>Email address</TD>
+							<TD style="text-align:right">Email address</TD>
 							<TD><INPUT type="text" id="UserEdit_EmailAddress" name="EmailAddress" value="" /></TD>
 						</TR>
 						<TR>
-							<TD>Password</TD>
-							<TD><INPUT type="text" id="UserEdit_Password" name="Password" value="" /></TD>
+							<TD style="text-align:right">Password</TD>
+							<TD><INPUT type="password" id="UserEdit_Password" name="Password" value="" /></TD>
 						</TR>
 						<TR>
-							<TD>Password verify</TD>
-							<TD><INPUT type="text" id="UserEdit_PasswordVerify" name="PasswordVerify" value="" /></TD>
+							<TD style="text-align:right">Password verify</TD>
+							<TD><INPUT type="password" id="UserEdit_PasswordVerify" name="PasswordVerify" value="" /></TD>
 						</TR>
 					</TBODY>
 				</Table>
@@ -95,23 +100,26 @@
 				</DIV>
 			</DIV>
 		</DIV>
+		<div class="Column" style="width:10px; border:0px none white"></div>
 		<DIV id="GroupColumn" class="Column">
 			<div class="ColumnTitle">Groups</div>
-			<Table>
-				<TBODY>
-					<TR>
-						<TD>Search</TD>
-						<TD><INPUT type="text" id="SearchGroup" name="SearchGroup" value="" /></TD>
-					</TR>
-					<TR>
-						<TD colspan="2" style="text-align:right"><BUTTON type="button" id="btnSearchGroup" name="btnSearchGroup" value="Search">Search</BUTTON></TD>
-					</TR>
-				</TBODY>
-			</Table>
-			<div id="GroupList" style="text-align:center">
-				<DIV id="GroupListSelect" class="ListingBox">
-				</DIV>
-			</div>
+			<DIV id="GroupSearchArea">
+				<Table>
+					<TBODY>
+						<TR>
+							<TD>Search</TD>
+							<TD><INPUT type="text" id="SearchGroup" name="SearchGroup" value="" /></TD>
+						</TR>
+						<TR>
+							<TD colspan="2" style="text-align:right"><BUTTON type="button" id="btnSearchGroup" name="btnSearchGroup" value="Search">Search</BUTTON></TD>
+						</TR>
+					</TBODY>
+				</Table>
+				<div id="GroupList" style="text-align:center">
+					<DIV id="GroupListSelect" class="ListingBox">
+					</DIV>
+				</div>
+			</DIV>
 			<div id="JoinedGroups" style="text-align:center">
 				<div>Linked Groups</div>
 				<DIV id="JoinedGroupsSelect" class="ListingBox">
@@ -121,11 +129,11 @@
 				<Table>
 					<TBODY>
 						<TR>
-							<TD>Group Name</TD>
+							<TD style="text-align:right">Group Name</TD>
 							<TD><INPUT type="text" id="GroupEdit_GroupName" name="GroupName" value="" /></TD>
 						</TR>
 						<TR>
-							<TD>Display Name</TD>
+							<TD style="text-align:right">Display Name</TD>
 							<TD><INPUT type="text" id="GroupEdit_DisplayName" name="DisplayName" value="" /></TD>
 						</TR>
 					</TBODY>
@@ -139,37 +147,40 @@
 				</DIV>
 			</DIV>
 		</DIV>
+		<div class="Column" style="width:10px; border:0px none white"></div>
 		<DIV id="PermissionColumn" class="Column">
 			<div class="ColumnTitle">Permissions</div>
-			<Table>
-				<TBODY>
-					<TR>
-						<TD>Search</TD>
-						<TD><INPUT type="text" id="SearchPermission" name="SearchPermission" value="" /></TD>
-					</TR>
-					<TR>
-						<TD colspan="2" style="text-align:right"><BUTTON type="button" id="btnSearchPermission" name="btnSearchPermissions" value="Search">Search</BUTTON></TD>
-					</TR>
-				</TBODY>
-			</Table>
-			<div id="PermissionList" style="text-align:center">
-				<DIV id="PermissionListSelect" class="ListingBox">
-				</DIV>
-			</div>
+			<DIV id="PermissionSearchArea" style="display:none">
+				<Table>
+					<TBODY>
+						<TR>
+							<TD>Search</TD>
+							<TD><INPUT type="text" id="SearchPermission" name="SearchPermission" value="" /></TD>
+						</TR>
+						<TR>
+							<TD colspan="2" style="text-align:right"><BUTTON type="button" id="btnSearchPermission" name="btnSearchPermissions" value="Search">Search</BUTTON></TD>
+						</TR>
+					</TBODY>
+				</Table>
+				<div id="PermissionList" style="text-align:center">
+					<DIV id="PermissionListSelect" class="ListingBox">
+					</DIV>
+				</div>
+			</DIV>
 			<div id="JoinedPermissions" style="text-align:center">
 				<div>Linked Permission</div>
-				<DIV id="JoinedPermissionsSelect" class="ListingBox">
+				<DIV id="JoinedPermissionsSelect" class="ListingBox ListBox-Long">
 				</DIV>
 			</div>
 			<DIV id="PermissionEditor">
 				<Table>
 					<TBODY>
 						<TR>
-							<TD>Permission Name</TD>
+							<TD style="text-align:right">Permission Name</TD>
 							<TD><INPUT type="text" id="PermissionEdit_PermissionName" name="PermissionName" value="" /></TD>
 						</TR>
 						<TR>
-							<TD>Permission Description</TD>
+							<TD style="text-align:right">Permission Description</TD>
 							<TD><INPUT type="text" id="PermissionEdit_PermissionDescription" name="PermissionDescription" value="" /></TD>
 						</TR>
 					</TBODY>
@@ -183,6 +194,7 @@
 				</DIV>
 			</DIV>
 		</DIV>
+		<div class="Column" style="width:10px; border:0px none white"></div>
 	</DIV>
 </body>
 </html>
