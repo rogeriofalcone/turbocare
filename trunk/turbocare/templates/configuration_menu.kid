@@ -12,7 +12,7 @@
 		<DIV class="big_text_2">Menu</DIV>
 			<div style="width:80%; left:10px; position:relative; font-size:14px" class="divtable">
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href="">Addresses Table</a></div>
+					<div style="text-align: left" class="clear"><a href="AddressesEditor">Addresses Table</a></div>
 					<div style="text-align: left" class="clear">
 						Manage Addresses
 					</div>

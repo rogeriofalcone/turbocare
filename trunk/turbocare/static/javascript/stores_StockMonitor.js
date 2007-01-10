@@ -1,4 +1,8 @@
+/*
 
+	Currently this file is not used for anything... so, I should probably delete this soon
+
+*/
 //Document wide variables
 var barcode = {};//The barcode object
 //The barcode value

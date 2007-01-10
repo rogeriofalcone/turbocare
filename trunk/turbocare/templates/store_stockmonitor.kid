@@ -5,13 +5,12 @@
 
 <head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
-    <title>${getattr(self,'title','Purchase Orders Editor')}</title>
+    <title>${getattr(self,'title','Stock Monitor')}</title>
     <LINK HREF="/tg_static/css/widget.css" TYPE="text/css" REL="stylesheet"/>
     <LINK HREF="/static/javascript/calendar/calendar-green.css" TYPE="text/css" REL="stylesheet"/>
     <LINK HREF="/static/css/table.css" TYPE="text/css" REL="stylesheet"/>
     <SCRIPT SRC="/static/javascript/calendar/calendar.js" TYPE="text/javascript"></SCRIPT>
    <SCRIPT SRC="/static/javascript/PickList.js" TYPE="text/javascript"></SCRIPT>
-   <SCRIPT SRC="/static/javascript/stores_StockMonitor.js" TYPE="text/javascript"></SCRIPT>
      <SCRIPT SRC="/tg_widgets/turbogears.widgets/calendar/lang/calendar-en.js" TYPE="text/javascript">
     </SCRIPT>
     <SCRIPT SRC="/tg_widgets/turbogears.widgets/calendar/calendar-setup.js" TYPE="text/javascript">
