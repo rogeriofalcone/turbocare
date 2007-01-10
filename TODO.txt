@@ -8,12 +8,14 @@ TODO list
 
 2. Billing
 - Some cleanups to make it look prettier (History list)
+- Sort-cuts on the UI, esp. Ctrl-S for saving the bill
+- Error messages for insufficient stock
 
 3. Dispensing
 - Make it look prettier
 
 4. Stores (Inventory)
-- Stock Monitor
+- Stock Monitor - In testing phase
 
 5. Reports
 -  Purchase Orders
@@ -22,7 +24,7 @@ TODO list
 	- Multi-page reports
 	
 6. User Manager
-- Debug new user manager
+- User manager - in testing phase
 
 7. TurboGears Configuration
 - Address editor

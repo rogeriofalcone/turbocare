@@ -3224,6 +3224,18 @@ class InvAddressCitytown(SQLObject):
 			value = 'Error in Entry (ERR)'
 		return value
 		
+	def DisplayNameAlt(self):
+		try:
+			if (self.Name == ''):
+				value = 'NEW ENTRY'
+			elif self.Status == 'deleted':
+				value = "***MARKED DELETED*** %s (%s) <%s> [%s] {%d}" % (self.Name, self.Block, self.District, self.State, self.id)
+			else:
+				value = " %s (%s) <%s> [%s] {%d}" % (self.Name, self.Block, self.District, self.State, self.id)
+		except AttributeError:
+			value = 'Error in Entry (ERR)'
+		return value
+		
 	UneceModifier = StringCol(length=2, default=None) #char 2 
 	UneceLocode = StringCol(length=15, default=None)#char 15
 	Name = StringCol(length=100)#char 100

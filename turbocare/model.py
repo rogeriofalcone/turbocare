@@ -194,6 +194,7 @@ class AddressCityTown(SQLObject):
 	UneceLocodeType = IntCol(default=0)#int 3
 	UneceCoordinates = StringCol(length=25, default='')#char 25
 	InfoUrl = StringCol(length=255, default='')#char 255
+	Persons = MultipleJoin("Person",joinColumn="addr_citytown_nr")
 	UseFrequency = IntCol(default=1)#int
 	Status = StringCol(length=25, default='')#char 25
 	History = StringCol(default='')#text
