@@ -22,6 +22,8 @@ It is strongly recommended if you are not familiar with MySQL Database Replicati
 ==Backups==
 
 [http://mysqlbackup.zmanda.com/]
+[http://www.zmanda.com/quick-mysql-backup.html Zmanda MySQL Backup Guide]
+
 
 =References=
 
@@ -32,5 +34,4 @@ It is strongly recommended if you are not familiar with MySQL Database Replicati
 
 [http://kjalleda.googlepages.com/mysqlprojects Some useful MySQL Projects]
 [http://dev.mysql.com/doc/refman/5.0/en/replication-howto.html Straight from the people who wrote it]
-
 
