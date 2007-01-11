@@ -18,13 +18,19 @@
 					</div>
 				</div>
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href=""></a>Tribes table</div>
+					<div style="text-align: left" class="clear"><a href="EthnicOriginsEditor">Tribes table</a></div>
 					<div style="text-align: left" class="clear">
 						Manage Tribes
 					</div>
 				</div>
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href=""></a>Wards, Rooms and Beds</div>
+					<div style="text-align: left" class="clear"><a href="LocationsEditor">Department/Locations</a></div>
+					<div style="text-align: left" class="clear">
+						Manage Departments/Locations
+					</div>
+				</div>
+				<div class="row">
+					<div style="text-align: left" class="clear"><a href="WardRoomBedsEditor">Wards, Rooms and Beds</a></div>
 					<div style="text-align: left" class="clear">
 						Manage Wards, Rooms and Beds
 					</div>
@@ -41,7 +47,48 @@
 						Manage the list of Insurance providers
 					</div>
 				</div>
-
+				<div class="row">
+					<div style="text-align: left" class="clear"><a href=""></a>Packaging Types</div>
+					<div style="text-align: left" class="clear">
+						Manage the list of Packaging Types
+					</div>
+				</div>
+				<div class="row">
+					<div style="text-align: left" class="clear"><a href=""></a>Item Master (Catalog Item) Groups</div>
+					<div style="text-align: left" class="clear">
+						Manage the list of Item Master (Catalog Item) Groups
+					</div>
+				</div>
+				<div class="row">
+					<div style="text-align: left" class="clear"><a href=""></a>Location Groups</div>
+					<div style="text-align: left" class="clear">
+						Manage the list of Location Groups
+					</div>
+				</div>
+				<div class="row">
+					<div style="text-align: left" class="clear"><a href=""></a>Customer Groups</div>
+					<div style="text-align: left" class="clear">
+						Manage the list of Customer Groups
+					</div>
+				</div>
+				<div class="row">
+					<div style="text-align: left" class="clear"><a href=""></a>Vendor Groups</div>
+					<div style="text-align: left" class="clear">
+						Manage the list of Vendor Groups
+					</div>
+				</div>
+				<div class="row">
+					<div style="text-align: left" class="clear"><a href=""></a>Packaging Groups</div>
+					<div style="text-align: left" class="clear">
+						Manage the list of Packaging Groups
+					</div>
+				</div>
+				<div class="row">
+					<div style="text-align: left" class="clear"><a href=""></a>Compound Groups</div>
+					<div style="text-align: left" class="clear">
+						Manage the list of Compound Groups
+					</div>
+				</div>
 			</div>
 	</DIV>
 </body>
