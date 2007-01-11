@@ -1685,6 +1685,7 @@ class Store(turbogears.controllers.Controller):
 			If a new item is added and it matches a "marked deleted" item, then un-delete the item and re-display
 		'''
 		# Convert our string to a data structure
+		# raise ZeroDivisionError
 		data = simplejson.loads(data)
 		# Load the Quote
 		Q = model.InvQuote.get(QuoteID)

@@ -317,13 +317,14 @@ pick.pickList_postList = function(dom_obj){
 		for (var j=0;j<values[0].length;j++){
 			var name = values[0][j];
 			var value = values[1][j];
-			data_part += '"'+name+'":"'+value+'", ';
+			// The value variable gets altered because FormEncode can't handle certain characters in a string
+			data_part += '"'+name+'":"'+value.replace('"',"'",'g').replace("&","+",'g')+'", ';
 		}
 		data_item += '{'+data_part.slice(0,-2)+'}, ';
 	}
 	data = '['+data_item.slice(0,-2)+']';
 	pick.toggle_message("Loading...");
-	//alert(data);
+	alert(data);
 	if (def.NoAjax == true){
  		location = def.Url+'?data='+data;
  		//location.eval(url+'?data='+data);
