@@ -7,6 +7,7 @@ import cherrypy
 from sqlobject import *
 import turbogears
 from turbogears import  controllers, expose, validate, redirect, widgets, validators, flash, identity
+from turbogears import config
 #Reportlab stuff
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import ParagraphStyle
@@ -48,9 +49,10 @@ class QuoteRequestPrintOut:
 	styles1 = getSampleStyleSheet()
 	styles2 = getSampleStyleSheet()
 	PAGE_SIZE = 'A4'
-	StaticDir = '/home/wesley/svn/google/turbocare/turbocare/static/reports/' # Location for static files to be stored
+	#StaticDir = '/home/wesley/svn/google/turbocare/turbocare/static/reports/' # Location for static files to be stored
+	StaticDir = config.get('turbocare.basedir','') + 'turbocare/static/reports/'
 	StaticURL = '/static/reports/'
-	LogoFile = '/home/wesley/devel/care2x/care2x/report/logo.png'
+	#LogoFile = '/home/wesley/devel/care2x/care2x/report/logo.png'
 	
 	def __init__(self, QR, Vendor, Paper='A4', PreparedBy='', CheckedBy='', ApprovedBy='', ToAddress='',
 	FromAddress='', Notes='', **kw):
