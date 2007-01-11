@@ -20,23 +20,40 @@ TODO list
 5. Reports
 -  Purchase Orders
 	- Multi-page reports
+	- Item columns don't wrap
 -  Quote Requests
 	- Multi-page reports
+	- Item columns don't wrap
 	
 6. User Manager
 - User manager - in testing phase
 
 7. TurboGears Configuration
-- Address editor
-- Tribes editor
+- Address editor - Ready for testing
+- Tribes editor - Ready for testing
+- Departments/Locations
 - Wards, rooms, and beds editor
 - Doctors list editor
 - Insurance providers editor
+====Inventory====
+- Packaging Types
+- Item Master (Catalog Item) Groups
+- Location Groups
+- Customer Groups
+- Vendor Groups
+- Packaging Groups
+- Compound Groups
 
 8. Patient manager
 - Discharge a patient
 - Move Inpatients (different wards, rooms and beds)
 - Temp Memo field on the patient record
+
+9. Customer manager
+- Add/Edit Customer entries
+
+10. Location manager
+- Add/Edit Locations within the system
 
   Future
   ====

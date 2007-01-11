@@ -137,6 +137,7 @@ class Permission(SQLObject):
 #
 
 class AddressCityTown(SQLObject):
+	'''	Address information '''
 	class sqlmeta:
 		table = "care_address_citytown"
 		idName = 'nr'
@@ -236,8 +237,9 @@ class ClassEthnicOrig(SQLObject):
 		self._SO_set_CreateTime(value)
 				
 	Name = StringCol(length=35,dbName='name')
-	LdVar = StringCol(length=35,dbName='LD_var')
-	Status = StringCol(length=25,dbName='status')
+	LdVar = StringCol(length=35,dbName='LD_var',default='')
+	Status = StringCol(length=25,dbName='status',default='')
+	Types = MultipleJoin("TypeEthnicOrig",joinColumn='class_nr')
 	ModifyId = StringCol(length=35,default=cur_user_id())#varchar(35) NOT NULL default '',
 	ModifyTime = DateTimeCol(default=cur_date_time())#datetime default '0000-00-00 00:00:00',
 	CreateId = StringCol(length=35,default=cur_user_id())#varchar(35) NOT NULL default '',
@@ -1239,28 +1241,29 @@ class Department(SQLObject):
 		self._SO_set_CreateTime(value)
 	
 	Id = StringCol(length=60,alternateID=True,dbName='id')
-	Type = StringCol(length=25,dbName='type')
+	Type = ForeignKey("TypeDepartment",dbName='type',default=None)
 	NameFormal = StringCol(length=60,dbName='name_formal')
-	NameShort = StringCol(length=35,dbName='name_short')
-	NameAlternate = StringCol(length=255,dbName='name_alternate')
-	LdVar = StringCol(length=35,dbName='LD_var')
-	Description = StringCol(length=255,dbName='description')
-	AdmitInpatient = BoolCol(dbName='admit_inpatient')
-	AdmitOutpatient = BoolCol(dbName='admit_outpatient')
-	HasOncallDoc = BoolCol(dbName='has_oncall_doc')
-	HasOncallNurse = BoolCol(dbName='has_oncall_nurse')
-	DoesSurgery = BoolCol(dbName='does_surgery')
+	NameShort = StringCol(length=35,dbName='name_short',default='')
+	NameAlternate = StringCol(length=255,dbName='name_alternate',default='')
+	LdVar = StringCol(length=35,dbName='LD_var',default='')
+	Description = StringCol(length=255,dbName='description',default='')
+	AdmitInpatient = BoolCol(dbName='admit_inpatient',default=False)
+	AdmitOutpatient = BoolCol(dbName='admit_outpatient',default=False)
+	HasOncallDoc = BoolCol(dbName='has_oncall_doc',default=False)
+	HasOncallNurse = BoolCol(dbName='has_oncall_nurse',default=False)
+	DoesSurgery = BoolCol(dbName='does_surgery',default=False)
 	ThisInstitution = BoolCol(default=True,dbName='this_institution')
-	IsSubDept = BoolCol(dbName='is_sub_dept')
-	ParentDeptNr = ForeignKey('Department',dbName='parent_dept_nr')
-	WorkHours = StringCol(length=100,dbName='work_hours')
-	ConsultHours = StringCol(length=100,dbName='consult_hours')
-	IsInactive = BoolCol(dbName='is_inactive')
-	SortOrder = IntCol(dbName='sort_order')
-	Address = StringCol(length=255,dbName='address')
-	SigLine = StringCol(length=60,dbName='sig_line')
-	SigStamp = StringCol(length=255,dbName='sig_stamp')
-	LogoMimeType = StringCol(length=5,dbName='logo_mime_type')
+	IsSubDept = BoolCol(dbName='is_sub_dept',default=False)
+	ParentDeptNr = ForeignKey('Department',dbName='parent_dept_nr',default=None)
+	WorkHours = StringCol(length=100,dbName='work_hours',default='')
+	ConsultHours = StringCol(length=100,dbName='consult_hours',default='')
+	IsInactive = BoolCol(dbName='is_inactive',default=False)
+	SortOrder = IntCol(dbName='sort_order',default=1)
+	Address = StringCol(length=255,dbName='address',default='')
+	SigLine = StringCol(length=60,dbName='sig_line',default='')
+	SigStamp = StringCol(length=255,dbName='sig_stamp',default='')
+	LogoMimeType = StringCol(length=5,dbName='logo_mime_type',default='')
+	Locations = MultipleJoin("InvLocation",joinColumn="department_id")
 	Status = StringCol(length=25,default='')
 	History = StringCol(length=255,default='')
 	ModifyId = StringCol(length=35,default=cur_user_id())#varchar(35) NOT NULL default '',
@@ -4040,7 +4043,7 @@ class TypeEthnicOrig(SQLObject):
 
 	ClassNr = ForeignKey('ClassEthnicOrig',dbName='class_nr')
 	Name = StringCol(length=35,dbName='name')
-	LdVar = StringCol(length=35,dbName='LD_var')
+	LdVar = StringCol(length=35,dbName='LD_var',default='')
 	Persons = MultipleJoin("Person",joinColumn='ethnic_orig')
 	Status = StringCol(length=25,default='')
 #	History = StringCol(length=255,default='')

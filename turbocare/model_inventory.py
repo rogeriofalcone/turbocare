@@ -1092,6 +1092,7 @@ class InvLocation(SQLObject):
 	CanReceive = BoolCol(default=False) #If True, then PO's can be delivered here
 	CanSell = BoolCol(default=False) #If True, then Items can be sold to customers here
 	IsConsumed = BoolCol(default=False) #If True, then Items stored at this location are considered consumed (like Customer)
+	Department = ForeignKey("Department",default=None)
 	Sort = IntCol(default=1000)
 	Status = StringCol(length=25,dbName="status",default="")
 	ModifyId = StringCol(length=35,dbName="modify_id",default=cur_user_id())
