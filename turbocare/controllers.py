@@ -11,7 +11,7 @@ import controllers_billing
 import controllers_registration
 import controllers_dispensing
 import controllers_store
-import controllers_reports
+#import controllers_reports
 import controllers_UDReport	
 import controllers_saved_reports
 import controllers_configuration
@@ -57,7 +57,7 @@ class Root(controllers.RootController):
     registration = controllers_registration.Registration()
     registration = identity.SecureObject(registration,identity.has_permission('reg_view'))
     
-    reports = controllers_reports.Reports()
+    #reports = controllers_reports.Reports()
     user_reports = controllers_UDReport.UserDefinedReport()
     
     # Dispensing locations
