@@ -125,4 +125,4 @@ class Inventory(controllers.RootController):
 			next_link = "/inventory"
 		return dict(error_message = error, next_link=next_link)
 	
-	ReportCatalogItems = report_CatalogItems.ReportCatalogItems
+#	ReportCatalogItems = report_CatalogItems.ReportCatalogItems
