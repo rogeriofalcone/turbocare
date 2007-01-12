@@ -119,6 +119,19 @@
 								<SELECT name="Type" id="Type">
 									<OPTION py:for="type in types" value="${type['id']}" selected="${type['selected']}">${type['name']}</OPTION>
 								</SELECT>
+								<INPUT type="button" id="EditTypeOptions" name="EditTypeOptions" value="Edit Types" />
+								<DIV id="EditTypeOptionsForm" style="font-size:9px;display:none">
+									Name: 
+									<INPUT type="text" name="TypeName" value="" id="TypeName" />
+									<INPUT type="hidden" name="TypeID" value="" id="TypeID" />
+									<DIV>
+										<input name="OperationType" id="btnSaveType" type="button" value="Save" />
+										<input name="OperationType" id="btnCancelType" type="button" value="Cancel" />
+										<input name="OperationType" id="btnAddNewType" type="button" value="New" />
+										<input name="OperationType" id="btnDeleteType" type="button" value="Delete" />
+										<input name="OperationType" id="btnUnDeleteType" type="button" value="Un-Delete" />
+									</DIV>
+								</DIV>
 							</div>
 						</div>
 						<div class="row">

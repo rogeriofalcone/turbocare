@@ -60,9 +60,9 @@ config.collectPostVars = function(f){
     {
       if(postVars!='') postVars+='&';
       if (getNodeAttribute(f.elements[i],'multiple') != null) {
-      	postVars+= f.elements[i].name +'='+ config.multiselect_csv(f.elements[i].id);
+      	postVars+= f.elements[i].name +'='+ encodeURIComponent(config.multiselect_csv(f.elements[i].id));
       } else {
-      	postVars+= f.elements[i].name +'='+ f.elements[i].options[f.elements[i].selectedIndex].value;
+      	postVars+= f.elements[i].name +'='+ encodeURIComponent(f.elements[i].options[f.elements[i].selectedIndex].value);
       }
     }
   }
@@ -396,8 +396,90 @@ config.RenderQuickSearch = function(data){
 		}
 	}
 }
-
-
+/*
+	ToggleDepartmentType: Show/Hide the mini edit form for department types
+*/
+config.ToggleDepartmentType = function(e){
+	var el = getElement('EditTypeOptionsForm');
+	if (el.style.display=='none') {
+		// initialize the edit form (any previous unsaved changes are cancelled)
+		var Type = getElement('Type');
+		var opts = getElementsByTagAndClassName('OPTION',null,Type);
+		forEach(opts, function(opt) {
+			if (opt.value==Type.value) {
+				getElement('TypeName').value = scrapeText(opt);
+			}
+		});
+		getElement('TypeID').value = Type.value;
+		el.style.display='';
+	} else {
+		el.style.display='none';
+	}
+}
+/*
+	SaveType: Save changes made to the department type
+*/
+config.SaveType = function(e){
+	config.toggle_message("Saving...");
+	var postVars = 'TypeID='+getElement('TypeID').value+'&TypeName='+getElement('TypeName').value+'&Operation=Save';
+	var d = postJSON('LocationsEditorDepartmentTypeSave',postVars);
+	d.addCallbacks(config.RenderTypes,config.error_report);
+}
+/*
+	CancelType: Cancel changes made to the department type
+*/
+config.CancelType = function(e){
+	config.toggle_message("Cancelling...");
+	var postVars = 'Operation=Cancel';
+	var d = postJSON('LocationsEditorDepartmentTypeSave',postVars);
+	d.addCallbacks(config.RenderTypes,config.error_report);
+}
+/*
+	NewType: Cancel changes made to the department type and set the record up to create a new entry
+*/
+config.NewType = function(e){
+	getElement('TypeName').value = '';
+	getElement('TypeID').value = '';
+}
+/*
+	DeleteType: Request that the department type be deleted
+*/
+config.DeleteType = function(e){
+	config.toggle_message("Deleting...");
+	var postVars = 'TypeID='+getElement('TypeID').value+'&Operation=Delete';
+	var d = postJSON('LocationsEditorDepartmentTypeSave',postVars);
+	d.addCallbacks(config.RenderTypes,config.error_report);
+}
+/*
+	UnDeleteType: Request that the department type be un-deleted
+*/
+config.UnDeleteType = function(e){
+	config.toggle_message("Deleting...");
+	var postVars = 'TypeID='+getElement('TypeID').value+'&Operation=Un-Delete';
+	var d = postJSON('LocationsEditorDepartmentTypeSave',postVars);
+	d.addCallbacks(config.RenderTypes,config.error_report);
+}
+/*
+	RenderTypes: Render an updated list of the Department types
+*/
+config.RenderTypes = function(d) {
+	if (d.message!='') {
+		config.toggle_message(d.message)
+		var delay = callLater(8,config.toggle_message);
+	} else {
+		config.toggle_message('');
+	}
+	var Select = getElement('Type');
+	replaceChildNodes(Select,null);
+	forEach(d.results,function(result) {
+		if (result.selected) {
+			Select.appendChild(OPTION({'value':result.id,'selected':'selected'},result.name));
+		} else {
+			Select.appendChild(OPTION({'value':result.id},result.name));
+		}
+	});
+	config.ToggleDepartmentType();
+}
 //custom short-cuts
 connect(document,'onkeypress',shortcuts.keypress);
 connect(document,'onkeydown', shortcuts.keydown);
@@ -413,6 +495,25 @@ connect(window, 'onload', function(){
 		}
 		if (getElement("btnParentDeptNrID")!=null) {
 			connect("btnParentDeptNrID",'onclick',config.FkSelect);
+		}
+		// buttons for the department type mini-form
+		if (getElement("EditTypeOptions")!=null) {
+			connect("EditTypeOptions",'onclick',config.ToggleDepartmentType);
+		}
+		if (getElement("btnSaveType")!=null) {
+			connect("btnSaveType",'onclick',config.SaveType);
+		}
+		if (getElement("btnCancelType")!=null) {
+			connect("btnCancelType",'onclick',config.CancelType);
+		}
+		if (getElement("btnAddNewType")!=null) {
+			connect("btnAddNewType",'onclick',config.NewType);
+		}
+		if (getElement("btnDeleteType")!=null) {
+			connect("btnDeleteType",'onclick',config.DeleteType);
+		}
+		if (getElement("btnUnDeleteType")!=null) {
+			connect("btnUnDeleteType",'onclick',config.UnDeleteType);
 		}
 });
 //Connect on onload for the document to open the document using javascript
