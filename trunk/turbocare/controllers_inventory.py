@@ -8,7 +8,7 @@ from turbogears import identity
 from turbogears.toolbox.catwalk import CatWalk 
 import model
 import model_inventory
-import report_CatalogItems
+#import report_CatalogItems
 
 log = logging.getLogger("turbocare.controllers")
 
