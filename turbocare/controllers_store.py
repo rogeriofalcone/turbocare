@@ -555,8 +555,11 @@ class Store(turbogears.controllers.Controller):
 			stock = "In Stock: %d" % item.QtyAvailable()
 			reorder = "Reorder in %d days" % item.DaysUntilReorder()
 			if POInfo['POSentOnDate'] != None:
-				lastpo = "Last PO on %s (%r%%)" % (POInfo['POSentOnDate'].strftime(DATE_FORMAT),	\
-					POInfo['QuantityReceived']/POInfo['QuantityRequested']*100)
+				if POInfo['QuantityRequested'] != 0:
+					lastpo = "Last PO on %s (%r%%)" % (POInfo['POSentOnDate'].strftime(DATE_FORMAT),	\
+						POInfo['QuantityReceived']/POInfo['QuantityRequested']*100)
+				else:
+					lastpo = "Last PO on %s (0 Qty requested)" % POInfo['POSentOnDate'].strftime(DATE_FORMAT)
 			else:
 				lastpo = ''
 			results.append(dict(id=item.id, name=name, stock=stock, reorder=reorder, lastpo=lastpo))
@@ -891,7 +894,11 @@ class Store(turbogears.controllers.Controller):
 			DateReceived = ''
 			Status = ''
 		else:
-			goodsreceived = model.InvGoodsReceived.get(GoodsReceivedID)
+			try:
+				goodsreceived = model.InvGoodsReceived.get(GoodsReceivedID)
+			except SQLObjectNotFound:
+				turbogears.flash('The Goods Received record you requested doesn\'t exist')
+				raise cherrypy.HTTPRedirect('GoodsReceivedEditor')
 			# Get the regular variables
 			Name = goodsreceived.Name()
 			PurchaseOrderID = goodsreceived.PurchaseOrderID
@@ -1092,55 +1099,59 @@ class Store(turbogears.controllers.Controller):
 		# Get our operation
 		log.debug('....Operation: %s' % Operation)
 		if Operation == 'Save':
-			# Silly but necessary date manipulations (I really wish the validators for dates worked!!!)
+			# Silly but necessary date manipulations 
 			if DateReceived != None and DateReceived != '':
 				DateReceived = datetime.fromtimestamp(time.mktime(time.strptime(DateReceived[0:10],DATE_FORMAT)))
 			else:
 				DateReceived = None
 			GR.DateReceived = DateReceived
 			GR.Notes = Notes
-			# Update the Purchase Order Items
-			CurrStock = [x.id for x in GR.StockItems]
-			if len(GRItemCounter) > 1:
-				NewStockItems = [int(x) for x in GRItemID]
-			elif len(GRItemCounter) == 1:
-				NewStockItems = [int(GRItemID)]
-			else:
-				NewStockItems = []
-			for NewID, Quantity, PurchasePrice, SalePrice, MRP,BatchNumber, ExpireDate in \
-				zip(GRItemID,GRItemQuantity, GRItemPurchasePrice,GRItemSalePrice,GRItemMRP,\
-				GRItemBatchNumber,GRItemExpireDate):
-				if int(NewID) in CurrStock: #Update the item
-					if ExpireDate != None and ExpireDate != '':
-						ExpireDate = datetime.fromtimestamp(time.mktime(time.strptime(ExpireDate[0:10],DATE_FORMAT)))
-					else:
-						ExpireDate = None
-					stockitem = model.InvStockItem.get(NewID)
-					stockitem.Quantity = float(Quantity)
-					stockitem.PurchasePrice = float(PurchasePrice)
-					stockitem.SalePrice = float(SalePrice)
-					stockitem.MRP = float(MRP)
-					stockitem.BatchNumber = str(BatchNumber)
-					stockitem.ExpireDate = ExpireDate
-				else: #We shouldn't have this, becuase we create new POItems in a different place (using AJAX/AJSON)
-					pass
+			turbogears.flash('Record Updated. Note: Modifying Goods received items needs to be done on the Stock Header (Stock Item) record.  Click on the link to edit the record for a particular stock item')
+			# REMOVE - Update the Purchase Order Items
+			# NEW Policy - No more editing of stock from the Goods Received screen.  Force the user to use
+			# the stock item editor so that it's easier for me to maintain the code (because making changes
+			# can be tricky to maintain in two places)
+#			CurrStock = [x.id for x in GR.StockItems]
+#			if len(GRItemCounter) > 1:
+#				NewStockItems = [int(x) for x in GRItemID]
+#			elif len(GRItemCounter) == 1:
+#				NewStockItems = [int(GRItemID)]
+#			else:
+#				NewStockItems = []
+#			for NewID, Quantity, PurchasePrice, SalePrice, MRP,BatchNumber, ExpireDate in \
+#				zip(GRItemID,GRItemQuantity, GRItemPurchasePrice,GRItemSalePrice,GRItemMRP,\
+#				GRItemBatchNumber,GRItemExpireDate):
+#				if int(NewID) in CurrStock: #Update the item
+#					if ExpireDate != None and ExpireDate != '':
+#						ExpireDate = datetime.fromtimestamp(time.mktime(time.strptime(ExpireDate[0:10],DATE_FORMAT)))
+#					else:
+#						ExpireDate = None
+#					stockitem = model.InvStockItem.get(NewID)
+#					stockitem.Quantity = float(Quantity)
+#					stockitem.PurchasePrice = float(PurchasePrice)
+#					stockitem.SalePrice = float(SalePrice)
+#					stockitem.MRP = float(MRP)
+#					stockitem.BatchNumber = str(BatchNumber)
+#					stockitem.ExpireDate = ExpireDate
+#				else: #We shouldn't have this, becuase we create new POItems in a different place (using AJAX/AJSON)
+#					pass
 			# Delete any StockItems which have been removed
 			# log.debug(CurrPOItems)
 			# log.debug(NewPOItemIDs)
-			mark_delete_count, delete_count = 0,0
-			for stockitemid in CurrStock:
-				if not (stockitemid in NewStockItems):
-					stockitem = model.InvStockItem.get(NewID)
-					if len(stockitem.Locations) > 0 or (stockitem.TransferCount() > 0):
-						poitem.Status = 'deleted'
-						mark_delete_count += 1
-					else:
-						poitem.destroySelf()
-						delete_count += 1
-			if mark_delete_count == 0 and  delete_count == 0:
-				turbogears.flash('Record updated')
-			else:
-				turbogears.flash('Record updated (%d items marked deleted and %d items deleted' % (mark_delete_count, delete_count))
+#			mark_delete_count, delete_count = 0,0
+#			for stockitemid in CurrStock:
+#				if not (stockitemid in NewStockItems):
+#					stockitem = model.InvStockItem.get(NewID)
+#					if len(stockitem.Locations) > 0 or (stockitem.TransferCount() > 0):
+#						poitem.Status = 'deleted'
+#						mark_delete_count += 1
+#					else:
+#						poitem.destroySelf()
+#						delete_count += 1
+#			if mark_delete_count == 0 and  delete_count == 0:
+#				turbogears.flash('Record updated')
+#			else:
+#				turbogears.flash('Record updated (%d items marked deleted and %d items deleted' % (mark_delete_count, delete_count))
 		elif Operation == 'Delete':
 			if not GR.SafeToDelete():
 				GR.Status = 'deleted'
@@ -1193,10 +1204,20 @@ class Store(turbogears.controllers.Controller):
 		pastQRs = [] # POs which are receiving, but not yet completed
 		items = model.InvQuoteRequest.select(orderBy=[-model.InvQuoteRequest.q.CreateTime])
 		for item in items:
-			if len(item.Quotes) < len(item.Vendors):
-				currentQRs.append(dict(id=item.id,name=item.Name()))
-			else:
-				pastQRs.append(dict(id=item.id,name=item.Name()))
+			try:
+				if len(item.Quotes) < len(item.Vendors):
+					currentQRs.append(dict(id=item.id,name=item.Name()))
+				else:
+					pastQRs.append(dict(id=item.id,name=item.Name()))
+			except SQLObjectNotFound, errorstr:
+				turbogears.flash('Some database errors were cleaned while loading this page.  Please reload the page')
+				errorArr = errorstr[0].split(' ')
+				table = errorArr[2]
+				id = errorArr[6]
+				if table == 'InvVendor':
+					item.removeInvVendor(int(id))
+				else:
+					item.removeInvQuote(int(id))
 		pastQRs = pastQRs[0:model.LATEST_QRS]
 		# Get a quick listing of the latest quotes
 		latestQs = [] # Most recent goods received
@@ -1490,7 +1511,10 @@ class Store(turbogears.controllers.Controller):
 						delete_count += 1
 			# Update Vendor information
 			# convert our Vendor list to an integer list
-			Vendors = [int(x) for x in Vendors]
+			if isinstance(Vendors, basestring): # an array with only one entry
+				Vendors = [int(Vendors)]
+			else:
+				Vendors = [int(x) for x in Vendors]
 			for vendor in QR.Vendors:
 				if not (vendor.id in Vendors):
 					QR.removeInvVendor(vendor)
@@ -1686,6 +1710,7 @@ class Store(turbogears.controllers.Controller):
 		'''
 		# Convert our string to a data structure
 		# raise ZeroDivisionError
+		log.debug(data)
 		data = simplejson.loads(data)
 		# Load the Quote
 		Q = model.InvQuote.get(QuoteID)
@@ -2272,7 +2297,7 @@ class Store(turbogears.controllers.Controller):
 				if SLs.count() > 0:
 					log.debug('....Stock locations found')
 					for location in SLs:
-						if location.QtyAvailable() < DiffQuantity:
+						if location.QtyAvailable() >= -DiffQuantity:
 							log.debug('....Suitable location found')
 							SL = model.InvStockLocation.get(location.id)
 							break
@@ -3244,7 +3269,10 @@ class Store(turbogears.controllers.Controller):
 			row['StockItemID'] = item.id
 			row['CatalogItemID'] = item.CatalogItemID
 			row['StockItemName'] = item.Name
-			row['CatalogItemName'] = item.CatalogItem.Name
+			if item.CatalogItemID == None:
+				row['CatalogItemName'] = 'ERROR: Not linked to a Catalog Item'
+			else:
+				row['CatalogItemName'] = item.CatalogItem.Name
 			row['QtyAvailable'] = "%.1f" % item.QtyAvailable()
 			row['RateOfConsumption'] = "%.2f" % item.RateOfConsumption()
 			row['QtyAvailableLocation'] = "%.1f" % item.QtyAvailableAtLocationID(self.LocationID)

@@ -1264,6 +1264,11 @@ class Department(SQLObject):
 	SigStamp = StringCol(length=255,dbName='sig_stamp',default='')
 	LogoMimeType = StringCol(length=5,dbName='logo_mime_type',default='')
 	Locations = MultipleJoin("InvLocation",joinColumn="department_id")
+	DutyPlans = MultipleJoin("DutyplanOncall",joinColumn='dept_nr')
+	DrgQuicklists = MultipleJoin("DrgQuicklist",joinColumn='dept_nr')
+	TechRepairs =  MultipleJoin("TechRepairDone",joinColumn='dept_nr')
+	OpMedDocs =  MultipleJoin("OpMedDoc",joinColumn='dept_nr')
+	Appointments =  MultipleJoin("Appointment",joinColumn='to_dept_nr')
 	Status = StringCol(length=25,default='')
 	History = StringCol(length=255,default='')
 	ModifyId = StringCol(length=35,default=cur_user_id())#varchar(35) NOT NULL default '',

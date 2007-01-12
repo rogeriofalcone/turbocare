@@ -13,10 +13,17 @@ from model import DATE_FORMAT
 
 log = logging.getLogger("turbocare.controllers")
 
+class TusharAdministrativeError(Exception):
+	def __init__(self, value):
+		self.value = value
+	def __str__(self):
+		return repr(self.value)
+
 class Configuration(controllers.RootController):
-#===== Inventory App Stuff ====================================================
+	
 	@expose(html='turbocare.templates.configuration_menu')
 	def index(self, **kw):
+		#raise TusharAdministrativeError('Did you run this on your laptop first?')
 		return dict()
 
 	@expose(html='turbocare.templates.programmingerror')
@@ -570,6 +577,10 @@ class Configuration(controllers.RootController):
 		# Prepare our form
 		result = {} # The dictionary we are sending to the web page
 		if LocationID==None: # Create a blank form
+			result['PermDisp'] = None
+			result['PermStore'] = None
+			result['DispPermissionExists'] = True
+			result['StorePermissionExists'] = True
 			result['DisplayName'] = 'New Entry'
 			result['Name'] = ''
 			result['Description'] = ''
@@ -599,6 +610,12 @@ class Configuration(controllers.RootController):
 			result['DepartmentID'] = ''
 			result['IsDeleted'] = False
 		else:
+			PermDisp = Location.Name.lower().replace(' ','_') + '_disp_view'
+			PermStore = Location.Name.lower().replace(' ','_') + '_store_view'
+			result['PermDisp'] = PermDisp
+			result['PermStore'] = PermStore
+			result['DispPermissionExists'] = model.Permission.select(model.Permission.q.permission_name==PermDisp).count()>0
+			result['StorePermissionExists'] = model.Permission.select(model.Permission.q.permission_name==PermStore).count()>0
 			result['DisplayName'] = "%s (%d/%d)" % (Location.Name, LocationID, DepartmentID)
 			result['Name'] = Location.Name
 			result['Description'] = Location.Description
@@ -641,157 +658,177 @@ class Configuration(controllers.RootController):
 			result['IsDeleted'] = False
 		return result
 
+	@expose(format='json')
+	@validate(validators={'LocationID':validators.Int()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def LocationsEditorGroupSelect(self, LocationID=None, **kw):
+		'''	Load the Location Group Options
+			Mark items which are already selected as selected
+		'''
+		cur_groups = []
+		if LocationID!=None:
+			Location = model.InvLocation.get(LocationID)
+			for group in Location.Groups:
+				cur_groups.append(group.id)
+		groups = model.InvGrpLocation.select(orderBy=[model.InvGrpLocation.q.Name])
+		results = []
+		for group in groups:
+			results.append(dict(id=group.id, text=group.Name, selected=(group.id in cur_groups)))
+		return dict(results=results)
+	
+	@expose(format='json')
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def LocationEditorParentDepartmentSelect(self, SearchText='', **kw):
+		'''	Load the Parent item options
+		'''
+		SearchText = str(SearchText)
+		items = model.Department.select(model.Department.q.NameFormal.contains(SearchText),
+			orderBy=[model.Department.q.NameFormal])
+		results = []
+		for item in items:
+			results.append(dict(id=item.id, text='%s (%d)' % (item.NameFormal,item.id)))
+		return dict(results=results, function_name='LocationEditorParentDepartmentSelect')
+	
 	@expose()
-	@validate(validators={'Name':validators.String(),'Block':validators.String(),'ZipCode':validators.String(),\
-		'District':validators.String(),'State':validators.String(),'IsoCountryId':validators.String(),\
-		'UneceModifier':validators.String(),'UneceLocode':validators.String(),'UneceLocodeType':validators.Int(),\
-		'UneceCoordinates':validators.String(),'Operation':validators.String(),'AddressID':validators.Int()})
+	@validate(validators={'Name':validators.String(),'Description':validators.String(),'IsStore':validators.Bool(),\
+		'CanReceive':validators.Bool(),'CanSell':validators.Bool(),'IsConsumed':validators.Bool(),\
+		'AdmitInpatient':validators.Bool(),'AdmitOutpatient':validators.Bool(),'HasOncallDoc':validators.Bool(),\
+		'HasOncallNurse':validators.Bool(),'DoesSurgery':validators.Bool(),'ThisInstitution':validators.Bool(),
+		'IsSubDept':validators.Bool(),'IsInactive':validators.Bool(),'WorkHours':validators.String(),\
+		'ConsultHours':validators.String(),'Address':validators.String(),'ParentDeptNrID':validators.Int(),\
+		'Type':validators.Int(),'LocationID':validators.Int(),'DepartmentID':validators.Int(),'Operation':validators.String()})
 	@identity.require(identity.has_permission("admin_controllers_configuration"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
-	def LocationsEditorSave(self, Name='', Block='', ZipCode='', District='', State='', IsoCountryId='',
-		UneceModifier='', UneceLocode='', UneceLocodeType=None, UneceCoordinates='', AddressID=None,
-		Operation='', **kw):
+	def LocationsEditorSave(self, Name='', Description='', IsStore=None, CanReceive=None, CanSell=None, IsConsumed=None,
+		AdmitInpatient=None, AdmitOutpatient=None, HasOncallDoc=None, HasOncallNurse=None, DoesSurgery=None,
+		ThisInstitution=None, IsSubDept=None, IsInactive=None, WorkHours='', ConsultHours='', Address='', 
+		ParentDeptNrID=None, Type=None, LocationGroups=[], LocationID=None, DepartmentID=None, Operation='', **kw):
 		'''	Save changes.  Either create a new entry, update an existing entry or attempt to delete an entry 
 			Save/Cancel/New/Delete are the various operations we have
 		'''
+		# If we're given a LocationID or DepartmentID, then we'll try to load both items.  If we get a problem, then we'll
+		# skip the operation and attempt to reload the screen in edit mode (because I'm too lazy to fix it here).  NOTE:
+		# If we have one ID we should have the other.  Both should be created when the item is initially loaded
+		if LocationID!=None or DepartmentID!=None:
+			try:
+				Location = model.InvLocation.get(LocationID)
+				if Location.DepartmentID != DepartmentID:
+					turbogears.flash("It seems that the data has been hacked in a way I don't want to handle.  Changes are lost and we're going to start over")
+					raise cherrypy.HTTPRedirect('LocationsEditor?LocationID=%d' % LocationID)
+				Department = model.Department.get(DepartmentID)
+			except SQLObjectNotFound, errorstr:
+				turbogears.flash("There is an error on a database entry I thought should exist, but doesn't, so all the changes are lost.  Try again.")
+				errorArr = errorstr[0].split(' ')
+				table = errorArr[2]
+				id = errorArr[6]
+				if table == 'Department':
+					Location.DepartmentID = None
+					raise cherrypy.HTTPRedirect('LocationsEditor?LocationID=%d' % LocationID)
+				else:
+					raise cherrypy.HTTPRedirect('LocationsEditor?DepartmentID=%d' % DepartmentID)
 		if Operation=='Save': # Either update or create a new entry
-			if AddressID in ['',None]: # Create a new entry
-				# It's tricky to add a new address for two tables which should always be synced but might not be
-				# So, if we create a new address with an id conflict in the Care2x table, then we'll sync the Inv table
-				# with the care2x table and try creating the address again.  We'll repeat until we don't have a id
-				# conflict
-				AddressAdded = False
-				while not AddressAdded:
-					InvAddress = model.InvAddressCitytown(Name=Name, Block=Block, ZipCode=ZipCode, 
-						District=District, State=State, IsoCountryId=IsoCountryId, UneceModifier=UneceModifier,
-						UneceLocode=UneceLocode, UneceLocodeType=UneceLocodeType, 
-						UneceCoordinates=UneceCoordinates)
-					# Search to see if the Care2x table has the id taken already
-					try:
-						CareAddress = model.AddressCityTown.get(InvAddress.id)
-						# If we don't raise an exception, this means the address exists.  Sync the Inventory address
-						# with this address and then try again
-						InvAddress.Name = CareAddress.Name
-						InvAddress.Block = CareAddress.Block
-						InvAddress.ZipCode = CareAddress.ZipCode
-						InvAddress.District = CareAddress.District
-						InvAddress.State = CareAddress.State
-						InvAddress.IsoCountryId = CareAddress.IsoCountryId
-						InvAddress.UneceModifier = CareAddress.UneceModifier
-						InvAddress.UneceLocode = CareAddress.UneceLocode
-						InvAddress.UneceLocodeType = CareAddress.UneceLocodeType
-						InvAddress.UneceCoordinates = CareAddress.UneceCoordinates					
-					except SQLObjectNotFound:
-						# This is what we're hoping for, now we can add the address safely
-						CareAddress = model.AddressCityTown(Name=Name, Block=Block, ZipCode=ZipCode, 
-							District=District, State=State, IsoCountryId=IsoCountryId, UneceModifier=UneceModifier,
-							UneceLocode=UneceLocode, UneceLocodeType=UneceLocodeType, 
-							UneceCoordinates=UneceCoordinates,id=InvAddress.id)
-						AddressAdded = True
-						turbogears.flash('New Record Added')
-				AddressID = InvAddress.id
+			Name = str(Name)
+			Description = str(Description)
+			WorkHours = str(WorkHours)
+			ConsultHours = str(ConsultHours)
+			Address = str(Address)
+			if LocationID==None: # Create a new entry
+				Department = model.Department(NameFormal=Name, Id=Name.replace(' ','_').lower(), Type=Type,
+					NameShort=Name, NameAlternate=Name, Description=Description,AdmitInpatient=AdmitInpatient,
+					AdmitOutpatient=AdmitOutpatient,HasOncallDoc=HasOncallDoc,HasOncallNurse=HasOncallNurse,
+					DoesSurgery=DoesSurgery,ThisInstitution=ThisInstitution,IsSubDept=IsSubDept,IsInactive=IsInactive,
+					WorkHours=WorkHours,ConsultHours=ConsultHours,Address=Address,ParentDeptNrID=ParentDeptNrID)
+				Location = model.InvLocation(Name=Name, Description=Description,DepartmentID=Department.id,
+					IsStore=IsStore,CanReceive=CanReceive,CanSell=CanSell,IsConsumed=IsConsumed)
 			else: # Update an entry
-				InvAddress = model.InvAddressCitytown.get(AddressID)
-				InvAddress.Name = Name
-				InvAddress.Block = Block
-				InvAddress.ZipCode = ZipCode
-				InvAddress.District = District
-				InvAddress.State = State
-				InvAddress.IsoCountryId = IsoCountryId
-				InvAddress.UneceModifier = UneceModifier
-				InvAddress.UneceLocode = UneceLocode
-				InvAddress.UneceLocodeType = UneceLocodeType
-				InvAddress.UneceCoordinates = UneceCoordinates					
-				try:
-					CareAddress = model.AddressCityTown.get(AddressID)
-					CareAddress.Name = Name
-					CareAddress.Block = Block
-					CareAddress.ZipCode = ZipCode
-					CareAddress.District = District
-					CareAddress.State = State
-					CareAddress.IsoCountryId = IsoCountryId
-					CareAddress.UneceModifier = UneceModifier
-					CareAddress.UneceLocode = UneceLocode
-					CareAddress.UneceLocodeType = UneceLocodeType
-					CareAddress.UneceCoordinates = UneceCoordinates					
-				except SQLObjectNotFound:
-					# The care2x table didn't have the entry, so add it in
-					CareAddress = model.AddressCityTown(Name=InvAddress.Name, Block=InvAddress.Block, 
-						ZipCode=InvAddress.ZipCode, District=InvAddress.District, State=InvAddress.State, 
-						IsoCountryId=InvAddress.IsoCountryId, UneceModifier=InvAddress.UneceModifier,
-						UneceLocode=InvAddress.UneceLocode, UneceLocodeType=InvAddress.UneceLocodeType, 
-						UneceCoordinates=InvAddress.UneceCoordinates,id=InvAddress.id)
+				# Update the InvLocation entry
+				Location.Name = Name
+				Location.Description = Description
+				Location.IsStore = IsStore
+				Location.CanReceive = CanReceive
+				Location.CanSell = CanSell
+				Location.IsConsumed = IsConsumed
+				#Location Groups
+				if isinstance(LocationGroups, basestring): # only one entry
+					LocationGroups = [int(LocationGroups)]
+				else:
+					LocationGroups = [int(x) for x in LocationGroups]
+				# Make a current listing of group ids
+				CurrGroups = [x.id for x in Location.Groups]
+				# Add new groups
+				for groupid in LocationGroups:
+					if not groupid in CurrGroups:
+						Location.addInvGrpLocation(groupid)
+				# Remove groups
+				for groupid in CurrGroups:
+					if not groupid in LocationGroups:
+						Location.removeInvGrpLocation(groupid)
+				# Update the department entry
+				Department.NameFormal = Name
+				Department.Id = Name.replace(' ','_').lower()
+				Department.Type = Type
+				Department.NameShort = Name
+				Department.NameAlternate = Name
+				Department.Description = Description
+				Department.AdmitInpatient = AdmitInpatient
+				Department.AdmitOutpatient = AdmitOutpatient
+				Department.HasOncallDoc = HasOncallDoc
+				Department.HasOncallNurse = HasOncallNurse
+				Department.DoesSurgery = DoesSurgery
+				Department.ThisInstitution = ThisInstitution
+				Department.IsSubDept = IsSubDept
+				Department.IsInactive = IsInactive
+				Department.WorkHours = WorkHours
+				Department.ConsultHours = ConsultHours
+				Department.Address = Address
+				Department.ParentDeptNrID = ParentDeptNrID
 				turbogears.flash('Recorded Updated')
-		elif Operation=='Delete' and AddressID!=None:
+		elif Operation=='Delete' and LocationID!=None:
 			# We need to check if any of the id's are in use before attempting to delete an address from the system
-			InvAddress = model.InvAddressCitytown.get(AddressID)
-			try:
-				CareAddress = model.AddressCityTown.get(AddressID)
-				if len(CareAddress.Persons)>0 or len(InvAddress.Vendors)>0 or len(InvAddress.Customers)>0:
-					# Mark the entry as deleted
-					CareAddress.Status = 'deleted'
-					InvAddress.Status = 'deleted'
-					turbogears.flash('Record Marked Deleted')
-				else:
-					CareAddress.destroySelf()
-					InvAddress.destroySelf()
-					turbogears.flash('Record Deleted')
-			except SQLObjectNotFound: # we only need to check the Inventory table for the address
-				if len(InvAddress.Vendors)>0 or len(InvAddress.Customers)>0:
-					# Mark the entry as deleted
-					InvAddress.Status = 'deleted'
-					# CREATE the care2x entry... and mark it deleted
-					CareAddress = model.AddressCityTown(Name=InvAddress.Name, Block=InvAddress.Block, 
-						ZipCode=InvAddress.ZipCode, District=InvAddress.District, State=InvAddress.State, 
-						IsoCountryId=InvAddress.IsoCountryId, UneceModifier=InvAddress.UneceModifier,
-						UneceLocode=InvAddress.UneceLocode, UneceLocodeType=InvAddress.UneceLocodeType, 
-						UneceCoordinates=InvAddress.UneceCoordinates,id=InvAddress.id,Status=InvAddress.Status)
-					turbogears.flash('Record Marked Deleted')
-				else:
-					InvAddress.destroySelf()
-					turbogears.flash('Record Deleted')
-		elif Operation=='Un-Delete' and AddressID!=None:
-			InvAddress = model.InvAddressCitytown.get(AddressID)
-			try:
-				CareAddress = model.AddressCityTown.get(AddressID)
-				# Mark the entry as ok
-				CareAddress.Status = ''
-				InvAddress.Status = ''
-				turbogears.flash('Record Un-Deleted')
-			except SQLObjectNotFound: # we only need to check the Inventory table for the address
-				InvAddress.Status = ''
-				# CREATE the care2x entry
-				CareAddress = model.AddressCityTown(Name=InvAddress.Name, Block=InvAddress.Block, 
-					ZipCode=InvAddress.ZipCode, District=InvAddress.District, State=InvAddress.State, 
-					IsoCountryId=InvAddress.IsoCountryId, UneceModifier=InvAddress.UneceModifier,
-					UneceLocode=InvAddress.UneceLocode, UneceLocodeType=InvAddress.UneceLocodeType, 
-					UneceCoordinates=InvAddress.UneceCoordinates,id=InvAddress.id,Status=InvAddress.Status)
-				turbogears.flash('Record Un-Deleted')
+			if len(Location.StockItems)>0 or len(Department.DutyPlans)>0 or len(Department.DrgQuicklists)>0 or len(Department.TechRepairs)>0 or len(Department.OpMedDocs)>0 or len(Department.Appointments)>0:
+				# Marke the items deleted
+				Location.Status = 'deleted'
+				Department.Status = 'deleted'
+				turbogears.flash('Record Marked Deleted')
+			else:
+				for group in Location.Groups:
+					Location.removeInvGrpLocation(group)
+				Location.destroySelf()
+				Department.destroySelf()
+				turbogears.flash('Record Deleted')
+		elif Operation=='Un-Delete' and LocationID!=None:
+			Location.Status = ''
+			Department.Status = ''
+			turbogears.flash('Record Un-Deleted')
 		elif Operation=='Cancel':
-			pass
+			turbogears.flash('Updates Cancelled')
 		elif Operation=='New':
-			AddressID=''
+			LocationID=''
+			DepartmentID=''
 		else:
 			turbogears.flash('Error in processing request')
-		if AddressID in ['', None]:
-			raise cherrypy.HTTPRedirect('AddressesEditor')
+		if LocationID in ['',None]:
+			raise cherrypy.HTTPRedirect('LocationsEditor')
 		else:
-			raise cherrypy.HTTPRedirect('AddressesEditor?AddressID=%d' % AddressID)
-		
+			raise cherrypy.HTTPRedirect('LocationsEditor?LocationID=%d' % LocationID)
 		
 	@expose(format='json')
 	def LocationsEditorQuickSearch(self, QuickSearchText='', **kw):
 		'''	Search for an existing address entry '''
 		if QuickSearchText=='*':
-			addresses = model.InvAddressCitytown.select(orderBy=[model.InvAddressCitytown.q.Name])
+			locations = model.InvLocation.select(model.InvLocation.q.DepartmentID==None,orderBy=[model.InvLocation.q.Name])
+			departments = model.Department.select(orderBy=[model.Department.q.NameFormal])
 		else:
-			addresses = model.InvAddressCitytown.select(OR (model.InvAddressCitytown.q.Name.contains(str(QuickSearchText)),
-				model.InvAddressCitytown.q.Block.contains(str(QuickSearchText)),
-				model.InvAddressCitytown.q.District.contains(str(QuickSearchText)),
-				model.InvAddressCitytown.q.State.contains(str(QuickSearchText))),
-				orderBy=[model.InvAddressCitytown.q.Name])
+			locations = model.InvLocation.select(AND (model.InvLocation.q.Name.contains(str(QuickSearchText)), 
+				model.InvLocation.q.DepartmentID==None),	orderBy=[model.InvLocation.q.Name])
+			departments = model.Department.select(model.Department.q.NameFormal.contains(str(QuickSearchText)),
+				orderBy=[model.Department.q.NameFormal])
 		results = []
-		for item in addresses:
-			results.append(dict(id=item.id, text=item.DisplayNameAlt()))
+		for item in locations:
+			results.append(dict(id=item.id, text=item.Name, type='location'))
+		for item in locations:
+			results.append(dict(id=item.id, text=item.Name, type='department'))
 		return dict(results=results)
 		

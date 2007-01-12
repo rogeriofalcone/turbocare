@@ -15,8 +15,8 @@ shortcuts.keydown = function(dom_obj){
 		if ((ID != null) && (ID.value != null) && (ID.value != '')){
 			//Load the items available for the customer
 			config.idDialog_remove();
-			var postVars = 'AddressID='+ID.value;
-			document.location.href = 'AddressesEditor?'+postVars;
+			var postVars = 'LocationID='+ID.value;
+			document.location.href = 'LocationsEditor?'+postVars;
 		}
 	}
 }
@@ -39,19 +39,7 @@ function redraw(){
 }
 
 var config = {};
-
-
-/*
-	Open a date entry javascript box
-*/
-config.DatePick = function(dom_obj){
-	if ((dom_obj.type() == 'click') || (dom_obj.type()=='keydown' && (dom_obj.key()['string']=='KEY_ARROW_DOWN'))) {
-		if (dom_obj.type() == 'keydown') {
-			dom_obj.stop();
-		}
-		Widget.pickDateTime("DateEdit");
-	}
-}
+config.FkDivID = null;
 
 config.collectPostVars = function(f){
   var postVars='';
@@ -161,7 +149,7 @@ config.QuickSearch = function(dom_obj){
 		config.toggle_message("Searching...");
 		var postVars = 'QuickSearchText='+getElement('QuickSearch').value;
 		// The following line needs to point to the function which is used for the quick search in your context
-		var d = postJSON('AddressesEditorQuickSearch',postVars);
+		var d = postJSON('LocationsEditorQuickSearch',postVars);
 		d.addCallbacks(config.RenderQuickSearch,config.error_report);
 	}
 }
@@ -183,8 +171,202 @@ config.OpenOnLoad = function() {
 		getElement('Name').focus();
 	}
 }
-
-
+/*
+	LocationGroups
+	Similar to any related join type selection
+*/
+config.LocationGroups = function(e){
+	config.toggle_message("Loading...");
+	var postVars = 'LocationID='+getElement('LocationID').value;
+	var d = postJSON('LocationsEditorGroupSelect',postVars);
+	d.addCallbacks(config.RenderLocationGroups,config.error_report);
+}
+/* 	
+	RenderLocationGroups box functions
+*/
+//Render the box
+config.RenderLocationGroups = function(data){
+	var AddResultRow = function(value){
+		//Each row needs: id, text, and selected
+		var row = createDOM('DIV',{'class':'divtable'});
+		if (value.selected) {
+			var Check = createDOM('INPUT',{'type':'checkbox', 'checked':'checked','value':value.id,'name':'LocationGroupID'});
+		} else {
+			var Check = createDOM('INPUT',{'type':'checkbox','value':value.id,'name':'LocationGroupID'});
+		}
+		var text = createDOM('INPUT',{'id':'LocationGroupName'+value.id,'type':'text','readonly':'readonly','value':value.text,'name':'LocationGroupName'});
+		//replaceChildNodes(Check, value.text);
+		row.appendChild(Check);
+		row.appendChild(text);
+		return row;
+	}
+	//Reset the message
+	config.toggle_message("");
+	//This is the big div box that surrounds the entire selection process
+	var dialog = createDOM('DIV',{'class':'dialogbox','id':'relatedjoin_dialog','style':'height:200px; overflow:auto'});
+	var shadow = createDOM('DIV',{'class':'dialogbox_shadow','id':'relatedjoin_shadow','style':'height:210px'});
+	//Close link
+	var close_link = createDOM('A',{'href':'javascript:config.LocationGroups_remove()'},"Close");
+	dialog.appendChild(close_link);
+	document.body.appendChild(shadow);
+	setOpacity(shadow,0.5);
+	document.body.appendChild(dialog);
+	//Make our listing
+	var results = data.results;
+	for (i=0; i<results.length; i++) {
+		dialog.appendChild(AddResultRow(results[i]));
+	}
+	//Put our OK button at the end
+	var btnRow = createDOM('DIV',{'style':'text-align:right'});
+	btnRow.appendChild(createDOM('INPUT',{'name':'btnSelectGroups','id':'btnSelectGroups','type':'BUTTON','value':'OK'}));
+	dialog.appendChild(btnRow);
+	//Attach an event to the button
+	connect('btnSelectGroups','onclick',config.LocationGroupsSelect);
+}
+config.LocationGroups_remove = function(){
+	swapDOM('relatedjoin_dialog',null);
+	swapDOM('relatedjoin_shadow',null);
+}
+config.LocationGroupsSelect = function(dom_obj){
+	var dialog = getElement('relatedjoin_dialog');
+	var groups = getElement('LocationGroups');
+	//Clear our current groups listing
+	replaceChildNodes(groups,null);
+	var checkboxes = getElementsByTagAndClassName('INPUT',null,dialog);
+	// For every input box line, append an entry to the groups
+	for (i=0; i<checkboxes.length;i++) {
+		if (checkboxes[i].checked) {
+			var text = getElement('LocationGroupName'+checkboxes[i].value).value;
+			var value = checkboxes[i].value;
+			groups.appendChild(createDOM('LI',null,text));
+			groups.appendChild(createDOM('INPUT',{'name':'LocationGroups','type':'hidden','value':value}));
+		}
+	}
+	//Close the dialog
+	config.LocationGroups_remove();
+}
+/*
+	ForeignKey Select box
+	
+*/
+config.FkSelect = function(e) {
+	config.toggle_message("Loading...");
+	if (e.src().id == 'btnParentDeptNrID') {
+		config.FkDivID = 'ParentDeptNrID'; // The DIV where we want to render our results later
+		var d = postJSON('LocationEditorParentDepartmentSelect',null);
+	}
+	d.addCallbacks(config.RenderFkSelect,config.error_report);	
+}
+/*
+	Render the ForeignKey selection dialog
+*/
+config.RenderFkSelect = function(data){
+	var AddResultRow = function(value){
+		//Each row needs: id, text, and selected
+		var row = createDOM('DIV',{'class':'listingrow'},value.text);
+		var btn = createDOM('INPUT',{'type':'button','value':'Select','name':'FkButton'});
+		var text = createDOM('INPUT',{'type':'hidden','readonly':'readonly','value':value.text,'name':'FkText'});
+		var id = createDOM('INPUT',{'type':'hidden','value':value.id,'name':'FkID'});
+		//replaceChildNodes(Check, value.text);
+		replaceChildNodes(row,btn,value.text,text,id);
+		return row;
+	}
+	//Reset the message
+	config.toggle_message("");
+	//This is the big div box that surrounds the entire selection process
+	var dialog = createDOM('DIV',{'class':'dialogbox','id':'fk_dialog','style':'height:200px; overflow:auto'});
+	var shadow = createDOM('DIV',{'class':'dialogbox_shadow','id':'fk_shadow','style':'height:210px'});
+	//Close link
+	var close_link = createDOM('A',{'href':'javascript:config.FkSelect_remove()'},"Close");
+	dialog.appendChild(close_link);
+	document.body.appendChild(shadow);
+	setOpacity(shadow,0.5);
+	document.body.appendChild(dialog);
+	//Create our SearchText box
+	var SearchText = createDOM('INPUT',{'type':'text','name':'FkSearchText','id':'FkSearchText','value':''});
+	dialog.appendChild(createDOM('BR',null));
+	dialog.appendChild(SearchText);
+	//Make our listing
+	var SearchResults = createDOM('DIV',{'id':'FkResults'});
+	dialog.appendChild(SearchResults);
+	var results = data.results;
+	for (i=0; i<results.length; i++) {
+		SearchResults.appendChild(AddResultRow(results[i]));
+	}
+	//Attach the event to the buttons
+	var Inputs = getElementsByTagAndClassName('INPUT',null,SearchResults);
+	for (i=0;i<Inputs.length;i++){
+		if (getNodeAttribute(Inputs[i],'type') == 'button') {
+			connect(Inputs[i],'onclick',config.FkSelect_select);
+		}
+	}
+	//Attach the update event to the search box
+	connect(SearchText,'onkeydown',config.FkSelect_update);
+	SearchText.focus();
+	//We have a function name which we'll hide in the dialog box
+	dialog.appendChild(createDOM('INPUT',{'type':'hidden','id':'FkFunction','value':data.function_name}));
+}
+//Remove the dialog box
+config.FkSelect_remove = function(){
+	swapDOM('fk_dialog',null);
+	swapDOM('fk_shadow',null);
+}
+//Run a search to update the listing (usually to fine-tune the search results)
+config.FkSelect_update = function(dom_obj){
+	if ((dom_obj.key()['string']=='KEY_ENTER')&&(getElement('FkSearchText').value!='')) {
+		config.toggle_message("Searching...");
+		var postVars = 'SearchText='+getElement('FkSearchText').value;
+		// The following line needs to point to the function which is used for the quick search in your context
+		//alert(getElement('FkFunction').value);
+		var d = postJSON(getElement('FkFunction').value,postVars);
+		d.addCallbacks(config.RenderFkSelectUpdate,config.error_report);
+	}
+}
+//Update the search results
+config.RenderFkSelectUpdate = function(data){
+	var AddResultRow = function(value){
+		//Each row needs: id, text, and selected
+		var row = createDOM('DIV',{'class':'listingrow'},value.text);
+		var btn = createDOM('INPUT',{'type':'button','value':'Select','name':'FkButton'});
+		var text = createDOM('INPUT',{'type':'hidden','readonly':'readonly','value':value.text,'name':'FkText'});
+		var id = createDOM('INPUT',{'type':'hidden','value':value.id,'name':'FkID'});
+		//replaceChildNodes(Check, value.text);
+		replaceChildNodes(row,btn,value.text,text,id);
+		return row;
+	}
+	//Reset the message
+	config.toggle_message("");
+	//Make our listing
+	var SearchResults = getElement('FkResults');
+	replaceChildNodes(SearchResults,null);
+	var results = data.results;
+	for (i=0; i<results.length; i++) {
+		SearchResults.appendChild(AddResultRow(results[i]));
+	}
+	//Attach the event to the buttons
+	var Inputs = getElementsByTagAndClassName('INPUT',null,SearchResults);
+	for (i=0;i<Inputs.length;i++){
+		if (getNodeAttribute(Inputs[i],'type') == 'button') {
+			connect(Inputs[i],'onclick',config.FkSelect_select);
+		}
+	}
+}
+//Select and return an item from the list
+config.FkSelect_select = function(dom_obj){
+	var FkDiv = getElement(config.FkDivID);
+	var elem = dom_obj.src().parentNode;
+	var Inputs = getElementsByTagAndClassName('INPUT',null,elem);
+	for (i=0; i<Inputs.length; i++){
+		if (getNodeAttribute(Inputs[i],'name') == 'FkText') {
+			var text = Inputs[i].value;
+		} else if (getNodeAttribute(Inputs[i],'name') == 'FkID') {
+			var ID = Inputs[i].value;
+		}
+	}
+	replaceChildNodes(FkDiv,text,createDOM('INPUT',{'name':config.FkDivID,'type':'hidden','value':ID}));
+	config.FkDivID = '';
+	config.FkSelect_remove();
+}
 /* 	
 	RenderQuickSearch: Render the Quick Search Results
 */
@@ -207,7 +389,11 @@ config.RenderQuickSearch = function(data){
 	var results = data.results;
 	QuickSearchResults.appendChild(AddResultRow(null,null,'There are '+results.length+' result(s)'));
 	for (i=0; i<results.length; i++) {
-		QuickSearchResults.appendChild(AddResultRow('AddressesEditor','AddressID='+results[i].id,results[i].text));
+		if (results[i].type=='location') {
+			QuickSearchResults.appendChild(AddResultRow('LocationsEditor','LocationID='+results[i].id,results[i].text));
+		} else {
+			QuickSearchResults.appendChild(AddResultRow('LocationsEditor','DepartmentID='+results[i].id,results[i].text));
+		}
 	}
 }
 
@@ -221,6 +407,12 @@ connect(window, 'onload', function(){
 		if (getElement("QuickSearch")!=null) {
 			connect("QuickSearch",'onkeydown',config.QuickSearch);
 			connect("QuickSearch",'onclick',config.QuickSearchClear);
+		}
+		if (getElement("btnEditLocationGroups")!=null) {
+			connect("btnEditLocationGroups",'onclick',config.LocationGroups);
+		}
+		if (getElement("btnParentDeptNrID")!=null) {
+			connect("btnParentDeptNrID",'onclick',config.FkSelect);
 		}
 });
 //Connect on onload for the document to open the document using javascript
@@ -255,7 +447,7 @@ config.renderIdDialog = function(){
 	var table = createDOM('TABLE',{'class':'regular'});
 	var tbody = createDOM('TBODY',null);
 	// Add field
-	tbody.appendChild(StringEdit('AddressID','Address ID',''));
+	tbody.appendChild(StringEdit('LocationID','Location ID',''));
 	//Create our dialog
 	table.appendChild(tbody);
 	dialog.appendChild(table);

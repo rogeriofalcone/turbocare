@@ -553,7 +553,8 @@ class InvStockItem(SQLObject):
 		sum = 0.0
 		for item in self.Locations:
 			if not (item.IsConsumed or item.IsSold):
-				sum += item.Quantity
+				if item.Quantity != None:
+					sum += item.Quantity
 		return sum
 		
 	def QtySold(self):

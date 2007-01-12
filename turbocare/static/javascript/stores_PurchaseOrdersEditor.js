@@ -208,9 +208,9 @@ store.collectPostVars = function(f){
     {
       if(postVars!='') postVars+='&';
       if (getNodeAttribute(f.elements[i],'multiple') != null) {
-      	postVars+= f.elements[i].name +'='+ store.multiselect_csv(f.elements[i].id);
+      	postVars+= f.elements[i].name +'='+ encodeURIComponent(store.multiselect_csv(f.elements[i].id));
       } else {
-      	postVars+= f.elements[i].name +'='+ f.elements[i].options[f.elements[i].selectedIndex].value;
+      	postVars+= f.elements[i].name +'='+ encodeURIComponent(f.elements[i].options[f.elements[i].selectedIndex].value);
       }
     }
   }

@@ -62,8 +62,8 @@
 							<div>
 								<div id="Items" style="display:table">
 									<div py:for="item in items" style="display:table-row">
-										<div><INPUT py:if="1 >= item['GRStockItemLocations']" type="button" name="GREdit${item['GRItemID']}" value="Edit" class="hideUnHide" />
-											<INPUT py:if="1 >= item['GRStockItemLocations']" type="button" name="GRDelete${item['GRItemID']}" value="Delete" class="delItem" />
+										<div><INPUT py:if="1 >= item['GRStockItemLocations']" type="button" name="GREdit${item['GRItemID']}" value="View Details" class="hideUnHide" />
+											<INPUT py:if="False" type="button" name="GRDelete${item['GRItemID']}" value="Delete" class="delItem" />
 											<A href="StockItemsEditor?StockItemID=${item['GRItemID']}">${item['GRItemName']}</A> Locations: ${item['GRStockItemLocations']}
 											<div style="position:relative; width:300px; left:0px; font-size:12px; display:none" id="GREdit${item['GRItemID']}">
 												<INPUT type="hidden" name="GRItemID" value="${item['GRItemID']}" />
