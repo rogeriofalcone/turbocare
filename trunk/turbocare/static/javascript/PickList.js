@@ -135,9 +135,9 @@ pick.collectPostVars = function(f)
     {
       if(postVars!='') postVars+='&';
       if (getNodeAttribute(f.elements[i],'multiple') != null) {
-      	postVars+= f.elements[i].name +'='+ pick.multiselect_csv(f.elements[i].id);
+      	postVars+= f.elements[i].name +'='+ encodeURIComponent(pick.multiselect_csv(f.elements[i].id));
       } else {
-      	postVars+= f.elements[i].name +'='+ f.elements[i].options[f.elements[i].selectedIndex].value;
+      	postVars+= f.elements[i].name +'='+ encodeURIComponent(f.elements[i].options[f.elements[i].selectedIndex].value);
       }
     }
   }
@@ -308,31 +308,27 @@ pick.pickList_postList = function(dom_obj){
 	var def = pick.def;
 	var form = 'pick_list_res_'+def.Name;
 	var node = getElement(form);
-	var data = "";
-	var data_item = "";
+	var data = new Array();
 	for (var i=0;i<node.childNodes.length;i++){
 		var item = node.childNodes[i];
 		var values = formContents(node.childNodes[i]);
-		var data_part = "";
+		var data_part = new Object();
 		for (var j=0;j<values[0].length;j++){
 			var name = values[0][j];
-			var value = values[1][j];
-			// The value variable gets altered because FormEncode can't handle certain characters in a string
-			data_part += '"'+name+'":"'+value.replace('"',"'",'g').replace("&","+",'g')+'", ';
+			var value = encodeURIComponent(values[1][j].replace('"','\\"','g'));
+			data_part[name] = value;
 		}
-		data_item += '{'+data_part.slice(0,-2)+'}, ';
+		data[i] = data_part;
 	}
-	data = '['+data_item.slice(0,-2)+']';
 	pick.toggle_message("Loading...");
-	alert(data);
+	//alert(serializeJSON(data));
 	if (def.NoAjax == true){
- 		location = def.Url+'?data='+data;
- 		//location.eval(url+'?data='+data);
+ 		location = def.Url+'?data='+serializeJSON(data);
  	} else {
 		if (def.UrlVars != '') {
-		  	var d = postJSON(def.Url,def.UrlVars+'&data='+data);
+		  	var d = postJSON(def.Url,def.UrlVars+'&data='+serializeJSON(data));
 		} else {
-			var d = postJSON(def.Url,'data='+data);
+			var d = postJSON(def.Url,'data='+serializeJSON(data));
 		}
 		if (def.JsonFunction != null && def.JsonFunction != '') {
 			d.addCallbacks(eval(def.JsonFunction),pick.error_report);

@@ -376,7 +376,7 @@ store.ShowHide = function(dom_obj){
 		btn.value = "Hide";
 		div.style.display = "table";
 	} else {
-		btn.value = "Edit";
+		btn.value = "View Details";
 		div.style.display = "none";
 	}
 }

@@ -18,7 +18,6 @@
     </SCRIPT>
     <SCRIPT SRC="/tg_static/js/widget.js" TYPE="text/javascript">
     </SCRIPT>
-      <SCRIPT SRC="/static/javascript/stores_QuickMenu.js" TYPE="text/javascript"></SCRIPT>
   </head>
 
 <body>
@@ -160,6 +159,16 @@
 						<input name="Operation" id="btnAddNew" type="submit" value="New" ></input>
 						<input name="Operation" id="btnDelete" type="submit" value="Delete" ></input>
 						<input py:if="IsDeleted" name="Operation" id="btnUnDelete" type="submit" value="Un-Delete" ></input>
+					</div>
+					<div py:if="(not DispPermissionExists) or (not StorePermissionExists)" id="buttons" style="display:table;background-color:pink">
+						<div py:if="not DispPermissionExists" style="display:table-row;">
+							<br/>The permission "${PermDisp}" does not exist yet.  If you want to access this location for Inventory Dispensing (such as a 
+							pharmacy dispensing counter), then you'll need to create this permission and assign groups to it.
+						</div>
+						<div py:if="not StorePermissionExists" style="display:table-row;" >
+							<br/>The permission "${PermStore}" does not exist yet.  If you want to access this location for Inventory Management (such as
+							stock transfers, or possibly Purchase Orders), then you'll need to create this permission and assign groups to it.
+						</div>
 					</div>
 				</form>
 			</div>
