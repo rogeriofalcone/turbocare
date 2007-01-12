@@ -640,7 +640,7 @@ class Configuration(controllers.RootController):
 				result['ParentDeptNrID'] = Department.ParentDeptNrID
 				result['ParentDeptNrName'] = ''
 			if Department.ParentDeptNrID != None:
-				result['ParentDeptNrName'] = Department.ParentDeptNr.Name
+				result['ParentDeptNrName'] = Department.ParentDeptNr.NameFormal
 			else:
 				result['ParentDeptNrName'] = ''
 			result['types'] = [] # Type field: id, name
@@ -711,6 +711,7 @@ class Configuration(controllers.RootController):
 		# If we're given a LocationID or DepartmentID, then we'll try to load both items.  If we get a problem, then we'll
 		# skip the operation and attempt to reload the screen in edit mode (because I'm too lazy to fix it here).  NOTE:
 		# If we have one ID we should have the other.  Both should be created when the item is initially loaded
+		log.debug('LocationsEditorSave')
 		if LocationID!=None or DepartmentID!=None:
 			try:
 				Location = model.InvLocation.get(LocationID)
@@ -729,12 +730,14 @@ class Configuration(controllers.RootController):
 				else:
 					raise cherrypy.HTTPRedirect('LocationsEditor?DepartmentID=%d' % DepartmentID)
 		if Operation=='Save': # Either update or create a new entry
+			log.debug('...Save')
 			Name = str(Name)
 			Description = str(Description)
 			WorkHours = str(WorkHours)
 			ConsultHours = str(ConsultHours)
 			Address = str(Address)
 			if LocationID==None: # Create a new entry
+				log.debug('...New Entry')
 				Department = model.Department(NameFormal=Name, Id=Name.replace(' ','_').lower(), Type=Type,
 					NameShort=Name, NameAlternate=Name, Description=Description,AdmitInpatient=AdmitInpatient,
 					AdmitOutpatient=AdmitOutpatient,HasOncallDoc=HasOncallDoc,HasOncallNurse=HasOncallNurse,
@@ -742,6 +745,9 @@ class Configuration(controllers.RootController):
 					WorkHours=WorkHours,ConsultHours=ConsultHours,Address=Address,ParentDeptNrID=ParentDeptNrID)
 				Location = model.InvLocation(Name=Name, Description=Description,DepartmentID=Department.id,
 					IsStore=IsStore,CanReceive=CanReceive,CanSell=CanSell,IsConsumed=IsConsumed)
+				DepartmentID = Department.id
+				LocationID = Location.id
+				turbogears.flash('New Entry Created (id: %d/%d)' % (LocationID,DepartmentID))
 			else: # Update an entry
 				# Update the InvLocation entry
 				Location.Name = Name
@@ -787,7 +793,13 @@ class Configuration(controllers.RootController):
 				turbogears.flash('Recorded Updated')
 		elif Operation=='Delete' and LocationID!=None:
 			# We need to check if any of the id's are in use before attempting to delete an address from the system
-			if len(Location.StockItems)>0 or len(Department.DutyPlans)>0 or len(Department.DrgQuicklists)>0 or len(Department.TechRepairs)>0 or len(Department.OpMedDocs)>0 or len(Department.Appointments)>0:
+			if len(Location.StockItems)>0 or len(Department.DutyPlans)>0 or len(Department.DrgQuicklists)>0 \
+				or len(Department.TechRepairs)>0 or len(Department.OpMedDocs)>0 or \
+				len(Department.Appointments)>0 or len(Department.BloodTestRequests)>0 or len(Department.Wards)>0\
+				or len(Department.MedOrdercatalogs)>0 or len(Department.MedOrderlists)>0 or len(Department.MedReports)>0\
+				or len(Department.EncounterOps)>0 or len(Department.PersonellAssignments)>0 or len(Department.Phones)>0\
+				or len(Department.PharmaOrderlists)>0 or len(Department.RadioTestFindings)>0 or len(Department.RadioTestRequests)>0\
+				or len(Department.Encounters)>0 or len(Department.EncounterDiagnosticsReports)>0 or len(Department.BaclaborTestFindings)>0:
 				# Marke the items deleted
 				Location.Status = 'deleted'
 				Department.Status = 'deleted'
@@ -797,6 +809,8 @@ class Configuration(controllers.RootController):
 					Location.removeInvGrpLocation(group)
 				Location.destroySelf()
 				Department.destroySelf()
+				LocationID = None
+				DepartmentID = None
 				turbogears.flash('Record Deleted')
 		elif Operation=='Un-Delete' and LocationID!=None:
 			Location.Status = ''
@@ -816,7 +830,7 @@ class Configuration(controllers.RootController):
 		
 	@expose(format='json')
 	def LocationsEditorQuickSearch(self, QuickSearchText='', **kw):
-		'''	Search for an existing address entry '''
+		'''	Search for an existing location entry '''
 		if QuickSearchText=='*':
 			locations = model.InvLocation.select(model.InvLocation.q.DepartmentID==None,orderBy=[model.InvLocation.q.Name])
 			departments = model.Department.select(orderBy=[model.Department.q.NameFormal])
@@ -828,7 +842,67 @@ class Configuration(controllers.RootController):
 		results = []
 		for item in locations:
 			results.append(dict(id=item.id, text=item.Name, type='location'))
-		for item in locations:
-			results.append(dict(id=item.id, text=item.Name, type='department'))
+		for item in departments:
+			results.append(dict(id=item.id, text=item.NameFormal, type='department'))
 		return dict(results=results)
+		
+	@expose(format='json')
+	@validate(validators={'TypeID':validators.Int(),'TypeName':validators.String(),'Operation':validators.String()})
+	def LocationsEditorDepartmentTypeSave(self, TypeID=None, TypeName='', Operation='', **kw):
+		'''	edit a department type entry
+			returns an updated list of department types, including the currently selected entry
+		'''
+		message = ''
+		if Operation == 'Save':
+			if TypeID == None: # create a new entry
+				Type = model.TypeDepartment(Type=TypeName.lower().replace(' ','_'), Name=TypeName,
+					Description=TypeName)
+				message = 'New Department Type Created'
+			else: # Update the entry
+				try:
+					Type = model.TypeDepartment.get(TypeID)
+					Type.Type = TypeName.lower().replace(' ','_')
+					Type.Name = TypeName
+					Type.Description = TypeName
+					message = 'Department Type Updated'
+				except SQLObjectNotFound:
+					message = 'The Department Type you wanted to edit could not be found, possibly deleted by someone else'
+					TypeID = None
+		elif Operation == 'Cancel':
+			message = 'Changes cancelled'
+		elif Operation == 'Delete' and TypeID!=None:
+			try:
+				Type = model.TypeDepartment.get(TypeID)
+				if len(Type.Departments) > 0:
+					Type.Status = 'deleted'
+					Type.Name += ' **DELETED**'
+					message = 'Department Type Marked Deleted'
+				else:
+					Type.destroySelf()
+					TypeID = None
+					message = 'Department Type Deleted'					
+			except SQLObjectNotFound:
+				message = 'The Department Type you wanted to delete could not be found (looks like someone else did the work faster)'
+				TypeID = None
+		elif Operation == 'Un-Delete' and TypeID!=None:
+			try:
+				Type = model.TypeDepartment.get(TypeID)
+				Type.Status = ''
+				Type.Name = Type.Name.replace('**DELETED**','').strip()
+				message = 'Department Type Updated'
+			except SQLObjectNotFound:
+				message = 'The Department Type you wanted to Un-Delete could not be found, possibly deleted by someone else'
+				TypeID = None
+		else:
+			TypeID = None
+			message = 'The Operation you tried to perform could not be executed properly'
+		# Produce an updated list of department types
+		types = model.TypeDepartment.select(orderBy=[model.TypeDepartment.q.Name])
+		if TypeID == None and types.count()>0:
+			TypeID = types[0].id
+		results = []
+		for type in types:
+			results.append(dict(id=type.id, name=type.Name, selected=type.id==TypeID))
+		return dict(results=results, message=message)
+	
 		
