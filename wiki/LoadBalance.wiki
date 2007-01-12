@@ -6,10 +6,12 @@ sudo apt-get install ldirectord-2
 Steps:
 Configure ldirectord to loadbalance between two servers:
 
+{{{
 # Global Directives
 checktimeout=3
 checkinterval=1
 fallback=127.0.0.1:80
+
 autoreload=yes
 #logfile="/var/log/ldirectord.log"
 #logfile="local0"
@@ -43,17 +45,20 @@ virtual=192.168.1.20:443
        #persistent=600
        #netmask=255.255.255.255
        protocol=tcp
-
+}}}
 
 
 
 Use hearbeat for 
+
 ldirectord
+
 SAMBA
+
 DHCP
 
 
-
+{{{
 #!/bin/bash
 #---------------mini-rc.lvs_dr-director------------------------
 #set ip_forward OFF for lvs-dr director (1 on, 0 off)
@@ -141,4 +146,4 @@ echo "1" >/proc/sys/net/ipv4/conf/lo/hidden
 cat       /proc/sys/net/ipv4/conf/lo/hidden
 
 #----------mini-rc.lvs_dr-realserver------------------
-
+}}}
