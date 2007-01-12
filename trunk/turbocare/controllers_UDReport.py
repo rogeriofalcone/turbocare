@@ -16,7 +16,7 @@ from turbogears import config
 from turbogears.toolbox.catwalk import CatWalk 
 import model
 import model_inventory
-import report_CatalogItems
+#import report_CatalogItems
 import ReportDefinition
 from datetime import datetime, timedelta
 import time
