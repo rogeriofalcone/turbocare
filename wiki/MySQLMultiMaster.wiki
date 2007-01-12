@@ -121,7 +121,7 @@ _start slave;_
 Wait 20 seconds_
 
 _show slave status\G;_
-
+{{{
 mysql> show slave status\G;
 *************************** 1. row ***************************
              Slave_IO_State: Waiting for master to send event
@@ -161,7 +161,7 @@ Replicate_Wild_Ignore_Table:
 
 ERROR: 
 No query specified
-
+}}}
 
 Sample output of the command.  
 
