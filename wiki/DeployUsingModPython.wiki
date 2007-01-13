@@ -87,14 +87,16 @@ Make sure turbocare.basedir="/home/USERNAME/turbocare" points to where turbocare
 
 You can also change the log file locations if you want to.
 
+cp turbocare/turbocare_modpython-sample.py turbocare/turbocare_modpython.py
+
+
 _sudo python setup.py install_
 
 We need to install the files for apache to be able to find them.  
 
 Note after every update you need to run this command.
 
-
-_sudo cp tmodpython_gateway.py /usr/lib/python2.4/site-pakages_
+_sudo cp modpython_gateway.py /usr/lib/python2.4/site-pakages_
 
 Copy Modpython Gateway to pythons sitepackages.  This lets us use TurboGears with mod_python. 
 
@@ -120,6 +122,12 @@ _sudo nano /etc/apache2/ports.conf_
 Add a new line with _Listen 443_ on it.
 
 _sudo apache2-ssl-certificate -days 365_
+
+_sudo mkdir /var/www/.egg_
+Setup temp egg directory.
+
+_sudo chown -R www-data /var/www/.egg_
+
 
 Install ssl certificate.
 
@@ -153,9 +161,9 @@ Now we need to change some permissions to make sure Apache's user can write repo
 
 _cd ~/turbocare_
 
-_sudo chown -R www-data turbocare/static/reports_
+_sudo chown  www-data turbocare/static/reports_
 
-_sudo chown -R www-data turbocare/static/user_reports_
+_sudo chown  www-data turbocare/static/user_reports_
 
 
 ===Finishing off===
