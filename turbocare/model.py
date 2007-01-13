@@ -2846,7 +2846,10 @@ class Room(SQLObject):
 			return False
 			
 	def BedsInUse(self):
-		''' The current bed usage '''
+		''' 	The current bed usage
+			Dictionairy columns include:
+			Start, End, Days, Room Nr., WardID, EncounterID, PatientID, Patient Name (formal), Discharge, Bed Nr.
+		'''
 		beds = GetBedActivityInformation(RoomID=self.id)
 		return beds
 	
@@ -2860,7 +2863,7 @@ class Room(SQLObject):
 		if len(ClosedBeds[0])==0:
 			ClosedBedCount=0
 		else:
-			ClosedBedCount = len(ClosedBeds)
+			ClosedBedCount = len(ClosedBeds)-1
 		NumBedsInUse = len(self.BedsInUse())
 		return '%sThere are %d beds, %d beds are closed, %d beds are in use' % (DeletedText, self.NrOfBeds, ClosedBedCount, NumBedsInUse)
 
@@ -5910,6 +5913,8 @@ def GetBedActivityInformation(WardID=None, RoomID=None, BedNr=None, StartDateTim
 		If a StartDateTime or EndDateTime are used, then it will not filter out discharged entries
 		The dates must be a datetime object
 		returns an array of dictionaries - each row is the detail for a patient
+		Dictionairy columns include:
+		Start, End, Days, Room Nr., WardID, EncounterID, PatientID, Patient Name (formal), Discharge, Bed Nr.
 	'''
 	# DateFilter - filters for the date or (with no dates) for records with no discharge (ie. in use)
 	if StartDateTime==None and EndDateTime==None:
@@ -6001,7 +6006,7 @@ def GetBedActivityInformation(WardID=None, RoomID=None, BedNr=None, StartDateTim
 				diff = DateTimeTo - DateTimeFrom
 				days = float(diff.days) + diff.seconds/60.0/60.0/24
 				result['End'] = 'In Use'
-				result['Days'] = days
+				result['Days'] = '%0.1f' % days
 			else:
 				dt = row.DateTo
 				tt = time.strptime(str(row.TimeTo),'%H:%M:%S')
@@ -6009,12 +6014,13 @@ def GetBedActivityInformation(WardID=None, RoomID=None, BedNr=None, StartDateTim
 				diff = DateTimeTo - DateTimeFrom
 				days = float(diff.days) + diff.seconds/60.0/60.0/24
 				result['End'] = DateTimeTo
-				result['Days'] = days
+				result['Days'] = '%0.1f' % days
 			result['RoomNr'] = CurrRoomNr
 			result['WardID'] = CurrWardID
 			result['EncounterID'] = row.EncounterNrID
 			result['PatientID'] = row.EncounterNr.Pid
 			result['PatientName'] = row.EncounterNr.P.DisplayName()
+			result['BedNr'] = row.LocationNr
 			if row.DischargeTypeNrID in [0,None]:
 				result['Discharge'] = 'Not Discharged'
 			else:
