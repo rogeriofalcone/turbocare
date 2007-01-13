@@ -127,6 +127,7 @@ Add a new line with _Listen 443_ on it.
 _sudo apache2-ssl-certificate -days 365_
 
 _sudo mkdir /var/www/.egg_
+
 Setup temp egg directory.
 
 _sudo chown -R www-data /var/www/.egg_
