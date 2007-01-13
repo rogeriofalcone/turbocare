@@ -28,7 +28,6 @@ class Root(controllers.RootController):
 	    for location in Locations:
 		    name_store = '%s_store' % location.Name.lower().replace(' ','_')
 		    name_disp = '%s_disp' % location.Name.lower().replace(' ','_')
-		    log.debug("Current location is " + str(location))
 		    # Create the store location
 		    if getattr(self,name_store,None) == None:
 			    setattr(self,name_store,eval('identity.SecureObject(controllers_store.Store(%d, "%s"),identity.has_permission("%s_view"))' % (location.id, name_store, name_store)))
@@ -116,7 +115,7 @@ class Root(controllers.RootController):
     def UserMenu(self, **kw):
         '''	Return a list of menu items available to the current user
         '''
-        log.debug('UserMenu')
+        #log.debug('UserMenu')
         results = []
         #Display top menu based on permissions of user. 
 	results.append(dict(link='/',name='Main Menu',sub_menu=[]))
