@@ -119,6 +119,11 @@ _sudo nano /etc/apache2/ports.conf_
 
 Add a new line with _Listen 443_ on it.
 
+_sudo apache2-ssl-certificate -days 365_
+
+Install ssl certificate.
+
+
 
 ===Enable sites and modules===
 _sudo a2enmod mod_python_
