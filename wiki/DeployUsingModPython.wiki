@@ -148,9 +148,9 @@ Now we need to change some permissions to make sure Apache's user can write repo
 
 _cd ~/turbocare_
 
-_chown -R www-data turbocare/static/reports_
+_sudo chown -R www-data turbocare/static/reports_
 
-_chown -R www-data turbocare/static/user_reports_
+_sudo chown -R www-data turbocare/static/user_reports_
 
 
 ===Finishing off===
