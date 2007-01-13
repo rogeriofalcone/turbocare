@@ -1281,7 +1281,7 @@ class Department(SQLObject):
 	RadioTestFindings = MultipleJoin("TestFindingsRadio",joinColumn='dept_nr')
 	RadioTestRequests = MultipleJoin("TestRequestRadio",joinColumn='dept_nr')
 	Encounters = MultipleJoin("Encounter",joinColumn='current_dept_nr')
-	EncounterDiagnosticsReports = MultipleJoin("EncounterDiagnosticsReport",joinColumn='dept_nr')
+	EncounterDiagnosticsReports = MultipleJoin("EncounterDiagnosticsReport",joinColumn='reporting_dept_nr')
 	BaclaborTestFindings = MultipleJoin("TestFindingsBaclabor",joinColumn='dept_nr')
 	Status = StringCol(length=25,default='')
 	History = StringCol(length=255,default='')
@@ -2843,6 +2843,73 @@ class Room(SQLObject):
 			return True
 		else:
 			return False
+			
+	def AssignedBeds(self, AtTime=None):
+		'''	Returns a listing of Assigned Beds and some information about the assignment 
+			AtTime: Filter the results based on time
+			NOTE: Performance of this function may... not... be... so... good.
+		'''
+		beds = []
+		if AtTime==None: # Find current bed usage
+			for bed in self.EncounterLocations:
+				use = {}
+				if bed.GroupNr==self.WardNrID and bed.TypeNrID == TYPE_LOCATION['bed'] and \
+					(bed.DishcargeTypeNrID==0 or bed.DischargeTypeNrID==None):
+					df = bed.DateFrom
+					tf = time.strptime(str(bed.TimeFrom),'%H:%M:%S')
+					DateTimeFrom = datetime(df.year,df.month,df.day,tf.tm_hour,tf.tm_min,tf.tm_sec)
+					if bed.DateTo!=None:
+						DateTimeTo = datetime.now()
+						diff = DateTimeTo - DateTimeFrom
+						days = float(diff.days) + diff.seconds/60.0/60.0/24
+					use['BedNr'] = bed.LocationNr
+					use['PatientName'] = bed.EncounterNr.Pid.DisplayName()
+					use['PatientID'] = bed.EncounterNr.PidID
+					use['StartDateTime'] = DateTimeFrom
+					use['EndDateTime'] = '(in use)'
+					use['CurrentUse'] = days
+					beds.append(use)
+		else:
+			for bed in self.EncounterLocations:
+				use = {}
+				if bed.GroupNr==self.WardNrID and bed.TypeNrID == TYPE_LOCATION['bed']:
+					df = bed.DateFrom
+					tf = time.strptime(str(bed.TimeFrom),'%H:%M:%S')
+					DateTimeFrom = datetime(df.year,df.month,df.day,tf.tm_hour,tf.tm_min,tf.tm_sec)
+					if (bed.DishcargeTypeNrID==0 or bed.DischargeTypeNrID==None):
+						DateTimeTo = datetime.now()
+						diff = DateTimeTo - DateTimeFrom
+						days = float(diff.days) + diff.seconds/60.0/60.0/24
+						use['EndDateTime'] = '(in use)'
+					else:
+						dt = bed.DateTo
+						tt = time.strptime(str(bed.TimeTo),'%H:%M:%S')
+						DateTimeTo = datetime(dt.year,dt.month,dt.day,tt.tm_hour,tt.tm_min,tt.tm_sec)
+						use['EndDateTime'] = DateTimeTo
+						diff = DateTimeTo - DateTimeFrom
+						days = float(diff.days) + diff.seconds/60.0/60.0/24
+					if AtTime >= DateTimeFrom and (AtTime<=DateTimeTo or use['EndDateTime'] == '(in use)'):
+						use['BedNr'] = bed.LocationNr
+						use['PatientName'] = bed.EncounterNr.Pid.DisplayName()
+						use['PatientID'] = bed.EncounterNr.PidID
+						use['StartDateTime'] = DateTimeFrom
+						use['CurrentUse'] = days
+						beds.append(use)
+		return beds
+	
+	def Description(self):
+		'''	Give some bits of info for the room'''
+		text = ''
+		DeletedText = ''
+		if self.Status == 'deleted':
+			DeletedText = '*** DELETED **** '
+		ClosedBeds = self.ClosedBeds.split('/')
+		if len(ClosedBeds[0])==0:
+			ClosedBedCount=0
+		else:
+			ClosedBedCount = len(ClosedBeds)
+		NumBedsInUse = len(self.AssignedBeds())
+		return '%sThere are %d beds, %d beds are closed, %d beds are in use' % (DeletedText, self.NrOfBeds, ClosedBedCount, NumBedsInUse)
 
 	TypeNr = ForeignKey('TypeRoom',dbName='type_nr')
 	DateCreate = DateTimeCol(default=cur_date_time(),dbName='date_create')
@@ -2854,9 +2921,9 @@ class Room(SQLObject):
 	NrOfBeds = IntCol(dbName='nr_of_beds',default=0)
 	ClosedBeds = StringCol(length=255,dbName='closed_beds',default='')
 	Info = StringCol(length='60',dbName='info',default='')
-	#Multi-Joins
-	# Bookings for rooms on this column needs an additional filter on "type_nr" or TypeNr=
-	#EncounterLocations = MultipleJoin("EncounterLocation",joinColumn="location_nr")
+	# Bed management is handled in a funny way.  Don't rely on this var directly, instead, 
+	# use the Assigned Beds function to return the filtered set of results
+	# EncounterLocations = MultipleJoin("EncounterLocation",joinColumn="location_nr")
 	#Regular
 	Status = StringCol(length=25,default='')
 	History = StringCol(length=255,default='')
@@ -2993,6 +3060,8 @@ class Ward(SQLObject):
 	RoomNrStart = IntCol(dbName='room_nr_start',default=None)
 	RoomNrEnd = IntCol(dbName='room_nr_end',default=None)
 	Roomprefix = StringCol(length=4,dbName='roomprefix',default='')
+	Rooms = MultipleJoin("Room",joinColumn='ward_nr')
+	EncounterLocations = MultipleJoin("EncounterLocation",joinColumn="group_nr")
 	Status = StringCol(length=25,default='')
 	History = StringCol(length=255,default='')
 	ModifyId = StringCol(length=35,default=cur_user_id())#varchar(35) NOT NULL default '',

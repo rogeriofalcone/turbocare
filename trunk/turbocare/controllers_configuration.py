@@ -1,7 +1,8 @@
 import logging
 import sys
 import simplejson
-import pprint
+from datetime import datetime
+# import pprint
 import cherrypy
 from sqlobject import *
 import turbogears
@@ -904,5 +905,70 @@ class Configuration(controllers.RootController):
 		for type in types:
 			results.append(dict(id=type.id, name=type.Name, selected=type.id==TypeID))
 		return dict(results=results, message=message)
-	
 		
+	@expose(html='turbocare.templates.config_WardsEditor')
+	@validate(validators={'WardID':validators.Int()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def WardsEditor(self, WardID=None, **kw):
+		'''	Either load a ward for editing, or bring up an empty form for adding a new ward 
+		'''
+		def Checked(value):
+			if value:
+				return "checked"
+			else:
+				return None
+		# Attempt to load our Ward
+		if WardID!=None: # attempt to load a location id
+			try:
+				Ward = model.Ward.get(WardID)
+			except SQLObjectNotFound:
+				turbogears.flash("The WardID %d could not be found (deleted?)" % WardID)
+				Ward=None
+				WardID=None
+		else:
+			Ward=None
+		# Prepare our form
+		result = {} # The dictionary we are sending to the web page
+		if WardID==None: # Create a blank form
+			result['DisplayName'] = 'New Entry'
+			result['Name'] = ''
+			result['DateCreate'] = datetime.now().strftime(DATE_FORMAT)
+			result['DateClose'] = ''
+			result['IsTempClosed'] = None
+			result['Description'] = ''
+			result['Info'] = ''
+			result['RoomNrStart'] = 1
+			result['RoomNrEnd'] = 1
+			result['Roomprefix'] = ''
+			result['DeptNrID'] = ''
+			result['DeptNrName'] = ''
+			result['WardID'] = None
+			result['IsDeleted'] = False
+		else:
+			result['DisplayName'] = "%s (%d)" % (Ward.Name, WardID)
+			result['Name'] = Ward.Name
+			result['DateCreate'] = Ward.DateCreate
+			result['DateClose'] = Ward.DateClose
+			result['IsTempClosed'] = Checked(Ward.IsTempClosed)
+			result['Description'] = Ward.Description
+			result['Info'] = Ward.Info
+			result['RoomNrStart'] = Ward.RoomNrStart
+			result['RoomNrEnd'] = Ward.RoomNrEnd
+			result['Roomprefix'] = Ward.Roomprefix
+			if Ward.DeptNrID in [0, None]:
+				if Ward.DeptNrID==0:
+					Ward.DeptNrID=None
+				result['DeptNrID'] = None
+				result['DeptNrName'] = ''
+			else:
+				result['DeptNrID'] = Ward.DeptNrID
+				result['DeptNrName'] = Ward.DeptNr.NameFormal
+			result['WardID'] = WardID
+			result['IsDeleted'] = Ward.Status=='deleted'
+			# Load the rooms linked to the ward as a list
+			rooms = []
+			for room in Ward.Rooms:
+				rooms.append(dict(RoomID=room.id, RoomNr=room.RoomNr, NrOfBeds=room.NrOfBeds, Status=room.Description()))
+			result['rooms'] = rooms
+		return result		
