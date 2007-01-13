@@ -141,6 +141,17 @@ _sudo a2ensite turbocare-ssl_
 
 Enable ssl version of turbocare.
 
+
+===Reports===
+
+Now we need to change some permissions to make sure Apache's user can write reports.
+cd ~/turbocare
+
+chown -R www-data turbocare/static/reports 
+
+chown -R www-data turbocare/static/user_reports
+
+
 ===Finishing off===
 _sudo /etc/init.d/apache2 restart_
 
@@ -151,19 +162,6 @@ Go to http://localhost and https://localhost in a Web Browser.
 
 Both should display first page of turbocare.  
 
-==Reports==
-_nano ~/prod.cfg_
-
-Add turbocare.reportdir=/pathtoreportsdirectory
-
-chown -R www-data /pathtoreports directory
-
-e.g.
-
-_chown -R www-data /home/david/turbocare/turbocare/start/user_reports_
-
-
-edit base report directory
 
 ==Upgrades==
 To upgrade turbocare
