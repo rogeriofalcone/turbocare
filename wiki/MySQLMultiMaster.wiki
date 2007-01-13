@@ -15,7 +15,7 @@ For our production system at CIHSR we are using 3 MySQL 5 Servers.
 ==Required Background Reading==
 It is strongly recommended if you are not familiar with MySQL Database Replication that you read the following page [http://www.onlamp.com/pub/a/onlamp/2005/06/16/MySQLian.html] in addition to the section on the topic in the MySQL manual
 
-==Assumptions__
+==Assumptions==
 This guide assumes that you already have the HIS DB setup and working on HIS1. 
 
 It assumes MySql 5.0 or later is installed on the three servers.  
