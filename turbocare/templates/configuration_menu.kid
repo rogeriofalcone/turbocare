@@ -30,9 +30,15 @@
 					</div>
 				</div>
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href="WardRoomBedsEditor">Wards, Rooms and Beds</a></div>
+					<div style="text-align: left" class="clear"><a href="WardsEditor">Wards</a></div>
 					<div style="text-align: left" class="clear">
-						Manage Wards, Rooms and Beds
+						Manage Wards
+					</div>
+				</div>
+				<div class="row">
+					<div style="text-align: left" class="clear"><a href="RoomBedsEditor">Rooms and Beds</a></div>
+					<div style="text-align: left" class="clear">
+						Manage Rooms and Beds
 					</div>
 				</div>
 				<div class="row">
