@@ -1,4 +1,5 @@
 #summary How to setup MultiMaster turbocare.
+#labels Phase-Deploy
 
 = Introduction =
 
@@ -8,8 +9,7 @@ For our production system at CIHSR we are using 3 MySQL 5 Servers.
 
 # *HIS2* - A Master MySQL server with turbocare running through Apache
 
-# *BKP1* - A Slave MySQL server with turbocare running just for reports 
-through Apache. It also has the backup software running on it. 
+# *BKP1* - A Slave MySQL server which has the backup software running on it. 
 
 
 ==Required Background Reading==
@@ -23,7 +23,10 @@ It assumes MySql 5.0 or later is installed on the three servers.
 It also assumes that an ssh server is installed and active on the three servers. 
 
 The best way to do this HowTo is to open up an ssh session to each server and leave it open for the duration of the HowTo.
-=Steps====Setup Mysql Network Interfaces and hosts files===
+
+=Steps=
+
+===Setup Mysql Network Interfaces and hosts files===
 
 MySQL Replication Network:
 
@@ -44,9 +47,16 @@ On HIS1
 _mysql -u root -p_ 
 
 Enter in your mysql root password you set in step 2.
-_GRANT REPLICATION SLAVE, REPLICATION CLIENT    ON *.*    TO 'HIS2'@'10.0.0.2'    IDENTIFIED BY 'HIS2 PASSWORD';_
 
-_GRANT REPLICATION SLAVE, REPLICATION CLIENT    ON *.*    TO 'BKP1'@'10.0.0.3'    IDENTIFIED BY 'BKP1 PASSWORD';_
+_GRANT REPLICATION SLAVE, REPLICATION CLIENT
+    ON *.*
+    TO 'HIS2'@'10.0.0.2'
+    IDENTIFIED BY 'HIS2 PASSWORD';_
+
+_GRANT REPLICATION SLAVE, REPLICATION CLIENT
+    ON *.*
+    TO 'BKP1'@'10.0.0.3'
+    IDENTIFIED BY 'BKP1 PASSWORD';_
 
 Note replace HIS2 PASSWORD and BKP1 PASSWORD with a real password.  Keep this password as we will need it later on.
 
@@ -57,7 +67,11 @@ ON HIS2
 _mysql -u root -p_ 
 
 Enter in your mysql root password you set in step 2.
-_GRANT REPLICATION SLAVE, REPLICATION CLIENT    ON *.*    TO 'HIS1'@'10.0.0.1'    IDENTIFIED BY 'HIS1 PASSWORD';_
+
+_GRANT REPLICATION SLAVE, REPLICATION CLIENT
+    ON *.*
+    TO 'HIS1'@'10.0.0.1'
+    IDENTIFIED BY 'HIS1 PASSWORD';_
 _exit_
 
 Note replace HIS1 PASSWORD with a real password.  Keep this password as we will need it later on.
