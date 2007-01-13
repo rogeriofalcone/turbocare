@@ -78,16 +78,23 @@ _cp prod-sample.cfg prod.cfg_
 _nano prod.cfg_
 
 This is the production configuration file.  
+
 Make sure the database variable is right. 
-Make sure turbocare.basedir="/home/USERNAME/turbocare" where username is your username
+
+sqlobject.dburi="mysql://root@localhost:3306/care2x"
+
+Make sure turbocare.basedir="/home/USERNAME/turbocare" points to where turbocare username is installed. 
+
 You can also change the log file locations if you want to.
 
 _sudo python setup.py install_
 
-We need to install the files for apache to be able to find them.  Note after every update you need to run this command.
+We need to install the files for apache to be able to find them.  
+
+Note after every update you need to run this command.
 
 
-_sudo cp modpython_gateway.py /usr/lib/python2.4/site-pakages_
+_sudo cp tmodpython_gateway.py /usr/lib/python2.4/site-pakages_
 
 Copy Modpython Gateway to pythons sitepackages.  This lets us use TurboGears with mod_python. 
 
@@ -97,6 +104,7 @@ Copy Modpython Gateway to pythons sitepackages.  This lets us use TurboGears wit
 _sudo cp apache-turbocare.conf /etc/apache2/sites-available/turbocare_
 
 _sudo cp apache-ssl-turbocare.conf /etc/apache2/sites-available/turbocare-ssl_
+
 Copy Apache def files
 
 _sudo nano /etc/apache2/sites-available/turbocare_
