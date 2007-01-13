@@ -145,11 +145,12 @@ Enable ssl version of turbocare.
 ===Reports===
 
 Now we need to change some permissions to make sure Apache's user can write reports.
-cd ~/turbocare
 
-chown -R www-data turbocare/static/reports 
+_cd ~/turbocare_
 
-chown -R www-data turbocare/static/user_reports
+_chown -R www-data turbocare/static/reports_
+
+_chown -R www-data turbocare/static/user_reports_
 
 
 ===Finishing off===
