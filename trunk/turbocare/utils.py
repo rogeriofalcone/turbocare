@@ -389,3 +389,4 @@ def GenerateReportDefinitions():
 	f.write("}")
 	f.close()
 	
+

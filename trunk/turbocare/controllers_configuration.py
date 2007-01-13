@@ -2,6 +2,7 @@ import logging
 import sys
 import simplejson
 from datetime import datetime
+import time
 # import pprint
 import cherrypy
 from sqlobject import *
@@ -971,4 +972,156 @@ class Configuration(controllers.RootController):
 			for room in Ward.Rooms:
 				rooms.append(dict(RoomID=room.id, RoomNr=room.RoomNr, NrOfBeds=room.NrOfBeds, Status=room.Description()))
 			result['rooms'] = rooms
-		return result		
+		return result
+	
+	@expose()
+	@validate(validators={'Name':validators.String(),'Description':validators.String(),'DateCreate':validators.String(),\
+		'DateClose':validators.String(),'IsTempClosed':validators.Bool(),'Info':validators.String(),\
+		'RoomNrStart':validators.Int(),'RoomNrEnd':validators.Int(),'Roomprefix':validators.String(),\
+		'DeptNrID':validators.Int(),'WardID':validators.Int(),'Operation':validators.String()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
+	def WardsEditorSave(self, Name='', Description='', DateCreate='', DateClose='', IsTempClosed=None,
+		Info='', RoomNrStart=None, RoomNrEnd=None, Roomprefix='', DeptNrID=None,
+		WardID=None, Operation='', **kw):
+		'''	Save changes.  Either create a new entry, update an existing entry or attempt to delete an entry 
+			Save/Cancel/New/Delete are the various operations we have
+		'''
+		log.debug('WardsEditorSave')
+		if WardID!=None:
+			try:
+				Ward = model.Ward.get(WardID)
+			except SQLObjectNotFound: #, errorstr:
+				turbogears.flash("There is an error on a database entry I thought should exist, but doesn't, so all the changes are lost.  Try again.")
+				raise cherrypy.HTTPRedirect('WardsEditor')
+		if Operation=='Save': # Either update or create a new entry
+			log.debug('...Save')
+			Name = str(Name)
+			Description = str(Description)
+			Info = str(Info)
+			Roomprefix = str(Roomprefix)
+			# Silly but necessary date manipulations (I really wish the validators for dates worked!!!)
+			if not DateCreate in ['',None]:
+				DateCreate = datetime.fromtimestamp(time.mktime(time.strptime(DateCreate[0:10],DATE_FORMAT)))
+			else:
+				DateCreate = None
+			if not DateClose in ['',None]:
+				DateClose = datetime.fromtimestamp(time.mktime(time.strptime(DateClose[0:10],DATE_FORMAT)))
+			else:
+				DateClose = None
+			if WardID==None: # Create a new entry
+				log.debug('...New Entry')
+				Ward = model.Ward(WardId=Name.lower().replace(' ','_'), Name=Name, DateCreate=DateCreate,
+				DateClose=DateClose, IsTempClosed=IsTempClosed,Description=Description,Info=Info,DeptNrID=DeptNrID,
+				RoomNrStart=RoomNrStart, RoomNrEnd=RoomNrEnd, Roomprefix=Roomprefix)
+				# Type room configuration
+				RoomTypes = model.TypeRoom.select(model.TypeRoom.q.Type=='ward')
+				if RoomTypes.count() == 0:
+					RoomType = model.TypeRoom(Type='ward', Name='Ward room')
+					RoomTypeID = RoomType.id
+				else:
+					RoomTypeID = RoomTypes[0].id
+				# Create the related rooms
+				RoomCount = 0
+				if RoomNrStart >=0 and RoomNrEnd >= RoomNrStart:
+					for RoomNr in range(RoomNrStart, RoomNrEnd+1):
+						RoomCount += 1
+						Room = model.Room(TypeNrID=RoomTypeID,RoomNr=RoomNr,WardNrID=Ward.id,DeptNrID=Ward.DeptNrID)
+					RoomMessage = 'and %d rooms created' % RoomCount
+				else:
+					RoomMessage = 'but there seems be a problem with the room numbers (no rooms created)'
+				WardID = Ward.id
+				turbogears.flash('New Entry Created (id: %d) %s' % (WardID, RoomMessage))
+			else: # Update an entry
+				Ward.WardId = Name.lower().replace(' ','_')
+				Ward.Name = Name
+				Ward.DateCreate = DateCreate
+				Ward.DateClose = DateClose
+				Ward.IsTempClosed = IsTempClosed
+				Ward.Description = Description
+				Ward.Info = Info
+				Ward.DeptNrID = DeptNrID
+				Ward.RoomNrStart = RoomNrStart
+				Ward.RoomNrEnd = RoomNrEnd
+				Ward.Roomprefix = Roomprefix
+				CurrRooms = [x.RoomNr for x in Ward.Rooms]
+				# Manage the rooms
+				# Type room configuration
+				RoomTypes = model.TypeRoom.select(model.TypeRoom.q.Type=='ward')
+				if RoomTypes.count() == 0:
+					RoomType = model.TypeRoom(Type='ward', Name='Ward room')
+					RoomTypeID = RoomType.id
+				else:
+					RoomTypeID = RoomTypes[0].id
+				DuplicateRooms = 0
+				DelRoomCount = 0
+				NewRoomCount = 0
+				UnDelRoomCount = 0
+				if RoomNrStart >=0 and RoomNrEnd >= RoomNrStart:
+					NewRooms = [x for x in range(RoomNrStart,RoomNrEnd+1)]
+					for RoomNr in NewRooms:
+						if RoomNr not in CurrRooms:
+							NewRoomCount += 1
+							Room = model.Room(TypeNrID=RoomTypeID,RoomNr=RoomNr,WardNrID=Ward.id,DeptNrID=Ward.DeptNrID)
+					for Room in Ward.Rooms:
+						if Room.RoomNr not in NewRooms:
+							DelRoomCount += 1
+							Room.Status = 'deleted'
+							# Room.destroySelf() -- Maybe have it really delete the record
+						elif Room.RoomNr in NewRooms and Room.Status=='deleted': # un-delete the entry
+							UnDelRoomCount += 1
+							Room.Status = ''
+				for RoomNr in CurrRooms:
+					if CurrRooms.count(RoomNr) > 1:
+						DuplicateRooms += 1
+				turbogears.flash('Recorded Updated with %d rooms created, %d rooms marked deleted, %d duplicate room entries and %d rooms un-deleted' \
+				% (NewRoomCount,DelRoomCount,DuplicateRooms/2, UnDelRoomCount))
+		elif Operation=='Delete' and WardID!=None:
+			# We need to check if any of the id's are in use before attempting to delete an address from the system
+			if len(Ward.Rooms)>0:
+				# Mark the items deleted
+				Ward.Status = 'deleted'
+				turbogears.flash('Record Marked Deleted')
+			else:
+				Ward.destroySelf()
+				WardID = None
+				turbogears.flash('Record Deleted')
+		elif Operation=='Un-Delete' and WardID!=None:
+			Ward.Status = ''
+			turbogears.flash('Record Un-Deleted')
+		elif Operation=='Cancel':
+			turbogears.flash('Updates Cancelled')
+		elif Operation=='New':
+			WardID=''
+		else:
+			turbogears.flash('Error in processing request')
+		if WardID in ['',None]:
+			raise cherrypy.HTTPRedirect('WardsEditor')
+		else:
+			raise cherrypy.HTTPRedirect('WardsEditor?WardID=%d' % WardID)
+		
+	@expose(format='json')
+	def WardsEditorQuickSearch(self, QuickSearchText='', **kw):
+		'''	Search for an existing location entry '''
+		if QuickSearchText=='*':
+			wards = model.Ward.select(orderBy=[model.Ward.q.Name])
+		else:
+			wards = model.Ward.select(model.Ward.q.Name.contains(str(QuickSearchText)),orderBy=[model.Ward.q.Name])
+		results = []
+		for item in wards:
+			results.append(dict(id=item.id, text=item.Name))
+		return dict(results=results)
+		
+	@expose(format='json')
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def WardsEditorDepartmentSelect(self, SearchText='', **kw):
+		'''	Load the department item options
+		'''
+		SearchText = str(SearchText)
+		items = model.Department.select(model.Department.q.NameFormal.contains(SearchText),
+			orderBy=[model.Department.q.NameFormal])
+		results = []
+		for item in items:
+			results.append(dict(id=item.id, text='%s (%d)' % (item.NameFormal,item.id)))
+		return dict(results=results, function_name='WardsEditorDepartmentSelect')
