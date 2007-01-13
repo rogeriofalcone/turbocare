@@ -36,7 +36,7 @@
 					</div>
 				</div>
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href="RoomBedsEditor">Rooms and Beds</a></div>
+					<div style="text-align: left" class="clear"><a href="RoomsEditor">Rooms and Beds</a></div>
 					<div style="text-align: left" class="clear">
 						Manage Rooms and Beds
 					</div>
