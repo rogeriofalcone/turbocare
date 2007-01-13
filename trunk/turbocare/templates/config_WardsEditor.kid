@@ -90,6 +90,7 @@
 					<div id="buttons" style="display:table" class="topbuttons">
 						<input id="WardID" type="hidden" name="WardID" value="${WardID}" />
 						<input name="Operation" id="btnSave" type="submit" value="Save" ></input>
+						<input name="Operation" id="btnSaveNoRoom" type="submit" value="Save (No Room Updates)" ></input>
 						<input name="Operation" id="btnCancel" type="submit" value="Cancel" ></input>
 						<input name="Operation" id="btnAddNew" type="submit" value="New" ></input>
 						<input name="Operation" id="btnDelete" type="submit" value="Delete" ></input>
