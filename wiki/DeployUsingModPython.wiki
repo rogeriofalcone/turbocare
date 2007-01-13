@@ -73,7 +73,7 @@ Now to get mod_python working
 
 _cd ~/turbocare_
 
-_cp sample-prod.cfg prod.cfg_
+_cp prod-sample.cfg prod.cfg_
 
 _nano prod.cfg_
 
