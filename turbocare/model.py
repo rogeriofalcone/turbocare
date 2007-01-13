@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import logging
 from sqlobject import *
 
 from turbogears import identity 
@@ -8,6 +8,7 @@ from model_inventory import *
 
 hub = PackageHub("care2x")
 __connection__ = hub
+log = logging.getLogger("turbocare.controllers")
 
 # class YourDataClass(SQLObject):
 #     pass
@@ -2844,57 +2845,9 @@ class Room(SQLObject):
 		else:
 			return False
 			
-	def AssignedBeds(self, AtTime=None):
-		'''	Returns a listing of Assigned Beds and some information about the assignment 
-			AtTime: Filter the results based on time
-			NOTE: Performance of this function may... not... be... so... good.
-		'''
-		beds = []
-		if AtTime==None: # Find current bed usage
-			for bed in self.EncounterLocations:
-				use = {}
-				if bed.GroupNr==self.WardNrID and bed.TypeNrID == TYPE_LOCATION['bed'] and \
-					(bed.DishcargeTypeNrID==0 or bed.DischargeTypeNrID==None):
-					df = bed.DateFrom
-					tf = time.strptime(str(bed.TimeFrom),'%H:%M:%S')
-					DateTimeFrom = datetime(df.year,df.month,df.day,tf.tm_hour,tf.tm_min,tf.tm_sec)
-					if bed.DateTo!=None:
-						DateTimeTo = datetime.now()
-						diff = DateTimeTo - DateTimeFrom
-						days = float(diff.days) + diff.seconds/60.0/60.0/24
-					use['BedNr'] = bed.LocationNr
-					use['PatientName'] = bed.EncounterNr.Pid.DisplayName()
-					use['PatientID'] = bed.EncounterNr.PidID
-					use['StartDateTime'] = DateTimeFrom
-					use['EndDateTime'] = '(in use)'
-					use['CurrentUse'] = days
-					beds.append(use)
-		else:
-			for bed in self.EncounterLocations:
-				use = {}
-				if bed.GroupNr==self.WardNrID and bed.TypeNrID == TYPE_LOCATION['bed']:
-					df = bed.DateFrom
-					tf = time.strptime(str(bed.TimeFrom),'%H:%M:%S')
-					DateTimeFrom = datetime(df.year,df.month,df.day,tf.tm_hour,tf.tm_min,tf.tm_sec)
-					if (bed.DishcargeTypeNrID==0 or bed.DischargeTypeNrID==None):
-						DateTimeTo = datetime.now()
-						diff = DateTimeTo - DateTimeFrom
-						days = float(diff.days) + diff.seconds/60.0/60.0/24
-						use['EndDateTime'] = '(in use)'
-					else:
-						dt = bed.DateTo
-						tt = time.strptime(str(bed.TimeTo),'%H:%M:%S')
-						DateTimeTo = datetime(dt.year,dt.month,dt.day,tt.tm_hour,tt.tm_min,tt.tm_sec)
-						use['EndDateTime'] = DateTimeTo
-						diff = DateTimeTo - DateTimeFrom
-						days = float(diff.days) + diff.seconds/60.0/60.0/24
-					if AtTime >= DateTimeFrom and (AtTime<=DateTimeTo or use['EndDateTime'] == '(in use)'):
-						use['BedNr'] = bed.LocationNr
-						use['PatientName'] = bed.EncounterNr.Pid.DisplayName()
-						use['PatientID'] = bed.EncounterNr.PidID
-						use['StartDateTime'] = DateTimeFrom
-						use['CurrentUse'] = days
-						beds.append(use)
+	def BedsInUse(self):
+		''' The current bed usage '''
+		beds = GetBedActivityInformation(RoomID=self.id)
 		return beds
 	
 	def Description(self):
@@ -2908,7 +2861,7 @@ class Room(SQLObject):
 			ClosedBedCount=0
 		else:
 			ClosedBedCount = len(ClosedBeds)
-		NumBedsInUse = len(self.AssignedBeds())
+		NumBedsInUse = len(self.BedsInUse())
 		return '%sThere are %d beds, %d beds are closed, %d beds are in use' % (DeletedText, self.NrOfBeds, ClosedBedCount, NumBedsInUse)
 
 	TypeNr = ForeignKey('TypeRoom',dbName='type_nr')
@@ -5948,3 +5901,125 @@ class Appointment(SQLObject):
 	CreateId = StringCol(length=35,dbName="create_id")
 	CreateTime = DateTimeCol(default=cur_date_time(),dbName="create_time")
 
+
+# A utility I function which I want to use in my classes above, lets see if it works the way I hope
+def GetBedActivityInformation(WardID=None, RoomID=None, BedNr=None, StartDateTime=None, EndDateTime=None):
+	'''	Query EncounterLocation to get Bed usage information 
+		With no filter, it will produce a current listing of used beds for the entire hospital
+		NOTE: BedNr requires RoomID to be set
+		If a StartDateTime or EndDateTime are used, then it will not filter out discharged entries
+		The dates must be a datetime object
+		returns an array of dictionaries - each row is the detail for a patient
+	'''
+	# DateFilter - filters for the date or (with no dates) for records with no discharge (ie. in use)
+	if StartDateTime==None and EndDateTime==None:
+		DateFilter = 'OR (EncounterLocation.q.DischargeTypeNrID == 0,EncounterLocation.q.DischargeTypeNrID == None),'
+	elif StartDateTime!=None and EndDateTime!=None:
+		DateFilter = 'AND ('
+		DateFilter += 'EncounterLocation.q.DateFrom >= StartDateTime.date(),'
+		DateFilter += 'EncounterLocation.q.TimeFrom >= StartDateTime.strftime(\'%H:%M:%S\'),'
+		DateFilter += 'EncounterLocation.q.DateTo <= EndDateTime.date(),'
+		DateFilter += 'EncounterLocation.q.TimeTo <= EndDateTime.strftime(\'%H:%M:%S\')'
+		DateFilter += '),'
+	elif StartDateTime!=None:
+		DateFilter = 'AND ('
+		DateFilter += 'EncounterLocation.q.DateFrom >= StartDateTime.date(),'
+		DateFilter += 'EncounterLocation.q.TimeFrom >= StartDateTime.strftime(\'%H:%M:%S\')'
+		DateFilter += '),'
+	else:
+		DateFilter = 'AND ('
+		DateFilter += 'EncounterLocation.q.DateTo <= EndDateTime.date(),'
+		DateFilter += 'EncounterLocation.q.TimeTo <= EndDateTime.strftime(\'%H:%M:%S\')'
+		DateFilter += '),'
+	# BedFilter filters entries for a specific Bed number - this is not a perfect filter, it will produce room entries without a following
+	# Bed entry.  Those room entries (without a following bed entry) need to be ignored.
+	if BedNr!=None: 
+		BedNr = int(BedNr)
+		room = Room.get(int(RoomID))
+		BedFilter = 'OR (AND (EncounterLocation.q.LocationNr==%d,' % BedNr
+		BedFilter += 'EncounterLocation.q.TypeNrID==%d),' % TYPE_LOCATION['bed']
+		RoomFilter = 'AND (EncounterLocation.q.LocationNr==%d,' % room.RoomNr
+		RoomFilter += 'EncounterLocation.q.TypeNrID==%d),' % TYPE_LOCATION['room']
+		RoomFilter += 'EncounterLocation.q.TypeNrID==%d),' % TYPE_LOCATION['ward']
+		WardID = room.WardNrID
+	else:
+		BedFilter = ''
+		RoomFilter = ''
+	# The room filter might also get set with the above bed filter, if not, then we'll do a filter for an entire room (all beds in the room)
+	if RoomID!=None and RoomFilter=='': 
+		room = Room.get(int(RoomID))
+		RoomFilter = 'OR (AND (EncounterLocation.q.LocationNr==%d,' % room.RoomNr
+		RoomFilter += 'EncounterLocation.q.TypeNrID==%d),' % TYPE_LOCATION['room']
+		RoomFilter += 'EncounterLocation.q.TypeNrID==%d,' % TYPE_LOCATION['ward']
+		RoomFilter += 'EncounterLocation.q.TypeNrID==%d),' % TYPE_LOCATION['bed']
+		WardID = room.WardNrID
+	# WardFilter (Group field filter).  Filter the table for the specific Ward
+	if WardID!=None:
+		WardID = int(WardID)
+		WardFilter = 'EncounterLocation.q.GroupNr==%d,' % WardID
+	else:
+		WardFilter = ''
+	# The type filter might be needed if there is no room filter
+	if RoomFilter == '':
+		TypeFilter = 'OR (EncounterLocation.q.TypeNrID==%d,' % TYPE_LOCATION['room']
+		TypeFilter = 'EncounterLocation.q.TypeNrID==%d,' % TYPE_LOCATION['ward']
+		TypeFilter = 'EncounterLocation.q.TypeNrID==%d),' % TYPE_LOCATION['bed']
+	else:
+		TypeFilter = ''
+#	Beds = model.EncounterLocation.select(AND (OR (model.EncounterLocation.q.DischargeTypeNrID == 0,\
+#		model.EncounterLocation.q.DischargeTypeNrID == None), \
+#		model.EncounterLocation.q.GroupNr == room.WardNrID, OR (model.EncounterLocation.q.TypeNrID == 4,\
+#		model.EncounterLocation.q.TypeNrID==5)),orderBy=[model.EncounterLocation.q.EncounterNrID,\
+#		model.EncounterLocation.q.TypeNrID])
+	Filters = '%s%s%s%s%s' %  (DateFilter, BedFilter, RoomFilter, WardFilter, TypeFilter)
+	OrderBy = 'EncounterLocation.q.GroupNr,EncounterLocation.q.EncounterNrID,EncounterLocation.q.DateFrom,'
+	OrderBy += 'EncounterLocation.q.TimeFrom,EncounterLocation.q.TypeNrID'
+	Query = 'EncounterLocation.select(AND (%s), orderBy=[%s])' % (Filters[:-1], OrderBy)
+	#log.debug(Query)
+	Results = eval(Query)
+	beds = []
+	CurrRoomNr = None
+	CurrWardID = None
+	CurrRoomEncounterID = None
+	CurrWardEncounterID = None
+	# Rows can either be Ward, Room or Bed, but only Bed entries get appended
+	for row in Results:
+		if row.TypeNrID == TYPE_LOCATION['room']:
+			CurrRoomNr = row.LocationNr
+			CurrRoomEncounterID = row.EncounterNrID
+		elif row.TypeNrID == TYPE_LOCATION['ward']:
+			CurrWardID = row.LocationNr
+			CurrWardEncounterID = row.EncounterNrID
+		else:
+			result = {}
+			df = row.DateFrom
+			tf = time.strptime(str(row.TimeFrom),'%H:%M:%S')
+			DateTimeFrom = datetime(df.year,df.month,df.day,tf.tm_hour,tf.tm_min,tf.tm_sec)
+			result['Start'] = DateTimeFrom
+			if row.DischargeTypeNrID in [0,None]:
+				DateTimeTo = datetime.now()
+				diff = DateTimeTo - DateTimeFrom
+				days = float(diff.days) + diff.seconds/60.0/60.0/24
+				result['End'] = 'In Use'
+				result['Days'] = days
+			else:
+				dt = row.DateTo
+				tt = time.strptime(str(row.TimeTo),'%H:%M:%S')
+				DateTimeTo = datetime(dt.year,dt.month,dt.day,tt.tm_hour,tt.tm_min,tt.tm_sec)
+				diff = DateTimeTo - DateTimeFrom
+				days = float(diff.days) + diff.seconds/60.0/60.0/24
+				result['End'] = DateTimeTo
+				result['Days'] = days
+			result['RoomNr'] = CurrRoomNr
+			result['WardID'] = CurrWardID
+			result['EncounterID'] = row.EncounterNrID
+			result['PatientID'] = row.EncounterNr.Pid
+			result['PatientName'] = row.EncounterNr.P.DisplayName()
+			if row.DischargeTypeNrID in [0,None]:
+				result['Discharge'] = 'Not Discharged'
+			else:
+				result['Discharge'] = row.DischargeTypeNr.Name
+			#log.debug('bed %r, ward %r, room %r' % (row.EncounterNrID, CurrWardEncounterID, CurrRoomEncounterID))
+			if row.EncounterNrID == CurrWardEncounterID == CurrRoomEncounterID:
+				beds.append(result)
+	return beds
