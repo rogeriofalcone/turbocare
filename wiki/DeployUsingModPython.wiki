@@ -72,7 +72,9 @@ Now to get mod_python working
 ===Setup Turbocare for production===
 
 _cd ~/turbocare_
+
 _cp sample_prod.cfg prod.cfg_
+
 _nano prod.cfg_
 
 This is the production configuration file.  Make sure the database variable is right. You can also change the log file locations if you want to.
