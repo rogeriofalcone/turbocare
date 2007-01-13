@@ -77,7 +77,10 @@ _cp prod-sample.cfg prod.cfg_
 
 _nano prod.cfg_
 
-This is the production configuration file.  Make sure the database variable is right. You can also change the log file locations if you want to.
+This is the production configuration file.  
+Make sure the database variable is right. 
+Make sure turbocare.basedir="/home/USERNAME/turbocare" where username is your username
+You can also change the log file locations if you want to.
 
 _sudo python setup.py install_
 
