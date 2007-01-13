@@ -87,8 +87,11 @@ Make sure turbocare.basedir="/home/USERNAME/turbocare" points to where turbocare
 
 You can also change the log file locations if you want to.
 
-cp turbocare/turbocare_modpython-sample.py turbocare/turbocare_modpython.py
+_cp turbocare/turbocare_modpython-sample.py turbocare/turbocare_modpython.py_
 
+_nano turbocare/turbocare_modpython.py_
+
+Update the configuration file location in this file to where you have installed turbocare.  
 
 _sudo python setup.py install_
 
@@ -96,7 +99,7 @@ We need to install the files for apache to be able to find them.
 
 Note after every update you need to run this command.
 
-_sudo cp modpython_gateway.py /usr/lib/python2.4/site-pakages_
+_sudo cp modpython_gateway.py /usr/lib/python2.4/site-packages/_
 
 Copy Modpython Gateway to pythons sitepackages.  This lets us use TurboGears with mod_python. 
 
