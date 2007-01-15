@@ -47,9 +47,9 @@ config.collectPostVars = function(f){
     {
       if(postVars!='') postVars+='&';
       if (getNodeAttribute(f.elements[i],'multiple') != null) {
-      	postVars+= f.elements[i].name +'='+ config.multiselect_csv(f.elements[i].id);
+      	postVars+= f.elements[i].name +'='+ encodeURIComponent(config.multiselect_csv(f.elements[i].id));
       } else {
-      	postVars+= f.elements[i].name +'='+ f.elements[i].options[f.elements[i].selectedIndex].value;
+      	postVars+= f.elements[i].name +'='+ encodeURIComponent(f.elements[i].options[f.elements[i].selectedIndex].value);
       }
     }
   }
@@ -212,11 +212,13 @@ config.AddNewClass = function(e){
 	DeleteClass: Attempt to delete the currently selected item
 */
 config.DeleteClass = function(e){
-	var ClassID = getElement('EditClassificationID').value;
-	if (ClassID!='') {
-		if (confirm('Are you sure you want to delete?')) {
-			var d = postJSON('EthnicOriginsEditorSaveClass','Operation=Delete&ClassID='+ClassID);
-			d.addCallbacks(config.RenderForms,config.error_report);
+	if (confirm('Are you sure you want to delete?')) {
+		var ClassID = getElement('EditClassificationID').value;
+		if (ClassID!='') {
+			if (confirm('Are you sure you want to delete?')) {
+				var d = postJSON('EthnicOriginsEditorSaveClass','Operation=Delete&ClassID='+ClassID);
+				d.addCallbacks(config.RenderForms,config.error_report);
+			}
 		}
 	}
 }
@@ -303,12 +305,14 @@ config.AddNewType = function(e){
 	DeleteType: Attempt to delete the currently selected item
 */
 config.DeleteType = function(e){
-	var ClassID = getElement('EditClassificationID').value;
-	var TypeID = getElement('EditTypeID').value;
-	if (TypeID!='') {
-		if (confirm('Are you sure you want to delete?')) {
-			var d = postJSON('EthnicOriginsEditorSaveType','Operation=Delete&ClassID='+ClassID+'&TypeID='+TypeID);
-			d.addCallbacks(config.RenderForms,config.error_report);
+	if (confirm('Are you sure you want to delete?')){
+		var ClassID = getElement('EditClassificationID').value;
+		var TypeID = getElement('EditTypeID').value;
+		if (TypeID!='') {
+			if (confirm('Are you sure you want to delete?')) {
+				var d = postJSON('EthnicOriginsEditorSaveType','Operation=Delete&ClassID='+ClassID+'&TypeID='+TypeID);
+				d.addCallbacks(config.RenderForms,config.error_report);
+			}
 		}
 	}
 }

@@ -445,10 +445,12 @@ config.NewType = function(e){
 	DeleteType: Request that the department type be deleted
 */
 config.DeleteType = function(e){
-	config.toggle_message("Deleting...");
-	var postVars = 'TypeID='+getElement('TypeID').value+'&Operation=Delete';
-	var d = postJSON('LocationsEditorDepartmentTypeSave',postVars);
-	d.addCallbacks(config.RenderTypes,config.error_report);
+	if (confirm('Are you sure you want to delete?')) {
+		config.toggle_message("Deleting...");
+		var postVars = 'TypeID='+getElement('TypeID').value+'&Operation=Delete';
+		var d = postJSON('LocationsEditorDepartmentTypeSave',postVars);
+		d.addCallbacks(config.RenderTypes,config.error_report);
+	}
 }
 /*
 	UnDeleteType: Request that the department type be un-deleted
@@ -515,6 +517,13 @@ connect(window, 'onload', function(){
 		if (getElement("btnUnDeleteType")!=null) {
 			connect("btnUnDeleteType",'onclick',config.UnDeleteType);
 		}
+	if (getElement('btnDelete')!=null){
+		connect('btnDelete','onclick',function(e) {
+			if (!confirm('Are you sure you want to delete?')) {
+				e.stop();
+			}
+		});
+	}
 });
 //Connect on onload for the document to open the document using javascript
 connect(window, 'onload', config.OpenOnLoad);

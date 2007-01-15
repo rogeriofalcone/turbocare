@@ -1189,7 +1189,7 @@ class Configuration(controllers.RootController):
 			else:
 				result['DeptNrName'] = Room.DeptNr.NameFormal
 			result['WardNrID'] = Room.WardNrID
-			if Room.WardNrID == [0,None]:
+			if Room.WardNrID in [0,None]:
 				if Room.WardNrID == 0:
 					Room.WardNrID = 0
 				result['WardNrName'] = ''
@@ -1197,10 +1197,10 @@ class Configuration(controllers.RootController):
 				result['WardNrName'] = Room.WardNr.Name
 			result['IsDeleted'] = Room.Status == 'deleted'
 			ClosedBedArr = Room.ClosedBeds.split('/')
+			NewClosedBedArr = []
 			if len(ClosedBedArr[0]) == 0:
 				ClosedBedArr = []
 			else:
-				NewClosedBedArr = []
 				for x in ClosedBedArr:
 					if len(x)>0:
 						NewClosedBedArr.append(int(x))
@@ -1218,13 +1218,13 @@ class Configuration(controllers.RootController):
 		return result
 	
 	@expose()
-	@validate(validators={'RoomNr':validators.String(),'Info':validators.String(),'DateCreate':validators.String(),\
+	@validate(validators={'RoomNr':validators.Int(),'Info':validators.String(),'DateCreate':validators.String(),\
 		'DateClose':validators.String(),'IsTempClosed':validators.Bool(),'DeptNrID':validators.Int(),\
 		'NrOfBeds':validators.Int(),'WardNrID':validators.Int(),'RoomID':validators.Int(),'Operation':validators.String()})
 	@identity.require(identity.has_permission("admin_controllers_configuration"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
 	def RoomsEditorSave(self, RoomNr=None, Info='', DateCreate='', DateClose='', IsTempClosed=None,
-		 NrOfBeds=None,  DeptNrID=None,	RoomID=None, Operation='', ClosedBeds=[], **kw):
+		 NrOfBeds=None,  DeptNrID=None, WardNrID=None, RoomID=None, Operation='', ClosedBeds=[], **kw):
 		'''	Save changes.  Either create a new entry, update an existing entry or attempt to delete an entry 
 			Save/Cancel/New/Delete are the various operations we have
 		'''
@@ -1255,6 +1255,7 @@ class Configuration(controllers.RootController):
 			else:
 				DateClose = None
 			# Update the Closed Beds variable - NOTE, the variable actually returns back the beds which are NOT closed
+			log.debug(ClosedBeds)
 			if len(ClosedBeds) == 0:
 				ClosedBeds = []
 			elif isinstance(ClosedBeds,basestring):
@@ -1275,59 +1276,460 @@ class Configuration(controllers.RootController):
 				Room.TypeNrID = RoomTypeID
 				Room.DateCreate = DateCreate
 				Room.DateClose = DateClose
-#				Room. = 
-#				Room. = 
-#				Room. = 
-#				Room. = 
-#				Room. = 
-				turbogears.flash('Recorded Updated with %d rooms created, %d rooms marked deleted, %d duplicate room entries and %d rooms un-deleted' \
-				% (NewRoomCount,DelRoomCount,DuplicateRooms/2, UnDelRoomCount))
-		elif Operation=='Delete' and WardID!=None:
-			# We need to check if any of the id's are in use before attempting to delete an address from the system
-			if len(Ward.Rooms)>0:
-				# Mark the items deleted
-				Ward.Status = 'deleted'
+				Room.IsTempClosed = IsTempClosed
+				Room.RoomNr = RoomNr
+				Room.WardNrID = WardNrID
+				if WardNrID == None: # Don't allow editing of the department unless the ward is blank
+					Room.DeptNrID = DeptNrID
+				else:
+					Room.DeptNrID = None
+				Room.NrOfBeds = NrOfBeds
+				Room.Info = Info
+				Room.ClosedBeds = ClosedBedsString
+				turbogears.flash('Recorded Updated')
+		elif Operation=='Delete' and RoomID!=None:
+			# Just check to make sure no one is using the room at the time
+			if len(model.GetBedActivityInformation(RoomID=RoomID)) > 0:
+				# Mark the item deleted
+				Room.Status = 'deleted'
 				turbogears.flash('Record Marked Deleted')
 			else:
-				Ward.destroySelf()
-				WardID = None
+				Room.destroySelf()
+				RoomID = None
 				turbogears.flash('Record Deleted')
 		elif Operation=='Un-Delete' and WardID!=None:
-			Ward.Status = ''
+			Room.Status = ''
 			turbogears.flash('Record Un-Deleted')
 		elif Operation=='Cancel':
 			turbogears.flash('Updates Cancelled')
 		elif Operation=='New':
-			WardID=''
+			RoomID=''
 		else:
 			turbogears.flash('Error in processing request')
-		if WardID in ['',None]:
-			raise cherrypy.HTTPRedirect('WardsEditor')
+		if RoomID in ['',None]:
+			raise cherrypy.HTTPRedirect('RoomsEditor')
 		else:
-			raise cherrypy.HTTPRedirect('WardsEditor?WardID=%d' % WardID)
+			raise cherrypy.HTTPRedirect('RoomsEditor?RoomID=%d' % RoomID)
 		
 	@expose(format='json')
 	def RoomsEditorQuickSearch(self, QuickSearchText='', **kw):
 		'''	Search for an existing location entry '''
+		QuickSearchText = str(QuickSearchText)
 		if QuickSearchText=='*':
-			wards = model.Ward.select(orderBy=[model.Ward.q.Name])
+			rooms = model.Room.select(orderBy=[model.Room.q.RoomNr])
 		else:
-			wards = model.Ward.select(model.Ward.q.Name.contains(str(QuickSearchText)),orderBy=[model.Ward.q.Name])
+			rooms = model.Room.select(OR (AND (model.Ward.q.id==model.Room.q.WardNrID, model.Ward.q.Name.contains(str(QuickSearchText))),
+			AND(model.Department.q.id==model.Room.q.DeptNrID,model.Department.q.NameFormal.contains(QuickSearchText))),
+			orderBy=[model.Ward.q.Name, model.Department.q.NameFormal, model.Room.q.RoomNr],distinct=True)
 		results = []
-		for item in wards:
-			results.append(dict(id=item.id, text=item.Name))
+		for item in rooms:
+			if item.WardNrID not in [0, None]:
+				results.append(dict(id=item.id, text='%s - %d' % (item.WardNr.Name, item.RoomNr)))
+			elif item.DeptNrID not in [0, None]:
+				results.append(dict(id=item.id, text='%s - %d' % (item.DeptNr.NameFormal, item.RoomNr)))
+			else:
+				results.append(dict(id=item.id, text='Un-linked room #%d' % item.RoomNr))
 		return dict(results=results)
 		
 	@expose(format='json')
 	@identity.require(identity.has_permission("admin_controllers_configuration"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
-	def RoomsEditorDepartmentSelect(self, SearchText='', **kw):
+	def RoomsEditorWardSelect(self, SearchText='', **kw):
 		'''	Load the department item options
 		'''
 		SearchText = str(SearchText)
-		items = model.Department.select(model.Department.q.NameFormal.contains(SearchText),
-			orderBy=[model.Department.q.NameFormal])
+		items = model.Ward.select(model.Ward.q.Name.contains(str(SearchText)),orderBy=[model.Ward.q.Name])
 		results = []
 		for item in items:
-			results.append(dict(id=item.id, text='%s (%d)' % (item.NameFormal,item.id)))
-		return dict(results=results, function_name='WardsEditorDepartmentSelect')
+			results.append(dict(id=item.id, text='%s (%d)' % (item.Name,item.id)))
+		return dict(results=results, function_name='RoomsEditorWardSelect')
+		
+	def GetDefaultCustomerLocationID(self):
+		'''	When moving inventory to a location where it's sold, we need to mark the new location as the customer
+			location.  Most customers should have a location already defined, but we need
+			a default just in case
+		'''
+		items = model.InvLocation.select(model.InvLocation.q.Name.contains('Customer'))
+		if items.count() > 0:
+			return items[0].id
+		else:
+			return None
+	
+	@expose(html='turbocare.templates.config_DoctorsEditor')
+	@validate(validators={'PersonellID':validators.Int(),'PersonID':validators.Int(),'CustomerID':validators.Int()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def DoctorsEditor(self, PersonellID=None, PatientID=None, CustomerID=None, **kw):
+		'''	Either load a Doctor for editing, or bring up an empty form for adding a Doctor ward
+			A Doctor, just like anyone else in the system, should have a Person and Customer Record
+		'''
+		def Checked(value):
+			if value:
+				return "checked"
+			else:
+				return None
+		def CreateCustomer(Person):
+			"""	Create a customer record based on the PersonID """
+			citytown = model.AddressCityTown.get(Person.AddrCitytownNrID)
+			AddressLabel = '%s\n%s\n%s, %s\n%s\n%s' % (Person.AddrStr, citytown.Name, citytown.Block, citytown.District, citytown.State, citytown.ZipCode)			
+			PersonName = ('%s %s,%s,%s' % (Person.Title, Person.NameFirst, Person.NameMiddle, Person.NameLast)).replace(',,',',').replace(',', ' ').strip()
+			customer = model.InvCustomer(Name=PersonName ,CityID=Person.AddrCitytownNrID , AddressLabel=AddressLabel, CreditAmount=0.0, \
+				InventoryLocation=self.GetDefaultCustomerLocationID(), ExternalID=Person.id)
+			return customer
+			
+		result = {} # The dictionary for our template variables
+		# Attempt to load person information, PersonellID will take precedence
+		log.debug('DoctorsEditor, PersonellID: %d, PatientID: %d, CustomerID: %d' % (PersonellID, PatientID, CustomerID))
+		if PersonellID != None:
+			try:
+				Personell = model.Personell.get(PersonellID)
+				Person = Personell.Person
+				PersonID = Person.id
+				if len(Person.Customer) == 0:
+					turbogears.flash("Note: A customer record was added for the Doctor (a required record by the program)")
+					Customer = CreateCustomer(Person)
+				else:
+					Customer = Person.Customer[0]
+			except SQLObjectNotFound, errorstr:
+				turbogears.flash("There was an error in trying to load the Doctor.")
+				errorArr = errorstr[0].split(' ')
+				table = errorArr[2]
+				id = errorArr[6]
+				if table == 'InvCustomer':
+					Location.DepartmentID = None
+					#raise cherrypy.HTTPRedirect('LocationsEditor?LocationID=%d' % LocationID)
+				else:
+					#raise cherrypy.HTTPRedirect('LocationsEditor?DepartmentID=%d' % DepartmentID)
+					pass
+		elif PatientID != '':
+			try:
+				patient = model.Person.get(int(PatientID))
+				#Search for the customer record for the patient (to get financial information)
+				customers = model.InvCustomer.select(AND (model.InvCustomer.q.ExternalID == patient.id, \
+					model.InvCustomer.q.Status != 'deleted'))
+				if customers.count() == 0:
+					#if the patient doesn't have a customer record, create one
+					log.debug('....Creating customer record')
+					if patient.AddrCitytownNrID == 0:
+						patient.AddrCitytownNrID = None
+					if patient.AddrCitytownNrID == None:
+						AddressLabel = 'No Address Provided'
+					else:
+						AddressLabel = '%s\n%s\n%s, %s\n%s\n%s' % (patient.AddrStr, patient.AddrCitytownNr.Name, patient.AddrCitytownNr.Block, \
+							patient.AddrCitytownNr.District, patient.AddrCitytownNr.State, patient.AddrCityTownNr.ZipCode)
+					PatientName = ('%s %s,%s,%s' % (patient.Title, patient.NameFirst, patient.NameMiddle, patient.NameLast)).replace(',,',',').replace(',', ' ').strip()
+					customer = model.InvCustomer(Name=PatientName ,Phone1=patient.Phone1Nr , Phone2=patient.Phone2Nr , Fax=patient.Fax , \
+						EMail1=patient.Email , CityID=patient.AddrCitytownNrID , AddressLabel=AddressLabel, CreditAmount=0.0, \
+						InventoryLocation=self.GetDefaultCustomerLocationID(), ExternalID=patient.id)
+					CustomerID = customer.id
+				else:
+					#Attach to the first matching customer record
+					log.debug('....loading customer record')
+					customer = customers[0]
+					CustomerID = customer.id
+			except:
+				raise
+		if patient == None:
+			NameFirst = ''
+			NameMiddle = ''
+			NameLast = ''
+			AddressStreet = ''
+			AddrCitytownNrID = ''
+			CityTownName = ''
+			PostOffice = ''
+			Block = ''
+			District = ''
+			State = ''
+			Country = ''
+			PatientID=''
+			Age=''
+			DateBirth=''
+			SelectedCity = 'No City Selected'
+		else:
+			NameFirst = patient.NameFirst
+			NameMiddle = patient.NameMiddle
+			NameLast = patient.NameLast
+			AddressStreet = patient.AddrStr
+			if patient.AddrCitytownNrID == 0:
+				patient.AddrCitytownNrID = None
+			AddrCitytownNrID = patient.AddrCitytownNrID
+			if AddrCitytownNrID == None:
+				CityTownName = ''
+				PostOffice = ''
+				Block = ''
+				District = ''
+				State = ''
+				Country = ''
+			else:
+				CityTownName = patient.AddrCitytownNr.Name
+				PostOffice = patient.AddrCitytownNr.ZipCode
+				Block = patient.AddrCitytownNr.Block
+				District = patient.AddrCitytownNr.District
+				State = patient.AddrCitytownNr.State
+				Country = patient.AddrCitytownNr.IsoCountryId
+			DateBirth = patient.DateBirth.strftime(DATE_FORMAT)
+			if AddrCitytownNrID == None:
+				SelectedCity = 'No city selected'
+			else:
+				SelectedCity = '(id:%d) %s in %s, %s (%s)' % (AddrCitytownNrID, Block, CityTownName, \
+					District, PostOffice)
+			PatientID = patient.id
+		# Load the latest encounter information (this contains patient type information)
+		if patient == None:
+			encounter = None
+		else:
+			try:
+				encounter = model.Encounter.get(patient.GetLatestEncounter())
+			except AssertionError:
+				#AssertionError when patient.GetLatestEncounter() returns "None"
+				encounter = None
+			except:
+				raise
+				encounter = None
+		if encounter == None:
+			InsuranceNumber = ''
+		else:
+			InsuranceNumber = encounter.InsuranceNr
+		# Load our patient types: similar to titles
+		PatientType = ''
+		if encounter != None:
+			PatientType = encounter.InsuranceClassNrID
+		else:
+			PatientType = 3 # 3=self_pay
+		patienttypes = []
+		items = model.ClassInsurance.select()
+		for patienttype in items:
+			if patienttype.id == PatientType:
+				patienttypes.append(dict(id=patienttype.id, name=patienttype.Name, selected='selected'))
+			else:
+				patienttypes.append(dict(id=patienttype.id, name=patienttype.Name, selected=None))
+		# Load our firm names: similar to titles
+		FirmID = ''
+		if encounter != None:
+			FirmID = encounter.InsuranceFirmId
+		firms=[]
+		items = model.InsuranceFirm.select()
+		for firm in items:
+			if firm.FirmId == FirmID:
+				firms.append(dict(id=firm.FirmId, name=firm.Name, selected='selected'))
+			else:
+				firms.append(dict(id=firm.FirmId, name=firm.Name, selected=None))
+		# Load our titles: we need title.name and title.selected (where title.selected = 'selected' for the patient's title)
+		Title = ''
+		if patient != None:
+			Title = patient.Title
+		items=['Ms.', 'Mrs.', 'Mr.', 'Dr.']
+		titles=[]
+		for title in items:
+			if title == Title:
+				titles.append(dict(id=title, name=title, selected='selected'))
+			else:
+				titles.append(dict(id=title, name=title, selected=None))
+		# Load our genders: similar to titles
+		Gender = ''
+		#Care2x wants lower case variables -- sheesh.
+		if patient != None:
+			patient.Sex = patient.Sex.lower()
+			Gender = patient.Sex
+		else:
+			Gender = 'u'
+		items=model.dbGender
+		genders=[]
+		for gender in items:
+			if gender == Gender.upper():
+				genders.append(dict(id=gender, name=gender, selected='selected'))
+			else:
+				genders.append(dict(id=gender, name=gender, selected=None))		
+		# Load our religions: similar to titles
+		Religion = ''
+		if patient != None:
+			Religion = patient.Religion
+		else:
+			Religion = 'Unknown'
+		items=model.dbReligion
+		religions=[]
+		for religion in items:
+			if religion == Religion:
+				religions.append(dict(id=religion, name=religion, selected='selected'))
+			else:
+				religions.append(dict(id=religion, name=religion, selected=None))
+		# Load our tribes: similar to titles 
+		if patient!=None and patient.EthnicOrigID!=None:
+			Tribe = patient.EthnicOrig.Name
+		else:
+			Tribe = ''
+		items= model.TypeEthnicOrig.select(AND (model.TypeEthnicOrig.q.ClassNrID==model.ClassEthnicOrig.q.id,
+			model.ClassEthnicOrig.q.Name == 'Tribe'),orderBy=[model.TypeEthnicOrig.q.Name])
+		tribes=[]
+		for tribe in items:
+			if tribe.Name == Tribe:
+				tribes.append(dict(id=tribe.id, name=tribe.Name, selected='selected'))
+			else:
+				tribes.append(dict(id=tribe.id, name=tribe.Name, selected=None))
+		# Load previous registration information
+		History = []
+		if customer != None:
+			History.append('Name: %s' % customer.Name)
+			PastDues = customer.CalcPayment() - customer.CalcPaid()
+			if PastDues > 0:
+				History.append('Past dues: %d' % PastDues)
+			elif PastDues == 0:
+				History.append('Past dues: None')
+			else:
+				History.append('Credit: %d' % abs(PastDues))
+			if encounter != None:
+				History.append('Last visit: %s' % encounter.EncounterDate.strftime(DATE_FORMAT))
+				History.append('Visit count: %d' % len(patient.Encounters))
+				if encounter.EncounterDate.strftime(DATE_FORMAT) == datetime.datetime.now().strftime(DATE_FORMAT):
+					History.append('Already registered today')
+				elif (encounter.EncounterClassNr.Name == 'Inpatient') and (not encounter.IsDischarged):
+					History.append('Currently admitted')
+		else:
+			History.append('NEW PATIENT')
+		# Calculate the age in years (using the days between, plus 1/2 a day)
+		if DateBirth != '':
+			Age = int(((datetime.datetime.now().date() - patient.DateBirth).days+0.5)/365.25)
+		else:
+			Age = ''
+		return dict(tribes=tribes, titles=titles,genders=genders,religions=religions,firms=firms, patienttypes=patienttypes,\
+			InsuranceNumber=InsuranceNumber,NameFirst=NameFirst,NameMiddle=NameMiddle,NameLast=NameLast,\
+			AddressStreet=AddressStreet,AddrCitytownNrID=AddrCitytownNrID,CityTownName=CityTownName,PostOffice=PostOffice,\
+			Block=Block,District=District,State=State,Country=Country, history=History, SelectedCity=SelectedCity,\
+			PatientID=PatientID, CustomerID=CustomerID, DateBirth=DateBirth, Age=Age)
+	
+	@expose()
+	@validate(validators={'RoomNr':validators.Int(),'Info':validators.String(),'DateCreate':validators.String(),\
+		'DateClose':validators.String(),'IsTempClosed':validators.Bool(),'DeptNrID':validators.Int(),\
+		'NrOfBeds':validators.Int(),'WardNrID':validators.Int(),'RoomID':validators.Int(),'Operation':validators.String()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
+	def DoctorsEditorSave(self, RoomNr=None, Info='', DateCreate='', DateClose='', IsTempClosed=None,
+		 NrOfBeds=None,  DeptNrID=None, WardNrID=None, RoomID=None, Operation='', ClosedBeds=[], **kw):
+		'''	Save changes.  Either create a new entry, update an existing entry or attempt to delete an entry 
+			Save/Cancel/New/Delete are the various operations we have
+		'''
+		log.debug('RoomsEditorSave')
+		if RoomID!=None:
+			try:
+				Room = model.Room.get(RoomID)
+			except SQLObjectNotFound: #, errorstr:
+				turbogears.flash("There is an error on a database entry I thought should exist, but doesn't, so all the changes are lost.  Try again.")
+				raise cherrypy.HTTPRedirect('RoomsEditor')
+		if Operation=='Save': # Either update or create a new entry
+			log.debug('...Save')
+			# Type room configuration
+			RoomTypes = model.TypeRoom.select(model.TypeRoom.q.Type=='ward')
+			if RoomTypes.count() == 0:
+				RoomType = model.TypeRoom(Type='ward', Name='Ward room')
+				RoomTypeID = RoomType.id
+			else:
+				RoomTypeID = RoomTypes[0].id
+			Info = str(Info)
+			# Silly but necessary date manipulations (I really wish the validators for dates worked!!!)
+			if not DateCreate in ['',None]:
+				DateCreate = datetime.fromtimestamp(time.mktime(time.strptime(DateCreate[0:10],DATE_FORMAT)))
+			else:
+				DateCreate = None
+			if not DateClose in ['',None]:
+				DateClose = datetime.fromtimestamp(time.mktime(time.strptime(DateClose[0:10],DATE_FORMAT)))
+			else:
+				DateClose = None
+			# Update the Closed Beds variable - NOTE, the variable actually returns back the beds which are NOT closed
+			log.debug(ClosedBeds)
+			if len(ClosedBeds) == 0:
+				ClosedBeds = []
+			elif isinstance(ClosedBeds,basestring):
+				ClosedBeds = [int(ClosedBeds)]
+			else:
+				ClosedBeds = [int(x) for x in ClosedBeds]
+			ClosedBedsString = '' # This will hold the true closed beds (not open beds)
+			for bed in range(1,NrOfBeds+1):
+				if bed not in ClosedBeds:
+					ClosedBedsString += '%d/' % bed
+			if RoomID==None: # Create a new entry
+				log.debug('...New Entry')
+				Room = model.Room(TypeNrID=RoomTypeID,DateCreate=DateCreate,DateClose=DateClose,IsTempClosed=IsTempClosed,
+				RoomNr=RoomNr,WardNrID=WardNrID,DeptNrID=DeptNrID,NrOfBeds=NrOfBeds,Info=Info,ClosedBeds=ClosedBedsString)
+				RoomID = Room.id
+				turbogears.flash('New Entry Created (id: %d)' % RoomID)
+			else: # Update an entry
+				Room.TypeNrID = RoomTypeID
+				Room.DateCreate = DateCreate
+				Room.DateClose = DateClose
+				Room.IsTempClosed = IsTempClosed
+				Room.RoomNr = RoomNr
+				Room.WardNrID = WardNrID
+				if WardNrID == None: # Don't allow editing of the department unless the ward is blank
+					Room.DeptNrID = DeptNrID
+				else:
+					Room.DeptNrID = None
+				Room.NrOfBeds = NrOfBeds
+				Room.Info = Info
+				Room.ClosedBeds = ClosedBedsString
+				turbogears.flash('Recorded Updated')
+		elif Operation=='Delete' and RoomID!=None:
+			# Just check to make sure no one is using the room at the time
+			if len(model.GetBedActivityInformation(RoomID=RoomID)) > 0:
+				# Mark the item deleted
+				Room.Status = 'deleted'
+				turbogears.flash('Record Marked Deleted')
+			else:
+				Room.destroySelf()
+				RoomID = None
+				turbogears.flash('Record Deleted')
+		elif Operation=='Un-Delete' and WardID!=None:
+			Room.Status = ''
+			turbogears.flash('Record Un-Deleted')
+		elif Operation=='Cancel':
+			turbogears.flash('Updates Cancelled')
+		elif Operation=='New':
+			RoomID=''
+		else:
+			turbogears.flash('Error in processing request')
+		if RoomID in ['',None]:
+			raise cherrypy.HTTPRedirect('RoomsEditor')
+		else:
+			raise cherrypy.HTTPRedirect('RoomsEditor?RoomID=%d' % RoomID)
+	
+	@expose(format='json')
+	def DoctorsEditorSearchDoctor(self, QuickSearchText):
+		'''	search for Doctors
+		'''
+		DoctorName = DoctorName.lower()
+		items=model.Personell.select(AND (model.Personell.q.JobFunctionTitle == 'Doctor',\
+			model.Personell.q.Status != 'deleted', model.Personell.q.IsDischarged == False))
+		doctors = [x.DisplayName() for x in items]
+		if len(doctors) > 0:
+			return dict(doctors=filter(lambda doctor: DoctorName in doctor.lower(), doctors))
+		else:
+			return dict(doctors=[])
+
+	@expose(format='json')
+	def DoctorsEditorCityTownSearch(self, CityTownName='', PostOffice='', Block='', District='', State='', Country='',  **kw):
+		'''	Search for Addresses (by Block, City/Town, District, State)
+		'''
+		qArgs = ''
+		if CityTownName != '':
+			qArgs+="model.AddressCityTown.q.Name.contains('"+ CityTownName + "'),"
+		if PostOffice != '':
+			qArgs+="model.AddressCityTown.q.ZipCode.contains('"+ PostOffice + "'),"
+		if District != '':
+			qArgs+="model.AddressCityTown.q.District.contains('"+ District + "'),"
+		if State != '':
+			qArgs+="model.AddressCityTown.q.State.contains('"+ State + "'),"
+		if Country != '':
+			qArgs+="model.AddressCityTown.q.IsoCountryId.contains('"+ Country + "'),"
+		if Block != '':
+			qArgs+="model.AddressCityTown.q.Block.contains('"+ Block + "'),"
+		if len(qArgs) > 0:
+			log.debug('Query String [Args]: model.AddressCityTown.select(AND (%s))' % qArgs[:-1])
+			items = eval('model.AddressCityTown.select(AND (%s))' % qArgs[:-1])
+		else:
+			items = []
+		Results = []
+		for item in items:
+			Text = '(id:%d) %s' % (item.id, item.DisplayName())
+			Results.append(dict(id=item.id,text=Text,city_town_name=item.Name, post_office=item.ZipCode, \
+				district=item.District, state=item.State, country=item.IsoCountryId, block=item.Block))
+		return dict(result_count=len(Results), results=Results, city_town_name=CityTownName, post_office=PostOffice,\
+			block=Block, district=District, state=State, country=Country)
