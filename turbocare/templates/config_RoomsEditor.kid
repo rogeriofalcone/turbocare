@@ -42,7 +42,8 @@
 						<div class="row">
 							<div style="width:200px" class="label"><input id="btnDeptNrID" type="button" value="Department" ></input></div>
 							<div id="DeptNrID">
-								${DeptNrName}
+								<a py:if="DeptNrID not in [0,'',None]" href="LocationsEditor?DepartmentID=${DeptNrID}">${DeptNrName}</a>
+								<span py:if="DeptNrID in [0,'',None]">${DeptNrName}</span>
 								<INPUT name="DeptNrID" type="hidden" value="${DeptNrID}"></INPUT>
 							</div>
 						</div>
@@ -75,7 +76,7 @@
 						<div class="row">
 							<div style="width:200px" class="label">Open/Closed Beds (checked is open)</div>			
 							<div >
-								<INPUT py:for="bed in ClosedBeds" name="ClosedBeds" type="checkbox" checked="${bed['checked']}">${bed['BedNr']}</INPUT>
+								<INPUT py:for="bed in ClosedBeds" name="ClosedBeds" type="checkbox" checked="${bed['checked']}" value="${bed['BedNr']}">${bed['BedNr']}</INPUT>
 							</div>
 						</div>
 						<div class="row">

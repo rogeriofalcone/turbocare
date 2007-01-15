@@ -348,6 +348,13 @@ connect(window, 'onload', function(){
 		connect(dateInputs[i],"onclick",config.DatePick);
 		connect(dateInputs[i],"onkeydown",config.DatePick);
 	}
+	if (getElement('btnDelete')!=null){
+		connect('btnDelete','onclick',function(e) {
+			if (!confirm('Are you sure you want to delete?')) {
+				e.stop();
+			}
+		});
+	}
 });
 //Connect on onload for the document to open the document using javascript
 connect(window, 'onload', config.OpenOnLoad);

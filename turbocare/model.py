@@ -403,6 +403,7 @@ class Person(SQLObject):
 	Occupation = StringCol(length=60,dbName='occupation',default=None)
 	Encounters = MultipleJoin("Encounter",joinColumn="pid")
 	Customer = MultipleJoin("InvCustomer", joinColumn="external_id")
+	Personell = MultipleJoin("Personell",joinColumn="pid")
 	Status = StringCol(length=20, default='',dbName='status')
 	History = StringCol(length=255, default='',dbName='history')
 	ModifyId = StringCol(length=35,default=cur_user_id())#varchar(35) NOT NULL default '',
