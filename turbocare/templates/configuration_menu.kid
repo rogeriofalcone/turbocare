@@ -42,7 +42,7 @@
 					</div>
 				</div>
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href=""></a>Doctors</div>
+					<div style="text-align: left" class="clear"><a href="DoctorsEditor">Doctors</a></div>
 					<div style="text-align: left" class="clear">
 						Manage the list of Doctors
 					</div>

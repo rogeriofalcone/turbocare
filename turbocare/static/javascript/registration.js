@@ -194,9 +194,9 @@ reg.collectPostVars = function(f){
     {
       if(postVars!='') postVars+='&';
       if (getNodeAttribute(f.elements[i],'multiple') != null) {
-      	postVars+= f.elements[i].name +'='+ reg.multiselect_csv(f.elements[i].id);
+      	postVars+= f.elements[i].name +'='+ encodeURIComponent(reg.multiselect_csv(f.elements[i].id));
       } else {
-      	postVars+= f.elements[i].name +'='+ f.elements[i].options[f.elements[i].selectedIndex].value;
+      	postVars+= f.elements[i].name +'='+ encodeURIComponent(f.elements[i].options[f.elements[i].selectedIndex].value);
       }
     }
   }
