@@ -15,8 +15,8 @@ shortcuts.keydown = function(dom_obj){
 		if ((ID != null) && (ID.value != null) && (ID.value != '')){
 			//Load the items available for the customer
 			config.idDialog_remove();
-			var postVars = 'RoomID='+ID.value;
-			document.location.href = 'RoomsEditor?'+postVars;
+			var postVars = 'PersonellID='+ID.value;
+			document.location.href = 'DoctorsEditor?'+postVars;
 		}
 	}
 }
@@ -40,6 +40,8 @@ function redraw(){
 
 var config = {};
 config.FkDivID = null;
+config.DateBirth = null;
+config.Age = null;
 
 config.collectPostVars = function(f){
   var postVars='';
@@ -149,7 +151,7 @@ config.QuickSearch = function(dom_obj){
 		config.toggle_message("Searching...");
 		var postVars = 'QuickSearchText='+getElement('QuickSearch').value;
 		// The following line needs to point to the function which is used for the quick search in your context
-		var d = postJSON('RoomsEditorQuickSearch',postVars);
+		var d = postJSON('DoctorsEditorSearchDoctor',postVars);
 		d.addCallbacks(config.RenderQuickSearch,config.error_report);
 	}
 }
@@ -163,13 +165,338 @@ config.QuickSearchClear = function(dom_obj){
 		getElement('QuickSearch').value = '';
 	}
 }
-/*
+/* 	
+	RenderQuickSearch: Render the Quick Search Results
+*/
+config.RenderQuickSearch = function(data){
+	var AddResultRow = function(URL,PostVar,Text){
+		var row = createDOM('LI',null);
+		if (URL!=null) {
+			var A = createDOM('A',{'href':URL+'?'+PostVar},Text);
+		} else {
+			var A = Text;
+		}
+		replaceChildNodes(row, A);
+		return row;
+	}
+	//Reset the message
+	config.toggle_message("");
+	//Make our results list
+	var QuickSearchResults = getElement('QuickSearchResults');
+	replaceChildNodes(QuickSearchResults,null);
+	var results = data.results;
+	QuickSearchResults.appendChild(AddResultRow(null,null,'There are '+results.length+' result(s)'));
+	for (i=0; i<results.length; i++) {
+		QuickSearchResults.appendChild(AddResultRow('DoctorsEditor','PersonellID='+results[i].id,results[i].text));
+	}
+}/*
 	Set the focus on the name field
 */
 config.OpenOnLoad = function() {
-	if (getElement('Name')!=null) {
-		getElement('Name').focus();
+	if (getElement('NameFirst')!=null) {
+		getElement('NameFirst').focus();
 	}
+}
+/*
+	When someone enters an age, modify the DateBirth
+	entry to match the age to the date.
+*/
+config.AgePickUpdate = function(dom_obj){
+	var Age = getElement('Age').value;
+	if (Age == '') {
+		return false;
+	} else if (isNaN(Age)){
+		getElement('Age').value = '';
+	} else if (Age != config.Age) {
+		var Today = new Date();
+		var DateBirth = new Date(Today.getFullYear() - Age, Today.getMonth(), Today.getDate());
+		getElement('DateBirth').value = toISODate(DateBirth);
+		config.Age = Age;
+		config.DateBirth = toISODate(DateBirth);
+	}
+}
+/*
+	When a date has been entered, update
+	the age box
+*/
+config.DatePickUpdate = function(dom_obj){
+	var DateBirth = isoDate((getElement("DateBirth").value).slice(0,10));
+	getElement('DateBirth').value = toISODate(DateBirth);
+	if (getElement('DateBirth').value != config.DateBirth) {
+		var Today = new Date();
+		var diff = Today.getTime() - DateBirth.getTime();
+		getElement('Age').value = parseInt((diff + 43200000)/(31557600000));
+		config.Age = getElement('Age').value;
+		config.DateBirth = toISODate(DateBirth);
+	}
+}
+/*
+	Call the search procedure and return the results below
+*/
+config.CityTownSearchKeyDown = function(dom_obj){
+	if (dom_obj.key()['string']=='KEY_ENTER') {
+		var Input = dom_obj.src();
+		dom_obj.stop();
+		config.toggle_message("Searching...");
+		var postVars = Input.name + '=' + Input.value;
+		var d = postJSON('DoctorsEditorCityTownSearch',postVars);
+		d.addCallbacks(config.RenderCityTownSearch,config.error_report);
+	}
+}
+/* 	Render the AddressCityTown search screen
+	This is just the main part of the box, not the 
+	search results
+*/
+config.RenderCityTownSearch = function(data){
+	var Input = function(name, value, label) {
+		if (label == null) {
+			label = name;
+		}
+		if (value == null) {
+			value = '';
+		}
+		var row = createDOM('DIV',{'id':'row_cts_'+name, 'class':'row'});
+		var title = createDOM('DIV',null,label);
+		var input = createDOM('INPUT',{'id':'cts_'+name,'type':'text','name':name,'value':value}); //cts: city town search
+		var data = createDOM('DIV',null);
+		data.appendChild(input);
+		appendChildNodes(row,title,data);
+		return row;
+	}
+	//Reset the message
+	config.toggle_message("");
+	//Remove any existing search box
+	if (getNodeAttribute('CityTownSearchBox','class') == 'dialogbox') {
+		config.CloseCityTownSearch();
+	}
+	var dialog = createDOM('DIV',{'style':'height:400px; width:400px', 'id':'CityTownSearchBox','class':'dialogbox'});
+	var shadow = createDOM('DIV',{'id':'CityTownSearchBoxShadow','style':'height:410px;width:410px','class':'dialogbox_shadow'});
+	//Close link
+	var close_link = createDOM('A',{'href':'javascript:config.CloseCityTownSearch()'},"Close");
+	dialog.appendChild(close_link);
+	//The main table
+	var table = createDOM('DIV',{'id':'CityTownSearchTable','class':'divtable_input'});
+	// Add fields
+	var firstrow = Input('CityTownName',data.city_town_name,'City name');
+	table.appendChild(firstrow);
+	table.appendChild(Input('Block',data.block));
+	table.appendChild(Input('District',data.district));
+	table.appendChild(Input('PostOffice',data.post_office));
+	table.appendChild(Input('State',data.state));
+	table.appendChild(Input('Country',data.country));
+	//Add button
+	table.appendChild(createDOM('INPUT',{'id':'btnCityTownSearch','type':'BUTTON','value':'Search'}));
+	//Create our dialog
+	dialog.appendChild(table);
+	document.body.appendChild(shadow);
+	setOpacity(shadow,0.5);
+	document.body.appendChild(dialog);
+	//Add a place for the Search results
+	dialog.appendChild(createDOM('DIV',{'id':'CityTownSearchResults','style':'overflow:auto;height:180px;font-size:11px;width:390px;list-style-type: none','class':'ListItemRow'},'Press Search'));
+	//Attach our button event
+	connect('btnCityTownSearch','onclick',config.CityTownSearchUpdate);
+	//Attach our Enter event
+	var Inputs = getElementsByTagAndClassName('INPUT',null,table);
+	for (i=0; i<Inputs.length; i++) {
+		if (getNodeAttribute(Inputs[i],'type')=='text') {
+			connect(Inputs[i],'onkeydown',config.CityTownSearchUpdateKeyDown);
+		}
+	}
+	//connect the dialog box to another event handler for up/down arrow keys and enter key press outside the fields
+	connect(dialog,'onkeydown',config.CityTownSearchKeydown);
+	//Set the focus to our first field
+	getElement('cts_CityTownName').focus();
+	//Check if we have results to render
+	if (data.result_count > 0) {
+		config.RenderCityTownSearchResults(data);
+	}
+}
+config.CityTownSearchUpdateKeyDown = function(dom_obj){
+	if (dom_obj.key()['string']=='KEY_ENTER') {
+		config.CityTownSearchUpdate();
+		dom_obj.stopPropagation();
+	} else if (dom_obj.key()['string']=='KEY_ARROW_DOWN') {
+		// Move the focus to the search area if there are search results
+		config.CityTownSearchKeydown(dom_obj);
+	}
+}
+/*
+	Perform a search (with updated inputs)
+	The form must be rendered before this function will work.
+*/
+config.CityTownSearchUpdate = function(){
+	if (getNodeAttribute('CityTownSearchBox','class') == 'dialogbox') {
+		var District = getElement('cts_District').value;
+		var CityTownName = getElement('cts_CityTownName').value;
+		var PostOffice = getElement('cts_PostOffice').value;
+		var State = getElement('cts_State').value;
+		var Block = getElement('cts_Block').value;
+		var Country = getElement('cts_Country').value;
+		
+		var postVars = 'District='+District+'&CityTownName='+CityTownName+'&PostOffice='+PostOffice+'&State='+State+'&Block='+Block+'&Country='+Country;
+		var d = postJSON('DoctorsEditorCityTownSearch',postVars);
+		d.addCallbacks(config.RenderCityTownSearchResults,config.error_report);
+	}
+}
+/*
+	Close the address city/town search box
+*/
+config.CloseCityTownSearch = function() {
+	swapDOM('CityTownSearchBox',null);
+	swapDOM('CityTownSearchBoxShadow',null);
+}
+/*
+	Handles the enter key for the search results
+	and the up and down arrows to navigate the
+	results
+*/
+config.CityTownSearchKeydown = function(dom_obj){
+	//get the current hi-lite row
+	var rows = getElementsByTagAndClassName('LI','lite','CityTownSearchResults');
+	if (rows.length == 0) {
+		var rows = getElementsByTagAndClassName('LI',null,'CityTownSearchResults');
+		if (rows.length == 0) {
+			//exit the function if we have no results to work with
+			return;
+		}
+		var row = rows[0];
+		setNodeAttribute(row,'class','lite');
+	} else {
+		var row = rows[0];
+	}
+	//Process the even
+	dom_obj.stop();
+	if (dom_obj.key()['string']=='KEY_ENTER') {
+		config.SelectCityTownResult(dom_obj);
+	} else if 	(dom_obj.key()['string']=='KEY_ARROW_UP') {
+		//find the row before our selected row
+		var rows = getElementsByTagAndClassName('LI',null,'CityTownSearchResults');
+		if (rows.length > 1)  {
+			//if the first row is selected, then we'll select the last row
+			if (getNodeAttribute(rows[0],'class') == 'lite') {
+				setNodeAttribute(rows[rows.length-1],'class','lite');
+				setNodeAttribute(rows[0],'class',null);
+			} else {
+				for (i=0; i<rows.length; i++) {
+					if (getNodeAttribute(rows[i+1],'class')=='lite') {
+						setNodeAttribute(rows[i],'class','lite');
+						setNodeAttribute(rows[i+1],'class',null);
+						var buttons = getElementsByTagAndClassName('INPUT',null,rows[i]);
+						buttons[0].focus();
+						break;
+					}
+				}
+			}
+		} else if (rows.length == 1) {
+			var buttons = getElementsByTagAndClassName('INPUT',null,rows[0]);
+			buttons[0].focus();
+		}
+	} else if 	(dom_obj.key()['string']=='KEY_ARROW_DOWN') {
+		//find the row after our selected row
+		var rows = getElementsByTagAndClassName('LI',null,'CityTownSearchResults');
+		//do nothing if the number of rows is 1
+		if (rows.length > 1)  {
+			//if the last row is selected, then we'll select the first row
+			if (getNodeAttribute(rows[rows.length-1],'class') == 'lite') {
+				setNodeAttribute(rows[rows.length-1],'class',null);
+				setNodeAttribute(rows[0],'class','lite');
+			} else {
+				for (i=0; i<rows.length; i++) {
+					if (getNodeAttribute(rows[i],'class')=='lite') {
+						setNodeAttribute(rows[i+1],'class','lite');
+						setNodeAttribute(rows[i],'class',null);
+						var buttons = getElementsByTagAndClassName('INPUT',null,rows[i+1]);
+						buttons[0].focus();
+						break;
+					}
+				}
+			}
+		} else if (rows.length == 1) {
+			var buttons = getElementsByTagAndClassName('INPUT',null,rows[0]);
+			buttons[0].focus();
+		}
+	}
+	dom_obj.stop();
+}
+/*
+	After the search box is rendered, display any results that we have
+*/
+config.RenderCityTownSearchResults = function(data){
+	var AddResultRow = function(result){
+		var row = createDOM('LI',null);
+		var Button = createDOM('INPUT',{'style':'font-size:8px', 'type':'BUTTON','value':'Select', 'name':'btnSearchResultItem'});
+		var ID = createDOM('INPUT',{'type':'HIDDEN','value':result.id,'name':'ID'});
+		var Block = createDOM('INPUT',{'type':'HIDDEN','value':result.block,'name':'Block'});
+		var District = createDOM('INPUT',{'type':'HIDDEN','value':result.district,'name':'District'});
+		var CityTownName = createDOM('INPUT',{'type':'HIDDEN','value':result.city_town_name,'name':'CityTownName'});
+		var PostOffice = createDOM('INPUT',{'type':'HIDDEN','value':result.post_office,'name':'PostOffice'});
+		var State = createDOM('INPUT',{'type':'HIDDEN','value':result.state,'name':'State'});
+		var Country = createDOM('INPUT',{'type':'HIDDEN','value':result.country,'name':'Country'});
+		var Display = result.text;
+		replaceChildNodes(row, Button,Display,ID,Block, District, CityTownName, PostOffice, State, Country);
+		return row;
+	}
+	//Reset the message
+	config.toggle_message("");
+	//Make our results list
+	var SearchResults = getElement('CityTownSearchResults');
+	replaceChildNodes(SearchResults,null);
+	var results = data.results;
+	for (i=0; i<results.length; i++) {
+		var row = AddResultRow(results[i]);
+		SearchResults.appendChild(row);
+		//hi-lite the first row
+		if (i==0) {
+			setNodeAttribute(row,'class','lite');
+		}
+	}
+	//Connect our buttons
+	var Inputs = getElementsByTagAndClassName('INPUT',null,SearchResults);
+	for (i=0; i<Inputs.length; i++) {
+		if (getNodeAttribute(Inputs[i],'name')=='btnSearchResultItem') {
+			connect(Inputs[i],'onclick',config.SelectCityTownResult);
+		}
+	}
+}
+/*
+	A click on the select button will call this function
+	and store the result and values into the current form
+*/
+config.SelectCityTownResult = function(dom_obj) {
+	if (dom_obj.src().value == 'Select') {
+		//In this case, someone pressed the "Select" button
+		var row = dom_obj.src().parentNode;
+	} else {
+		var row = null;
+		//In this case, someone pressed enter somewhere on the form.  Look for the item which is hi-lited
+		var rows = getElementsByTagAndClassName('LI','lite','CityTownSearchResults');
+		if (rows.length > 0) {
+			row = rows[0];
+		}
+	}
+	if (row != null) {
+		var Inputs = getElementsByTagAndClassName('INPUT',null,row);
+		for (i=0; i<Inputs.length; i++) {
+			if (getNodeAttribute(Inputs[i],'name')=='Block') {
+				getElement('Block').value = Inputs[i].value;
+			} else if (getNodeAttribute(Inputs[i],'name')=='ID') {
+				getElement('AddrCitytownNrID').value = Inputs[i].value;
+			} else if (getNodeAttribute(Inputs[i],'name')=='District') {
+				getElement('District').value = Inputs[i].value;
+			} else if (getNodeAttribute(Inputs[i],'name')=='CityTownName') {
+				getElement('CityTownName').value = Inputs[i].value;
+			} else if (getNodeAttribute(Inputs[i],'name')=='PostOffice') {
+				getElement('PostOffice').value = Inputs[i].value;
+			} else if (getNodeAttribute(Inputs[i],'name')=='State') {
+				getElement('State').value = Inputs[i].value;
+			} else if (getNodeAttribute(Inputs[i],'name')=='Country') {
+				getElement('Country').value = Inputs[i].value;
+			}
+		}
+		var Text = scrapeText(row);
+		replaceChildNodes('SelectedCity',Text);
+	}
+	config.CloseCityTownSearch();
 }
 /*
 	ForeignKey Select box
@@ -177,13 +504,9 @@ config.OpenOnLoad = function() {
 */
 config.FkSelect = function(e) {
 	config.toggle_message("Loading...");
-	if (e.src().id == 'btnDeptNrID') {
-		config.FkDivID = 'DeptNrID'; // The DIV where we want to render our results later
-		var d = postJSON('WardsEditorDepartmentSelect',null);
-	}
-	if (e.src().id == 'btnWardNrID') {
-		config.FkDivID = 'WardNrID'; // The DIV where we want to render our results later
-		var d = postJSON('RoomsEditorWardSelect',null);
+	if (e.src().id == 'btnPersonID') {
+		config.FkDivID = 'PersonID'; // The DIV where we want to render our results later
+		var d = postJSON('DoctorsEditorPersonSelect',null);
 	}
 	d.addCallbacks(config.RenderFkSelect,config.error_report);	
 }
@@ -294,47 +617,17 @@ config.FkSelect_select = function(dom_obj){
 		}
 	}
 	replaceChildNodes(FkDiv,text,createDOM('INPUT',{'name':config.FkDivID,'type':'hidden','value':ID}));
-	// ============== EXTRA processing in the case of Rooms.  Remove this next line for regular foreign key operation
-	config.ClearOtherKey();
-	// ==============
 	config.FkDivID = '';
 	config.FkSelect_remove();
-}
-/*
-	ClearOtherKey: Rooms can either have an Department or Ward foreign key, not both (since a Ward already has
-		a department linked to it).  This function will detect which ForeignKey was updated and clear the other key
-*/
-config.ClearOtherKey = function(){
-	if (config.FkDivID=='WardNrID') {
-		replaceChildNodes('DeptNrID',createDOM('INPUT',{'name':'DeptNrID','type':'hidden','value':''}));
-	} else {
-		replaceChildNodes('WardNrID',createDOM('INPUT',{'name':'WardNrID','type':'hidden','value':''}));
-	}
-}
-/* 	
-	RenderQuickSearch: Render the Quick Search Results
-*/
-config.RenderQuickSearch = function(data){
-	var AddResultRow = function(URL,PostVar,Text){
-		var row = createDOM('LI',null);
-		if (URL!=null) {
-			var A = createDOM('A',{'href':URL+'?'+PostVar},Text);
-		} else {
-			var A = Text;
-		}
-		replaceChildNodes(row, A);
-		return row;
-	}
-	//Reset the message
-	config.toggle_message("");
-	//Make our results list
-	var QuickSearchResults = getElement('QuickSearchResults');
-	replaceChildNodes(QuickSearchResults,null);
-	var results = data.results;
-	QuickSearchResults.appendChild(AddResultRow(null,null,'There are '+results.length+' result(s)'));
-	for (i=0; i<results.length; i++) {
-		QuickSearchResults.appendChild(AddResultRow('RoomsEditor','RoomID='+results[i].id,results[i].text));
-	}
+	//=========== Additional code not belonging to the normal foreign key operation
+	// Un-Hide the DIV with information about saving a person as a doctor
+	getElement('SaveInformation').style.display = 'table';
+	// Hide the edit section
+	getElement('part2').style.display = 'none';
+	getElement('part3').style.display = 'none';
+	getElement('part4').style.display = 'none';
+	getElement('part5').style.display = 'none';
+	//===========
 }
 /*
 	Open a date entry javascript box
@@ -354,14 +647,8 @@ connect(window, 'onload', function(){
 		connect("QuickSearch",'onkeydown',config.QuickSearch);
 		connect("QuickSearch",'onclick',config.QuickSearchClear);
 	}
-	if (getElement("btnEditLocationGroups")!=null) {
-		connect("btnEditLocationGroups",'onclick',config.LocationGroups);
-	}
-	if (getElement("btnDeptNrID")!=null) {
-		connect("btnDeptNrID",'onclick',config.FkSelect);
-	}
-	if (getElement("btnWardNrID")!=null) {
-		connect("btnWardNrID",'onclick',config.FkSelect);
+	if (getElement("btnPersonID")!=null) {
+		connect("btnPersonID",'onclick',config.FkSelect);
 	}
 	//We have some inputs with the  dateEntry class which want to have a date control added
 	var dateInputs = getElementsByTagAndClassName('INPUT',"dateEntry",document);
@@ -375,7 +662,37 @@ connect(window, 'onload', function(){
 				e.stop();
 			}
 		});
-	}});
+	}
+	if (getElement("CityTownName")!=null) {
+		connect("CityTownName",'onkeydown',config.CityTownSearchKeyDown);
+	}
+	if (getElement("btnCityTown")!=null) {
+		connect("btnCityTown",'onclick',config.RenderCityTownSearch);
+	}
+	if (getElement("PostOffice")!=null) {
+		connect("PostOffice",'onkeydown',config.CityTownSearchKeyDown);
+	}
+	if (getElement("Block")!=null) {
+		connect("Block",'onkeydown',config.CityTownSearchKeyDown);
+	}
+	if (getElement("District")!=null) {
+		connect("District",'onkeydown',config.CityTownSearchKeyDown);
+	}
+	if (getElement("State")!=null) {
+		connect("State",'onkeydown',config.CityTownSearchKeyDown);
+	}
+	if (getElement("Country")!=null) {
+		connect("Country",'onkeydown',config.CityTownSearchKeyDown);
+	}
+	if (getElement("Age")!=null) {
+		connect("Age",'onblur',config.AgePickUpdate);
+		config.Age = getElement("Age").value;
+	}
+	if (getElement("DateBirth")!=null) {
+		connect("DateBirth",'onblur',config.DatePickUpdate);
+		config.DateBirth = getElement("DateBirth").value;
+	}
+});
 //Connect on onload for the document to open the document using javascript
 connect(window, 'onload', config.OpenOnLoad);
 
@@ -408,7 +725,7 @@ config.renderIdDialog = function(){
 	var table = createDOM('TABLE',{'class':'regular'});
 	var tbody = createDOM('TBODY',null);
 	// Add field *********************************************** Edit this name
-	tbody.appendChild(StringEdit('RoomID','Room ID',''));
+	tbody.appendChild(StringEdit('PersonellID','Personell ID',''));
 	//Create our dialog
 	table.appendChild(tbody);
 	dialog.appendChild(table);
