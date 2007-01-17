@@ -48,7 +48,7 @@ just press enter if you have no password yet.
 
 at the prompt type:
 
-_create database turbocare_
+_create database turbocare;_
 
 press enter and then ctrl-D to exit. 
 
