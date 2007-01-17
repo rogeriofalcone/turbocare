@@ -5,9 +5,16 @@ This is a quick guide to installing turbocare using mod_python on Ubuntu.  Using
 Commands are in _italics_.
 ==Procedure==
 ===Install mysql, turbocare, python, and apache2 packages.===
+
+_sudo vi /etc/apt/sources.list_
+
+Remove "#" on deb http://in.archive.ubuntu.com/ubuntu/ dapper universe
+and on  deb-src http://in.archive.ubuntu.com/ubuntu/ dapper universe lines.
+
+
 _sudo apt-get install gcc libc6-dev  build-essential_
 
-_sudo apt-get install mysql-server python-reportlab mysql-admin subversion_
+_sudo apt-get install mysql-server python-reportlab subversion_
 
 _sudo apt-get install python-pysqlite2 python-mysqldb python-imaging  python-dev python-setuptools_
 
