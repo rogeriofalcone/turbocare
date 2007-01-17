@@ -26,7 +26,7 @@ _sudo apt-get install apache2 libapache2-mod-python2.4_
 
 _sudo easy_install -UZ setuptools_
 
-_sudo easy_install -UZ TuboGears_
+_sudo easy_install -UZ TuboGears
 
 _sudo easy_install -Z SQLObject_  
 
