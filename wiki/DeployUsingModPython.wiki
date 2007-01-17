@@ -24,7 +24,9 @@ _sudo apt-get install apache2 libapache2-mod-python2.4_
 
 ===Install turbogears===
 
-_sudo easy_install -Z TurboGears
+_wget http://www.turbogears.org/download/tgsetup.py_
+
+_python tgsetup.py_ or _sudo easy_install -Z TurboGears
 
 _sudo easy_install -Z SQLObject_  
 
