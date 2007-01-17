@@ -24,20 +24,20 @@ _sudo apt-get install apache2 libapache2-mod-python2.4_
 
 ===Install turbogears===
 
-_sudo easy_install -UZ setuptools_
+_sudo easy_install -UZ  setuptools_
 
-_sudo easy_install -UZ TuboGears
+_sudo easy_install -UZ  TuboGears
 
-_sudo easy_install -Z SQLObject_  
+_sudo easy_install -Z  SQLObject_  
 
 Note you may need to specify v0.7 as 0.8 and 0.9 have caused me some troubles 
 
 Note when using easy_install we need to specify the install as unziped eggs as this stops apache from trying to extract the eggs into its own home directory.
 
 ===Install turbocare===
-_cd ~/_
+_cd  ~/_
 
-_svn checkout http://turbocare.googlecode.com/svn/trunk/ turbocare_
+_svn checkout http://turbocare.googlecode.com/svn/trunk/  turbocare_
 
 ===Setup database===
 We should add a password to MySQL's root user but I will add that later. 
@@ -62,7 +62,7 @@ _python mysqlschema.py -d turbocare -u root -o restore -f turbocarebackup.data_
 ===Check standalone turbocare===
 _cp dev-sample.cfg dev.cfg_
 
-_nano dev.cfg_
+_vi dev.cfg_
 
 Check that all the variables are right. Particularly the sqlobject.dburi string.
 
@@ -86,7 +86,7 @@ _cd ~/turbocare_
 
 _cp prod-sample.cfg prod.cfg_
 
-_nano prod.cfg_
+_vi prod.cfg_
 
 This is the production configuration file.  
 
@@ -100,7 +100,7 @@ You can also change the log file locations if you want to.
 
 _cp turbocare/turbocare_modpython-sample.py turbocare/turbocare_modpython.py_
 
-_nano turbocare/turbocare_modpython.py_
+_vi turbocare/turbocare_modpython.py_
 
 Update the configuration file location in this file to where you have installed turbocare.  
 
@@ -123,15 +123,15 @@ _sudo cp apache-ssl-turbocare.conf /etc/apache2/sites-available/turbocare-ssl_
 
 Copy Apache def files
 
-_sudo nano /etc/apache2/sites-available/turbocare_
+_sudo vi /etc/apache2/sites-available/turbocare_
 
 Change any references to /home/david to the home/USER where user is the user in which you have done the installation with.
 
-_sudo nano /etc/apache2/sites-available/turbocare-ssl_
+_sudo vi /etc/apache2/sites-available/turbocare-ssl_
 
 Change any references to /home/david to the home/USER where user is the user in which you have done the installation with.
 
-_sudo nano /etc/apache2/ports.conf_
+_sudo vi /etc/apache2/ports.conf_
 
 Add a new line with _Listen 443_ on it.
 
