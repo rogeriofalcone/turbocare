@@ -66,6 +66,10 @@ _vi dev.cfg_
 
 Check that all the variables are right. Particularly the sqlobject.dburi string.
 
+_cp turbocare/ReportDefinition-Sample.py turbocare/ReportDefinition.oy_
+
+
+
 _python start-turbocare.py_ 
 
 If this loads without errors you have installed turbocare. 
