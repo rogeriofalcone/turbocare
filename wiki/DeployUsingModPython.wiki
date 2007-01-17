@@ -55,9 +55,9 @@ press enter and then ctrl-D to exit.
 
 _cd ~/turbocare_
 
-_python mysqlschema.py -d turbocare -u root -o schemaupdt -f turbocareschema.data_ 
+_python mysql_schema.py -d turbocare -u root -o schemaupdt -f turbocareschema.data_ 
 
-_python mysqlschema.py -d turbocare -u root -o restore -f turbocarebackup.data_ 
+_python mysql_schema.py -d turbocare -u root -o restore -f turbocarebackup.data_ 
 
 ===Check standalone turbocare===
 _cp dev-sample.cfg dev.cfg_
