@@ -24,9 +24,9 @@ _sudo apt-get install apache2 libapache2-mod-python2.4_
 
 ===Install turbogears===
 
-_wget http://www.turbogears.org/download/tgsetup.py_
+_wget http://www.turbogears.org/download/tgsetup.py
 
-_python tgsetup.py_ 
+python tgsetup.py_ 
 
 
 
