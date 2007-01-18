@@ -28,9 +28,9 @@ _sudo easy_install -UZ  setuptools_
 
 _sudo easy_install -UZ  TuboGears
 
-_wget http://cheeseshop.python.org/packages/2.4/S/SQLObject/SQLObject-0.7.2-py2.4.egg_
+_wget http://files.turbogears.org/eggs/SQLObject-0.7.1dev_r1860-py2.4.egg_
 
-_sudo easy_install -fZ SQLObject-0.7.2-py2.4.egg_
+_sudo easy_install -fZ SQLObject-0.7.1dev_r1860-py2.4.egg_
 
 Note you may need to specify v0.7 as 0.8 and 0.9 have caused me some troubles 
 
