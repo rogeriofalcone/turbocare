@@ -31,18 +31,18 @@ TODO list
 7. TurboGears Configuration
 - Address editor - Ready for testing
 - Tribes editor - Ready for testing
-- Departments/Locations
-- Wards, rooms, and beds editor
-- Doctors list editor
-- Insurance providers editor
+- Departments/Locations - Ready for testing
+- Wards, rooms, and beds editor - Ready for testing
+- Doctors list editor - Ready for testing
+- Insurance providers editor - Ready for testing
 ====Inventory====
-- Packaging Types
-- Item Master (Catalog Item) Groups
-- Location Groups
-- Customer Groups
-- Vendor Groups
-- Packaging Groups
-- Compound Groups
+- Packaging Types - Ready for testing
+- Item Master (Catalog Item) Groups - Ready for testing
+- Location Groups - Ready for testing
+- Customer Groups - Ready for testing
+- Vendor Groups - Ready for testing
+- Packaging Groups - Ready for testing
+- Compound Groups - Ready for testing
 
 8. Patient manager
 - Discharge a patient
@@ -53,7 +53,7 @@ TODO list
 - Add/Edit Customer entries
 
 10. Location manager
-- Add/Edit Locations within the system
+- Add/Edit Locations within the system - Ready for testing (It's under configuration!!)
 
   Future
   ====

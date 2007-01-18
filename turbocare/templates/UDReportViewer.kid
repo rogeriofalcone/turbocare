@@ -25,7 +25,7 @@
 
 <body>
 	<DIV py:if="'report_editor' in tg.identity.permissions"> Go to: <A HREF="Builder">Report Builder</A>, <A href="Editor">Report Editor</A> </DIV>
-	<DIV >Step 1: Select the report
+	<DIV >Step 1: Select the report [Render report as a series of flat tables <INPUT id="RenderFlat" name="RenderFlat" type="checkbox" value="true"/>]
 		<DIV style="display:table">
 			<DIV style="display:table-row">
 				<DIV style="display:table-cell">
@@ -42,7 +42,8 @@
 		</DIV>
 	</DIV>
 	 <DIV >Step 2: <A href="javascript:rr.HideDetails()">Hide all details</A> Or 
-		<A href="javascript:rr.ShowDetails()">Show all details</A>
+		<A href="javascript:rr.ShowDetails()">Show all details</A> Or
+		<A href="javascript:rr.RemoveHiddenSections()">Remove</A> any hidden sections from the report display
 	</DIV>
 	<DIV id='RenderReport' style="font-size:10px">
 	</DIV>
