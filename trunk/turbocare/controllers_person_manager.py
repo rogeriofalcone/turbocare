@@ -8,21 +8,175 @@ import turbogears
 from turbogears import  controllers, expose, validate, redirect, widgets, validators, flash
 from turbogears import identity
 from turbogears import exception_handler
-from turbogears.toolbox.catwalk import CatWalk 
 import model
 import datetime, time
 from model import DATE_FORMAT
-import model_inventory
-import inventory_catalogitem
-from printer_inventory import *
 
 log = logging.getLogger("turbocare.controllers")
-conn = model.hub.getConnection()
 
-class Registration(turbogears.controllers.Controller):
-	@expose(html='turbocare.templates.registration_search')
-	def index(self, **kw):
-		return dict(title="Registration Search")
+class PersonManager(turbogears.controllers.Controller):
+	@identity.require(identity.has_permission("patient_manager_view"))
+	@validate(validators={'PersonID':validators.Int(),'CustomerID':validators.Int(),'PersonellID':validators.Int()})
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	@expose(html='turbocare.templates.patient_manager_main')
+	def index(self, PersonID=None, CustomerID=None, PersonellID=None **kw):
+		'''	The main page for the Person manager - which will also do patient management
+			PersonID -  the id of the person we want to load (priority)
+			CustomerID - if no PersonID is available, customer id will suffice
+			PersonellID - final resort for an id to load
+			If no Id's are given, then the user is re-directed to the Search Screen
+		'''
+		def Checked(value):
+			if value:
+				return "checked"
+			else:
+				return None
+		def CreateCustomer(Person):
+			"""	Create a customer record based on the Person record """
+			citytown = model.AddressCityTown.get(Person.AddrCitytownNrID)
+			AddressLabel = '%s\n%s\n%s, %s\n%s\n%s' % (Person.AddrStr, citytown.Name, citytown.Block, citytown.District, citytown.State, citytown.ZipCode)			
+			PersonName = ('%s %s,%s,%s' % (Person.Title, Person.NameFirst, Person.NameMiddle, Person.NameLast)).replace(',,',',').replace(',', ' ').strip()
+			customer = model.InvCustomer(Name=PersonName ,CityID=Person.AddrCitytownNrID , AddressLabel=AddressLabel, CreditAmount=0.0, \
+				InventoryLocation=self.GetDefaultCustomerLocationID(), ExternalID=Person.id)
+			return customer
+		def GetCustomer(Person):
+			"""	Look for a customer based on the person record.  If none is found, then create it """
+			customers = model.InvCustomer.select(model.InvCustomer.q.ExternalID==Person.id)
+			if customers.count() == 0:
+				return CreateCustomer(Person)
+			else:
+				return customers[0]
+		# Attempt to load our objects
+		if PersonID==None and CustomerID==None and PersonellID==None:
+			raise cherrypy.HTTPRedirect('PatientManagerSearch')
+		else:
+			try:
+				if PersonID != None:
+					Person = model.Person.get(PersonID)
+					if len(Person.Personell) == 0:
+						Personell = None
+						PersonellID = None
+					else:
+						Personell = Person.Personell[0]
+						PersonellID = Personell.id
+					Customer = GetCustomer(Person)
+					CustomerID = Customer.id
+				elif CustomerID != None:
+					Customer = model.InvCustomer.get(CustomerID)
+					if Customer.ExternalID == None:
+						Personell = None
+						PersonellID = None
+						PersonID = None
+						Person = None
+						turbogears.flash('The customer you selected is not registered, so many details will be missing.')
+					else:
+						PersonID = Customer.ExternalID
+					Person = model.Person.get(PersonID)
+					if len(Person.Personell) == 0:
+						Personell = None
+						PersonellID = None
+					else:
+						Personell = Person.Personell[0]
+						PersonellID = Personell.id
+				elif PersonellID != None:
+					Personell = model.Personell.get(PersonellID)
+					Person = Personell.Person
+					PersonID = Person.id
+					if len(Person.Customer) == 0:
+						Customer = GetCustomer(Person)
+						CustomerID = Customer.id
+					else:
+						Customer = Person.Customer[0]
+						CustomerID = Customer.id
+			except SQLObjectNotFound, errorstr:
+				turbogears.flash("There was an error in trying to load the Person.")
+				errorArr = errorstr[0].split(' ')
+				table = errorArr[2]
+				id = errorArr[6]
+				if table == 'InvCustomer':
+					turbogears.flash("There was an error in trying to load the Person.  The Customer record (id: %s) could not be found" % id)
+				elif table == 'Person':
+					turbogears.flash("There was an error in trying to load the Person.  The Person record (Person id: %s) could not be found" % id)
+				elif table == 'Personell':
+					turbogears.flash("There was an error in trying to load the Person.  The Personell record (Personell id: %s) could not be found" % id)
+				else:
+					turbogears.flash("There was an error in trying to load the Person.  The object %s record (%s id: %d) could not be found" % (table,table,id))
+		# Load the variables for our template
+		if Person == None and Customer!=None: # No Person selected, load an empty form for a new entry
+			result['DisplayName'] = Customer.Name
+			result['titles'] = [dict(id=x, name=x, selected=None) for x in model.dbTitles]
+			result['NameFirst'] = ''
+			result['NameMiddle'] = ''
+			result['NameLast'] = ''
+			result['genders'] = [dict(name=x, selected=None) for x in model.dbGender]
+			result['religions'] = [dict(id=x, name=x, selected=None) for x in model.dbReligion]
+			result['tribes'] =  [dict(id=x.id, name=x.Name, selected=None) for x in model.TypeEthnicOrig.select(AND (model.TypeEthnicOrig.q.ClassNrID==model.ClassEthnicOrig.q.id,
+				model.ClassEthnicOrig.q.Name == 'Tribe'),orderBy=[model.TypeEthnicOrig.q.Name])]
+			result['AddressStreet'] = ''
+			result['SelectedCity'] = 'No City Selected'
+			result['AddrCitytownNrID'] = ''
+			result['CityTownName'] = ''
+			result['PostOffice'] = ''
+			result['Block'] = ''
+			result['District'] = ''
+			result['State'] = ''
+			result['Country'] = ''
+			result['PersonID']=''
+			result['PersonellID']=''
+			result['Age']=''
+			result['DateBirth']=''
+			result['IsDeleted'] = False
+		else:
+			def Selected(value):
+				""" Returns 'selected' if the value is true, otherwise false """
+				if value:
+					return 'selected'
+				else:
+					return None
+			if Personell.JobFunctionTitle != 'Doctor':
+				turbogears.flash("The person you loaded is not a Doctor.  If you want to make them a Doctor, then search for the person in the 'Person Record' link option, and then save it")
+				raise cherrypy.HTTPRedirect('DoctorsEditor')				
+			result['DisplayName'] = '%s (%d/%d)' % (Person.DisplayName(), PersonellID, PersonID)
+			result['IsDischarged'] = Checked(Personell.IsDischarged)
+			result['titles'] = [dict(id=x, name=x, selected=Selected(Person.Title==x)) for x in model.dbTitles]
+			result['NameFirst'] = Person.NameFirst
+			result['NameMiddle'] = Person.NameMiddle
+			result['NameLast'] = Person.NameLast
+			result['genders'] = [dict(name=x, selected=Selected(Person.Sex==x)) for x in model.dbGender]
+			result['religions'] = [dict(id=x, name=x, selected=Selected(Person.Religion==x)) for x in model.dbReligion]
+			result['tribes'] =  [dict(id=x.id, name=x.Name, selected=Selected(Person.EthnicOrigID==x.id)) for x in model.TypeEthnicOrig.select(AND (model.TypeEthnicOrig.q.ClassNrID==model.ClassEthnicOrig.q.id,
+				model.ClassEthnicOrig.q.Name == 'Tribe'),orderBy=[model.TypeEthnicOrig.q.Name])]
+			result['AddressStreet'] = Person.AddrStr
+			if Person.AddrCitytownNrID == 0:
+				Person.AddrCitytownNrID = None
+			result['AddrCitytownNrID'] = Person.AddrCitytownNrID
+			if Person.AddrCitytownNrID == None:
+				result['CityTownName'] = ''
+				result['PostOffice'] = ''
+				result['Block'] = ''
+				result['District'] = ''
+				result['State'] = ''
+				result['Country'] = ''
+				result['SelectedCity'] = 'No City Selected'
+			else:
+				result['CityTownName'] = Person.AddrCitytownNr.Name
+				result['PostOffice'] = Person.AddrCitytownNr.ZipCode
+				result['Block'] = Person.AddrCitytownNr.Block
+				result['District'] = Person.AddrCitytownNr.District
+				result['State'] = Person.AddrCitytownNr.State
+				result['Country'] = Person.AddrCitytownNr.IsoCountryId
+				result['SelectedCity'] = '(id:%d) %s in %s, %s (%s)' % (result['AddrCitytownNrID'], result['Block'], result['CityTownName'],
+					result['District'], result['PostOffice'])
+			result['PersonID']=PersonID
+			result['PersonellID']=PersonellID
+			result['DateBirth']=Person.DateBirth.strftime(DATE_FORMAT)
+			if Person.DateBirth != '':
+				result['Age'] = int(((datetime.now().date() - Person.DateBirth).days+0.5)/365.25)
+			else:
+				result['Age'] = ''
+			result['DateBirth']=Person.DateBirth.strftime(DATE_FORMAT)
+			result['IsDeleted'] = Personell.Status=='deleted'		
+		return results
 
 	@expose(html='turbocare.templates.programmingerror')
 	def idFail(error):

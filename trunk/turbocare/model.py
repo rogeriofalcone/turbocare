@@ -2640,12 +2640,18 @@ class InsuranceFirm(SQLObject):
 		except AttributeError:
 			value = cur_date_time()
 		self._SO_set_CreateTime(value)
+		
+	def Persons(self):
+		'''	People who have used this Insurance Firm 
+			PersonID, PersonName, EncounterID, FirmID, FirmName, EncounterDate
+		'''
+		return GetInsuranceFirmCustomers(FirmID=self.id)
 
-	FirmId = StringCol(length=40,dbName='firm_id',alternateID=True)
+	FirmId = StringCol(length=40,dbName='firm_id',alternateID=True) # NOTE: I synch this to the id field (integer primary key)
 	Name = StringCol(length=60,dbName='name')
 	IsoCountryId = StringCol(length=3,dbName='iso_country_id', default='IND')
 	SubArea = StringCol(length=60,dbName='sub_area',default='')
-	TypeNr = ForeignKey('TypeInsurance',dbName='type_nr')
+	TypeNr = ForeignKey('TypeInsurance',dbName='type_nr',default=0)
 	Addr = StringCol(length=255,dbName='addr',default='')
 	AddrMail = StringCol(length=200,dbName='addr_mail',default='')
 	AddrBilling = StringCol(length=200,dbName='addr_billing',default='')
@@ -2700,8 +2706,8 @@ class TypeInsurance(SQLObject):
 
 	Type = StringCol(length=35,dbName='type')
 	Name = StringCol(length=60,dbName='name')
-	LdVar = StringCol(length=35,dbName='LD_var')
-	Description = StringCol(length=255,dbName='description')
+	LdVar = StringCol(length=35,dbName='LD_var',default='')
+	Description = StringCol(length=255,dbName='description',default='')
 	Status = StringCol(length=25,default='')
 	History = StringCol(length=255,default='')
 	ModifyId = StringCol(length=35,default=cur_user_id())#varchar(35) NOT NULL default '',
@@ -5907,6 +5913,38 @@ class Appointment(SQLObject):
 	CreateTime = DateTimeCol(default=cur_date_time(),dbName="create_time")
 
 
+# A function to count the number of persons using (or have used) an insurance firm
+def GetInsuranceFirmCustomers(FirmID=None, PersonID=None):
+	'''	Without any filters, returns a list of people (Person) that use insurance, and which firm they use (InsuranceFirm).
+		If a FirmID is given, then the results are filtered for a specific Firm, or if PersonID is given, then a particular Person's
+		history is given (which companies they have used)
+		PersonID, PersonName, EncounterID, FirmID, FirmName, EncounterDate
+	'''
+	def GetInsuranceFirm(firm_id):
+		'''	Search for a firm by the firm id '''
+		Firms = InsuranceFirm.select(InsuranceFirm.q.FirmId==firm_id)
+		if Firms.count() == 0:
+			return None
+		else:
+			return Firms[0]
+	if FirmID!=None and PersonID!=None:
+		PersonFirms = Encounter.select(AND (Encounter.q.InsuranceFirmId==InsuranceFirm.q.FirmId,
+			Encounter.q.Pid==PersonID,InsuranceFirm.q.id==FirmID), orderBy=[Encounter.q.Pid])
+	elif FirmID!=None:# Find all people using a specific insurance company
+		PersonFirms = Encounter.select(AND (Encounter.q.InsuranceFirmId==InsuranceFirm.q.FirmId,
+			InsuranceFirm.q.id==FirmID), orderBy=[Encounter.q.Pid])
+	elif PersonID!=None:# Find all people using insurance
+		PersonFirms = Encounter.select(AND (Encounter.q.Pid==PersonID, 
+			Encounter.q.InsuranceFirmId not in ['',None,0]),orderBy=[Encounter.q.Pid])
+	else:
+		PersonFirms = Encounter.select(Encounter.q.InsuranceFirmId not in ['',None,0],orderBy=[Encounter.q.Pid])
+	results = []
+	for encounter in PersonFirms:
+		Firm = GetInsuranceFirm(encounter.InsuranceFirmId)
+		results.append(dict(PersonID=encounter.Pid, PersonName=encounter.P.DisplayName(), EncounterID=encounter.id,
+			FirmID=Firm.id, FirmName=Firm.Name, EncounterDate=encounter.EncounterDate))
+	return results
+	
 # A utility I function which I want to use in my classes above, lets see if it works the way I hope
 def GetBedActivityInformation(WardID=None, RoomID=None, BedNr=None, StartDateTime=None, EndDateTime=None):
 	'''	Query EncounterLocation to get Bed usage information 

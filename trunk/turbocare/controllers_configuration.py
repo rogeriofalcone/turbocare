@@ -1385,7 +1385,7 @@ class Configuration(controllers.RootController):
 				return customers[0]
 		result = {} # The dictionary for our template variables
 		# Attempt to load person information, PersonellID will take precedence
-		log.debug('DoctorsEditor, PersonellID: %r, PersonID: %r, CustomerID: %r' % (PersonellID, PersonID, CustomerID))
+		# log.debug('DoctorsEditor, PersonellID: %r, PersonID: %r, CustomerID: %r' % (PersonellID, PersonID, CustomerID))
 		if PersonellID != None or PersonID != None or CustomerID != None: # Attempt to load the doctor
 			try:
 				if PersonellID != None:
@@ -1711,7 +1711,6 @@ class Configuration(controllers.RootController):
 			results.append(dict(id=item.id, text='%s (%d)' % (item.DisplayName(),item.id)))
 		return dict(results=results, function_name='DoctorsEditorPersonSelect')
 	
-
 	@expose(format='json')
 	def DoctorsEditorCityTownSearch(self, CityTownName='', PostOffice='', Block='', District='', State='', Country='',  **kw):
 		'''	Search for Addresses (by Block, City/Town, District, State)
@@ -1741,3 +1740,878 @@ class Configuration(controllers.RootController):
 				district=item.District, state=item.State, country=item.IsoCountryId, block=item.Block))
 		return dict(result_count=len(Results), results=Results, city_town_name=CityTownName, post_office=PostOffice,\
 			block=Block, district=District, state=State, country=Country)
+			
+	@expose(html='turbocare.templates.config_InsuranceEditor')
+	@validate(validators={'FirmID':validators.Int()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def InsuranceEditor(self, FirmID=None, **kw):
+		'''	Either load an insurance firm for editing, or bring up an empty form for adding a new ward 
+		'''
+		# Attempt to load our Room
+		if FirmID!=None: # attempt to load the record
+			try:
+				Firm = model.InsuranceFirm.get(FirmID)
+			except SQLObjectNotFound:
+				turbogears.flash("The FirmID %d could not be found (deleted?)" % FirmID)
+				Firm=None
+				FirmID=None
+		else:
+			Firm=None
+		# Prepare our form
+		result = {} # The dictionary we are sending to the web page
+		if FirmID==None: # Create a blank form
+			result['FirmID'] = ''
+			result['DisplayName'] = 'New Entry'
+			result['Name'] = ''
+			result['IsoCountryId'] = 'IND'
+			result['SubArea'] = ''
+			result['Addr'] = ''
+			result['AddrMail'] = ''
+			result['AddrBilling'] = ''
+			result['AddrEmail'] = ''
+			result['PhoneMain'] = ''
+			result['PhoneAux'] = ''
+			result['FaxMain'] = ''
+			result['FaxAux'] = ''
+			result['ContactPerson'] = ''
+			result['ContactPhone'] = ''
+			result['ContactFax'] = ''
+			result['ContactEmail'] = ''
+			result['InsuranceUsers'] = []
+			result['IsDeleted'] = False
+		else:
+			result['FirmID'] = FirmID
+			result['DisplayName'] = '%s (%d)' % (Firm.Name, FirmID)
+			result['Name'] = Firm.Name
+			result['IsoCountryId'] = Firm.IsoCountryId
+			result['SubArea'] = Firm.SubArea
+			result['Addr'] = Firm.Addr
+			result['AddrMail'] = Firm.AddrMail
+			result['AddrBilling'] = Firm.AddrBilling
+			result['AddrEmail'] = Firm.AddrEmail
+			result['PhoneMain'] = Firm.PhoneMain
+			result['PhoneAux'] = Firm.PhoneAux
+			result['FaxMain'] = Firm.FaxMain
+			result['FaxAux'] = Firm.FaxAux
+			result['ContactPerson'] = Firm.ContactPerson
+			result['ContactPhone'] = Firm.ContactPhone
+			result['ContactFax'] = Firm.ContactFax
+			result['ContactEmail'] = Firm.ContactEmail
+			result['IsDeleted'] = Firm.Status == 'deleted'
+			result['InsuranceUsers'] = Firm.Persons()
+		return result
+	
+	@expose()
+	@validate(validators={'FirmID':validators.Int(),'Name':validators.String(),'IsoCountryId':validators.String(),\
+	'SubArea':validators.String(),'Addr':validators.String(),'AddrMail':validators.String(),'AddrBilling':validators.String(),\
+	'AddrEmail':validators.String(),'PhoneMain':validators.String(),'PhoneAux':validators.String(),'FaxMain':validators.String(),\
+	'FaxAux':validators.String(),'ContactPerson':validators.String(),'ContactPhone':validators.String(),\
+	'ContactFax':validators.String(),'ContactEmail':validators.String(),'Operation':validators.String()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
+	def InsuranceEditorSave(self, FirmID=None,Name='',IsoCountryId='',SubArea='',Addr='',AddrMail='',
+		AddrBilling='',AddrEmail='',PhoneMain='',PhoneAux='',FaxMain='',FaxAux='',
+		ContactPerson='',ContactPhone='',ContactFax='',ContactEmail='',Operation='', **kw):
+		'''	Save changes.  Either create a new entry, update an existing entry or attempt to delete an entry 
+			Save/Cancel/New/Delete are the various operations we have
+		'''
+		log.debug('InsuranceEditorSave')
+		if FirmID!=None:
+			try:
+				Firm = model.InsuranceFirm.get(FirmID)
+			except SQLObjectNotFound: #, errorstr:
+				turbogears.flash("There is an error on a database entry I thought should exist, but doesn't, so all the changes are lost.  Try again.")
+				raise cherrypy.HTTPRedirect('InsuranceEditor')
+		if Operation=='Save': # Either update or create a new entry
+			log.debug('...Save')
+			# Type room configuration
+			InsuranceTypes = model.TypeInsurance.select(model.TypeInsurance.q.Type=='private')
+			if InsuranceTypes.count() == 0:
+				InsuranceType = model.TypeInsurance(Type='private', Name='Private Insurance')
+				InsuranceTypeID = InsuranceType.id
+			else:
+				InsuranceTypeID = InsuranceTypes[0].id
+			if FirmID==None: # Create a new entry
+				log.debug('...New Entry')
+				if AddrMail=='':
+					AddrMail = Addr
+				if AddrBilling=='':
+					AddrBilling = Addr
+				Firm = model.InsuranceFirm(Name=Name,IsoCountryId=IsoCountryId,SubArea=SubArea,FirmId='',
+					TypeNrID=InsuranceTypeID,FaxMain=FaxMain,FaxAux=FaxAux,ContactPerson=ContactPerson,
+					Addr=Addr,AddrMail=AddrMail,AddrBilling=AddrBilling,AddrEmail=AddrEmail,PhoneMain=PhoneMain,
+					PhoneAux=PhoneAux,ContactPhone=ContactPhone,ContactFax=ContactFax,ContactEmail=ContactEmail)
+				Firm.FirmId = str(Firm.id)
+				FirmID = Firm.id
+				turbogears.flash('New Entry Created (id: %d)' % FirmID)
+			else: # Update an entry
+				Firm.Name = str(Name)
+				Firm.IsoCountryId = str(IsoCountryId)
+				Firm.SubArea = str(SubArea)
+				if Firm.Addr!=Addr:
+					if AddrMail=='':
+						AddrMail = Addr
+					if AddrBilling=='':
+						AddrBilling = Addr
+				Firm.Addr = str(Addr)
+				Firm.AddrMail = str(AddrMail)
+				Firm.AddrBilling = str(AddrBilling)
+				Firm.AddrEmail = str(AddrEmail)
+				Firm.PhoneMain = str(PhoneMain)
+				Firm.PhoneAux = str(PhoneAux)
+				Firm.FaxMain = str(FaxMain)
+				Firm.FaxAux = str(FaxAux)
+				Firm.ContactPerson = str(ContactPerson)
+				Firm.ContactPhone = str(ContactPhone)
+				Firm.ContactFax = str(ContactFax)
+				Firm.ContactEmail = str(ContactEmail)
+				turbogears.flash('Recorded Updated')
+		elif Operation=='Delete' and FirmID!=None:
+			# Just check to make sure no one is using the room at the time
+			if len(Firm.Persons()) > 0:
+				# Mark the item deleted
+				Firm.Status = 'deleted'
+				turbogears.flash('Record Marked Deleted')
+			else:
+				Firm.destroySelf()
+				FirmID = None
+				turbogears.flash('Record Deleted')
+		elif Operation=='Un-Delete' and FirmID!=None:
+			Firm.Status = ''
+			turbogears.flash('Record Un-Deleted')
+		elif Operation=='Cancel':
+			turbogears.flash('Updates Cancelled')
+		elif Operation=='New':
+			FirmID=''
+		else:
+			turbogears.flash('Error in processing request')
+		if FirmID in ['',None]:
+			raise cherrypy.HTTPRedirect('InsuranceEditor')
+		else:
+			raise cherrypy.HTTPRedirect('InsuranceEditor?FirmID=%d' % FirmID)
+		
+	@expose(format='json')
+	def InsuranceEditorQuickSearch(self, QuickSearchText='', **kw):
+		'''	Search for an existing location entry '''
+		QuickSearchText = str(QuickSearchText)
+		if QuickSearchText=='*':
+			firms = model.InsuranceFirm.select(orderBy=[model.InsuranceFirm.q.Name])
+		else:
+			firms = model.InsuranceFirm.select(model.InsuranceFirm.q.Name.contains(QuickSearchText),
+			orderBy=[model.InsuranceFirm.q.Name])
+		results = []
+		for item in firms:
+			results.append(dict(id=item.id, text=item.Name))
+		return dict(results=results)
+		
+	@expose(html='turbocare.templates.config_PackagingTypesEditor')
+	@validate(validators={'PackagingID':validators.Int()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def PackagingTypesEditor(self, PackagingID=None, **kw):
+		'''	Either load an packaging types for editing, or bring up an empty form for adding a new entry 
+		'''
+		if PackagingID!=None: # attempt to load the record
+			try:
+				Packaging = model.InvPackaging.get(PackagingID)
+			except SQLObjectNotFound:
+				turbogears.flash("The PackagingID %d could not be found (deleted?)" % PackagingID)
+				Packaging=None
+				PackagingID=None
+		else:
+			Packaging=None
+		# Prepare our form
+		result = {} # The dictionary we are sending to the web page
+		if PackagingID==None: # Create a blank form
+			result['PackagingID'] = ''
+			result['DisplayName'] = 'New Entry'
+			result['Name'] = ''
+			result['Description'] = ''
+			result['Groups'] = []
+			result['Items'] = []
+			result['IsDeleted'] = False
+		else:
+			result['PackagingID'] = PackagingID
+			result['DisplayName'] = '%s (%d)' % (Packaging.Name, PackagingID)
+			result['Name'] = Packaging.Name
+			result['Description'] = Packaging.Description
+			try:
+				result['Groups'] = [dict(id=x.id, name=x.Name) for x in Packaging.Groups]
+			except SQLObjectNotFound, errorstr:
+				turbogears.flash('There was a problem loading this record.  Some linked data has been removed from the system, which is causing the problem.  Try reloading this record (sometimes repeatedly) until the error is corrected.  Have a nice day.')
+				errorArr = errorstr[0].split(' ')
+				table = errorArr[2]
+				id = errorArr[6]
+				# Remove the offending record
+				if table == 'InvGrpPackaging':
+					Packaging.removeInvGrpPackaging(int(id))
+			result['Items'] = [dict(Name=x.DisplayName()) for x in Packaging.CatalogItems]
+			result['IsDeleted'] = Packaging.Status=='deleted'
+		return result
+		
+	@expose()
+	@validate(validators={'PackagingID':validators.Int(),'Name':validators.String(),'Description':validators.String(),\
+	'Operation':validators.String()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
+	def PackagingTypesEditorSave(self, PackagingID=None,Name='',Description='',Operation='', Groups=[], **kw):
+		'''	Save changes.  Either create a new entry, update an existing entry or attempt to delete an entry 
+			Save/Cancel/New/Delete are the various operations we have
+		'''
+		if PackagingID!=None:
+			try:
+				Packaging = model.InvPackaging.get(PackagingID)
+			except SQLObjectNotFound: #, errorstr:
+				turbogears.flash("There is an error on a database entry I thought should exist, but doesn't, so all the changes are lost.  Try again.")
+				raise cherrypy.HTTPRedirect('PackagingTypesEditor')
+		if Operation=='Save': # Either update or create a new entry
+			# Format the Groups as a list of integers
+			if isinstance(Groups, basestring): # a single entry
+				Groups = [int(Groups)]
+			else:
+				Groups = [int(x) for x in Groups]
+			if PackagingID==None: # Create a new entry
+				Packaging = model.InvPackaging(Name=Name,Description=Description)
+				# Add Groups
+				for group in Groups:
+					Packaging.addInvGrpPackaging(group)
+				PackagingID = Packaging.id
+				turbogears.flash('New Entry Created (id: %d)' % PackagingID)
+			else: # Update an entry
+				Packaging.Name = str(Name)
+				Packaging.Description = str(Description)
+				# Get a list of current groups
+				CurGroups = [x.id for x in Packaging.Groups]
+				# Add new groups
+				for group in Groups:
+					if group not in CurGroups:
+						Packaging.addInvGrpPackaging(group)
+				# Remove groups
+				for group in CurGroups:
+					if group not in Groups:
+						Packaging.removeInvGrpPackaging(group)
+				turbogears.flash('Recorded Updated')
+		elif Operation=='Delete' and PackagingID!=None:
+			# Just check to make sure no one is using the room at the time
+			if len(Packaging.CatalogItems) > 0:
+				# Mark the item deleted
+				Packaging.Status = 'deleted'
+				turbogears.flash('Record Marked Deleted')
+			else:
+				# Remove all groups before deleting
+				for group in Packaging.Groups:
+					Packaging.removeInvGrpPackaging(group)
+				Packaging.destroySelf()
+				PackagingID = None
+				turbogears.flash('Record Deleted')
+		elif Operation=='Un-Delete' and PackagingID!=None:
+			Packaging.Status = ''
+			turbogears.flash('Record Un-Deleted')
+		elif Operation=='Cancel':
+			turbogears.flash('Updates Cancelled')
+		elif Operation=='New':
+			PackagingID=''
+		else:
+			turbogears.flash('Error in processing request')
+		if PackagingID in ['',None]:
+			raise cherrypy.HTTPRedirect('PackagingTypesEditor')
+		else:
+			raise cherrypy.HTTPRedirect('PackagingTypesEditor?PackagingID=%d' % PackagingID)
+		
+	@expose(format='json')
+	def PackagingTypesEditorQuickSearch(self, QuickSearchText='', **kw):
+		'''	Search for an existing entry '''
+		QuickSearchText = str(QuickSearchText)
+		if QuickSearchText=='*':
+			packages = model.InvPackaging.select(orderBy=[model.InvPackaging.q.Name])
+		else:
+			packages = model.InvPackaging.select(model.InvPackaging.q.Name.contains(QuickSearchText),
+				orderBy=[model.InvPackaging.q.Name])
+		results = []
+		for item in packages:
+			results.append(dict(id=item.id, text=item.Name))
+		return dict(results=results)
+	
+	@expose(format='json')
+	@validate(validators={'PackagingID':validators.Int()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def PackagingTypesEditorGroupSelect(self, PackagingID=None, **kw):
+		'''	Load the Group Options
+			Mark items which are already selected as selected
+		'''
+		cur_groups = []
+		if PackagingID!=None:
+			Packaging = model.InvPackaging.get(PackagingID)
+			for group in Packaging.Groups:
+				cur_groups.append(group.id)
+		groups = model.InvGrpPackaging.select(orderBy=[model.InvGrpPackaging.q.Name])
+		results = []
+		for group in groups:
+			results.append(dict(id=group.id, text=group.Name, selected=(group.id in cur_groups)))
+		return dict(results=results)
+		
+	@expose(html='turbocare.templates.config_CatalogItemGroupsEditor')
+	@validate(validators={'GroupID':validators.Int()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def CatalogItemGroupsEditor(self, GroupID=None, **kw):
+		'''	Either load an Catalog Item Groups for editing, or bring up an empty form for adding a new entry 
+		'''
+		if GroupID!=None: # attempt to load the record
+			try:
+				Group = model.InvGrpStock.get(GroupID)
+			except SQLObjectNotFound:
+				turbogears.flash("The GroupID %d could not be found (deleted?)" % GroupID)
+				Group=None
+				GroupID=None
+		else:
+			Group=None
+		# Prepare our form
+		result = {} # The dictionary we are sending to the web page
+		if GroupID==None: # Create a blank form
+			result['GroupID'] = ''
+			result['DisplayName'] = 'New Entry'
+			result['Name'] = ''
+			result['Description'] = ''
+			result['IsDeleted'] = False
+		else:
+			result['GroupID'] = GroupID
+			result['DisplayName'] = '%s (%d) linked to %d items' % (Group.Name, GroupID, len(Group.CatalogItems))
+			result['Name'] = Group.Name
+			result['Description'] = Group.Description
+			result['IsDeleted'] = Group.Status=='deleted'
+		return result
+		
+	@expose()
+	@validate(validators={'GroupID':validators.Int(),'Name':validators.String(),'Description':validators.String(),\
+	'Operation':validators.String()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
+	def CatalogItemGroupsEditorSave(self, GroupID=None,Name='',Description='',Operation='', **kw):
+		'''	Save changes.  Either create a new entry, update an existing entry or attempt to delete an entry 
+			Save/Cancel/New/Delete are the various operations we have
+		'''
+		if GroupID!=None:
+			try:
+				Group = model.InvGrpStock.get(GroupID)
+			except SQLObjectNotFound: #, errorstr:
+				turbogears.flash("There is an error on a database entry I thought should exist, but doesn't, so all the changes are lost.  Try again.")
+				raise cherrypy.HTTPRedirect('CatalogItemGroupsEditor')
+		if Operation=='Save': # Either update or create a new entry
+			if GroupID==None: # Create a new entry
+				Group = model.InvGrpStock(Name=Name,Description=Description)
+				GroupID = Group.id
+				turbogears.flash('New Entry Created (id: %d)' % GroupID)
+			else: # Update an entry
+				Group.Name = str(Name)
+				Group.Description = str(Description)
+				turbogears.flash('Recorded Updated')
+		elif Operation=='Delete' and GroupID!=None:
+			# Just check to make sure no one is using the room at the time
+			if len(Group.CatalogItems) > 0:
+				# Mark the item deleted
+				Group.Status = 'deleted'
+				turbogears.flash('Record Marked Deleted')
+			else:
+				Group.destroySelf()
+				GroupID = None
+				turbogears.flash('Record Deleted')
+		elif Operation=='Un-Delete' and GroupID!=None:
+			Group.Status = ''
+			turbogears.flash('Record Un-Deleted')
+		elif Operation=='Cancel':
+			turbogears.flash('Updates Cancelled')
+		elif Operation=='New':
+			GroupID=''
+		else:
+			turbogears.flash('Error in processing request')
+		if GroupID in ['',None]:
+			raise cherrypy.HTTPRedirect('CatalogItemGroupsEditor')
+		else:
+			raise cherrypy.HTTPRedirect('CatalogItemGroupsEditor?GroupID=%d' % GroupID)
+		
+	@expose(format='json')
+	def CatalogItemGroupsEditorQuickSearch(self, QuickSearchText='', **kw):
+		'''	Search for an existing entry '''
+		QuickSearchText = str(QuickSearchText)
+		if QuickSearchText=='*':
+			groups = model.InvGrpStock.select(orderBy=[model.InvGrpStock.q.Name])
+		else:
+			groups = model.InvGrpStock.select(model.InvGrpStock.q.Name.contains(QuickSearchText),
+				orderBy=[model.InvGrpStock.q.Name])
+		results = []
+		for item in groups:
+			results.append(dict(id=item.id, text=item.Name))
+		return dict(results=results)
+		
+	@expose(html='turbocare.templates.config_LocationGroupsEditor')
+	@validate(validators={'GroupID':validators.Int()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def LocationGroupsEditor(self, GroupID=None, **kw):
+		'''	Either load an Location Groups for editing, or bring up an empty form for adding a new entry 
+		'''
+		if GroupID!=None: # attempt to load the record
+			try:
+				Group = model.InvGrpLocation.get(GroupID)
+			except SQLObjectNotFound:
+				turbogears.flash("The GroupID %d could not be found (deleted?)" % GroupID)
+				Group=None
+				GroupID=None
+		else:
+			Group=None
+		# Prepare our form
+		result = {} # The dictionary we are sending to the web page
+		if GroupID==None: # Create a blank form
+			result['GroupID'] = ''
+			result['DisplayName'] = 'New Entry'
+			result['Name'] = ''
+			result['Description'] = ''
+			result['IsDeleted'] = False
+		else:
+			result['GroupID'] = GroupID
+			result['DisplayName'] = '%s (%d) linked to %d items' % (Group.Name, GroupID, len(Group.Locations))
+			result['Name'] = Group.Name
+			result['Description'] = Group.Description
+			result['IsDeleted'] = Group.Status=='deleted'
+		return result
+		
+	@expose()
+	@validate(validators={'GroupID':validators.Int(),'Name':validators.String(),'Description':validators.String(),\
+	'Operation':validators.String()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
+	def LocationGroupsEditorSave(self, GroupID=None,Name='',Description='',Operation='', **kw):
+		'''	Save changes.  Either create a new entry, update an existing entry or attempt to delete an entry 
+			Save/Cancel/New/Delete are the various operations we have
+		'''
+		if GroupID!=None:
+			try:
+				Group = model.InvGrpLocation.get(GroupID)
+			except SQLObjectNotFound: #, errorstr:
+				turbogears.flash("There is an error on a database entry I thought should exist, but doesn't, so all the changes are lost.  Try again.")
+				raise cherrypy.HTTPRedirect('LocationGroupsEditor')
+		if Operation=='Save': # Either update or create a new entry
+			if GroupID==None: # Create a new entry
+				Group = model.InvGrpLocation(Name=Name,Description=Description)
+				GroupID = Group.id
+				turbogears.flash('New Entry Created (id: %d)' % GroupID)
+			else: # Update an entry
+				Group.Name = str(Name)
+				Group.Description = str(Description)
+				turbogears.flash('Recorded Updated')
+		elif Operation=='Delete' and GroupID!=None:
+			# Just check to make sure no one is using the room at the time
+			if len(Group.Locations) > 0:
+				# Mark the item deleted
+				Group.Status = 'deleted'
+				turbogears.flash('Record Marked Deleted')
+			else:
+				Group.destroySelf()
+				GroupID = None
+				turbogears.flash('Record Deleted')
+		elif Operation=='Un-Delete' and GroupID!=None:
+			Group.Status = ''
+			turbogears.flash('Record Un-Deleted')
+		elif Operation=='Cancel':
+			turbogears.flash('Updates Cancelled')
+		elif Operation=='New':
+			GroupID=''
+		else:
+			turbogears.flash('Error in processing request')
+		if GroupID in ['',None]:
+			raise cherrypy.HTTPRedirect('LocationGroupsEditor')
+		else:
+			raise cherrypy.HTTPRedirect('LocationGroupsEditor?GroupID=%d' % GroupID)
+		
+	@expose(format='json')
+	def LocationGroupsEditorQuickSearch(self, QuickSearchText='', **kw):
+		'''	Search for an existing entry '''
+		QuickSearchText = str(QuickSearchText)
+		if QuickSearchText=='*':
+			groups = model.InvGrpLocation.select(orderBy=[model.InvGrpLocation.q.Name])
+		else:
+			groups = model.InvGrpLocation.select(model.InvGrpLocation.q.Name.contains(QuickSearchText),
+				orderBy=[model.InvGrpLocation.q.Name])
+		results = []
+		for item in groups:
+			results.append(dict(id=item.id, text=item.Name))
+		return dict(results=results)
+		
+	@expose(html='turbocare.templates.config_CustomerGroupsEditor')
+	@validate(validators={'GroupID':validators.Int()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def CustomerGroupsEditor(self, GroupID=None, **kw):
+		'''	Either load an Customer Groups for editing, or bring up an empty form for adding a new entry 
+		'''
+		if GroupID!=None: # attempt to load the record
+			try:
+				Group = model.InvGrpCustomer.get(GroupID)
+			except SQLObjectNotFound:
+				turbogears.flash("The GroupID %d could not be found (deleted?)" % GroupID)
+				Group=None
+				GroupID=None
+		else:
+			Group=None
+		# Prepare our form
+		result = {} # The dictionary we are sending to the web page
+		if GroupID==None: # Create a blank form
+			result['GroupID'] = ''
+			result['DisplayName'] = 'New Entry'
+			result['Name'] = ''
+			result['Description'] = ''
+			result['IsDeleted'] = False
+		else:
+			result['GroupID'] = GroupID
+			result['DisplayName'] = '%s (%d) linked to %d items' % (Group.Name, GroupID, len(Group.Customers))
+			result['Name'] = Group.Name
+			result['Description'] = Group.Description
+			result['IsDeleted'] = Group.Status=='deleted'
+		return result
+		
+	@expose()
+	@validate(validators={'GroupID':validators.Int(),'Name':validators.String(),'Description':validators.String(),\
+	'Operation':validators.String()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
+	def CustomerGroupsEditorSave(self, GroupID=None,Name='',Description='',Operation='', **kw):
+		'''	Save changes.  Either create a new entry, update an existing entry or attempt to delete an entry 
+			Save/Cancel/New/Delete are the various operations we have
+		'''
+		if GroupID!=None:
+			try:
+				Group = model.InvGrpCustomer.get(GroupID)
+			except SQLObjectNotFound: #, errorstr:
+				turbogears.flash("There is an error on a database entry I thought should exist, but doesn't, so all the changes are lost.  Try again.")
+				raise cherrypy.HTTPRedirect('CustomerGroupsEditor')
+		if Operation=='Save': # Either update or create a new entry
+			if GroupID==None: # Create a new entry
+				Group = model.InvGrpCustomer(Name=Name,Description=Description)
+				GroupID = Group.id
+				turbogears.flash('New Entry Created (id: %d)' % GroupID)
+			else: # Update an entry
+				Group.Name = str(Name)
+				Group.Description = str(Description)
+				turbogears.flash('Recorded Updated')
+		elif Operation=='Delete' and GroupID!=None:
+			# Just check to make sure no one is using the room at the time
+			if len(Group.Customers) > 0:
+				# Mark the item deleted
+				Group.Status = 'deleted'
+				turbogears.flash('Record Marked Deleted')
+			else:
+				Group.destroySelf()
+				GroupID = None
+				turbogears.flash('Record Deleted')
+		elif Operation=='Un-Delete' and GroupID!=None:
+			Group.Status = ''
+			turbogears.flash('Record Un-Deleted')
+		elif Operation=='Cancel':
+			turbogears.flash('Updates Cancelled')
+		elif Operation=='New':
+			GroupID=''
+		else:
+			turbogears.flash('Error in processing request')
+		if GroupID in ['',None]:
+			raise cherrypy.HTTPRedirect('CustomerGroupsEditor')
+		else:
+			raise cherrypy.HTTPRedirect('CustomerGroupsEditor?GroupID=%d' % GroupID)
+		
+	@expose(format='json')
+	def CustomerGroupsEditorQuickSearch(self, QuickSearchText='', **kw):
+		'''	Search for an existing entry '''
+		QuickSearchText = str(QuickSearchText)
+		if QuickSearchText=='*':
+			groups = model.InvGrpCustomer.select(orderBy=[model.InvGrpCustomer.q.Name])
+		else:
+			groups = model.InvGrpCustomer.select(model.InvGrpCustomer.q.Name.contains(QuickSearchText),
+				orderBy=[model.InvGrpCustomer.q.Name])
+		results = []
+		for item in groups:
+			results.append(dict(id=item.id, text=item.Name))
+		return dict(results=results)
+
+	@expose(html='turbocare.templates.config_VendorGroupsEditor')
+	@validate(validators={'GroupID':validators.Int()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def VendorGroupsEditor(self, GroupID=None, **kw):
+		'''	Either load an Vendor Groups for editing, or bring up an empty form for adding a new entry 
+		'''
+		if GroupID!=None: # attempt to load the record
+			try:
+				Group = model.InvGrpVendor.get(GroupID)
+			except SQLObjectNotFound:
+				turbogears.flash("The GroupID %d could not be found (deleted?)" % GroupID)
+				Group=None
+				GroupID=None
+		else:
+			Group=None
+		# Prepare our form
+		result = {} # The dictionary we are sending to the web page
+		if GroupID==None: # Create a blank form
+			result['GroupID'] = ''
+			result['DisplayName'] = 'New Entry'
+			result['Name'] = ''
+			result['Description'] = ''
+			result['IsDeleted'] = False
+		else:
+			result['GroupID'] = GroupID
+			result['DisplayName'] = '%s (%d) linked to %d items' % (Group.Name, GroupID, len(Group.Vendors))
+			result['Name'] = Group.Name
+			result['Description'] = Group.Description
+			result['IsDeleted'] = Group.Status=='deleted'
+		return result
+		
+	@expose()
+	@validate(validators={'GroupID':validators.Int(),'Name':validators.String(),'Description':validators.String(),\
+	'Operation':validators.String()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
+	def VendorGroupsEditorSave(self, GroupID=None,Name='',Description='',Operation='', **kw):
+		'''	Save changes.  Either create a new entry, update an existing entry or attempt to delete an entry 
+			Save/Cancel/New/Delete are the various operations we have
+		'''
+		if GroupID!=None:
+			try:
+				Group = model.InvGrpVendor.get(GroupID)
+			except SQLObjectNotFound: #, errorstr:
+				turbogears.flash("There is an error on a database entry I thought should exist, but doesn't, so all the changes are lost.  Try again.")
+				raise cherrypy.HTTPRedirect('VendorGroupsEditor')
+		if Operation=='Save': # Either update or create a new entry
+			if GroupID==None: # Create a new entry
+				Group = model.InvGrpVendor(Name=Name,Description=Description)
+				GroupID = Group.id
+				turbogears.flash('New Entry Created (id: %d)' % GroupID)
+			else: # Update an entry
+				Group.Name = str(Name)
+				Group.Description = str(Description)
+				turbogears.flash('Recorded Updated')
+		elif Operation=='Delete' and GroupID!=None:
+			# Just check to make sure no one is using the room at the time
+			if len(Group.Vendors) > 0:
+				# Mark the item deleted
+				Group.Status = 'deleted'
+				turbogears.flash('Record Marked Deleted')
+			else:
+				Group.destroySelf()
+				GroupID = None
+				turbogears.flash('Record Deleted')
+		elif Operation=='Un-Delete' and GroupID!=None:
+			Group.Status = ''
+			turbogears.flash('Record Un-Deleted')
+		elif Operation=='Cancel':
+			turbogears.flash('Updates Cancelled')
+		elif Operation=='New':
+			GroupID=''
+		else:
+			turbogears.flash('Error in processing request')
+		if GroupID in ['',None]:
+			raise cherrypy.HTTPRedirect('VendorGroupsEditor')
+		else:
+			raise cherrypy.HTTPRedirect('VendorGroupsEditor?GroupID=%d' % GroupID)
+		
+	@expose(format='json')
+	def VendorGroupsEditorQuickSearch(self, QuickSearchText='', **kw):
+		'''	Search for an existing entry '''
+		QuickSearchText = str(QuickSearchText)
+		if QuickSearchText=='*':
+			groups = model.InvGrpVendor.select(orderBy=[model.InvGrpVendor.q.Name])
+		else:
+			groups = model.InvGrpVendor.select(model.InvGrpVendor.q.Name.contains(QuickSearchText),
+				orderBy=[model.InvGrpVendor.q.Name])
+		results = []
+		for item in groups:
+			results.append(dict(id=item.id, text=item.Name))
+		return dict(results=results)
+		
+	@expose(html='turbocare.templates.config_PackagingGroupsEditor')
+	@validate(validators={'GroupID':validators.Int()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def PackagingGroupsEditor(self, GroupID=None, **kw):
+		'''	Either load an Packaging Groups for editing, or bring up an empty form for adding a new entry 
+		'''
+		if GroupID!=None: # attempt to load the record
+			try:
+				Group = model.InvGrpPackaging.get(GroupID)
+			except SQLObjectNotFound:
+				turbogears.flash("The GroupID %d could not be found (deleted?)" % GroupID)
+				Group=None
+				GroupID=None
+		else:
+			Group=None
+		# Prepare our form
+		result = {} # The dictionary we are sending to the web page
+		if GroupID==None: # Create a blank form
+			result['GroupID'] = ''
+			result['DisplayName'] = 'New Entry'
+			result['Name'] = ''
+			result['Description'] = ''
+			result['IsDeleted'] = False
+		else:
+			result['GroupID'] = GroupID
+			result['DisplayName'] = '%s (%d) linked to %d items' % (Group.Name, GroupID, len(Group.Packagings))
+			result['Name'] = Group.Name
+			result['Description'] = Group.Description
+			result['IsDeleted'] = Group.Status=='deleted'
+		return result
+		
+	@expose()
+	@validate(validators={'GroupID':validators.Int(),'Name':validators.String(),'Description':validators.String(),\
+	'Operation':validators.String()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
+	def PackagingGroupsEditorSave(self, GroupID=None,Name='',Description='',Operation='', **kw):
+		'''	Save changes.  Either create a new entry, update an existing entry or attempt to delete an entry 
+			Save/Cancel/New/Delete are the various operations we have
+		'''
+		if GroupID!=None:
+			try:
+				Group = model.InvGrpPackaging.get(GroupID)
+			except SQLObjectNotFound: #, errorstr:
+				turbogears.flash("There is an error on a database entry I thought should exist, but doesn't, so all the changes are lost.  Try again.")
+				raise cherrypy.HTTPRedirect('PackagingGroupsEditor')
+		if Operation=='Save': # Either update or create a new entry
+			if GroupID==None: # Create a new entry
+				Group = model.InvGrpPackaging(Name=Name,Description=Description)
+				GroupID = Group.id
+				turbogears.flash('New Entry Created (id: %d)' % GroupID)
+			else: # Update an entry
+				Group.Name = str(Name)
+				Group.Description = str(Description)
+				turbogears.flash('Recorded Updated')
+		elif Operation=='Delete' and GroupID!=None:
+			# Just check to make sure no one is using the room at the time
+			if len(Group.Packagings) > 0:
+				# Mark the item deleted
+				Group.Status = 'deleted'
+				turbogears.flash('Record Marked Deleted')
+			else:
+				Group.destroySelf()
+				GroupID = None
+				turbogears.flash('Record Deleted')
+		elif Operation=='Un-Delete' and GroupID!=None:
+			Group.Status = ''
+			turbogears.flash('Record Un-Deleted')
+		elif Operation=='Cancel':
+			turbogears.flash('Updates Cancelled')
+		elif Operation=='New':
+			GroupID=''
+		else:
+			turbogears.flash('Error in processing request')
+		if GroupID in ['',None]:
+			raise cherrypy.HTTPRedirect('PackagingGroupsEditor')
+		else:
+			raise cherrypy.HTTPRedirect('PackagingGroupsEditor?GroupID=%d' % GroupID)
+		
+	@expose(format='json')
+	def PackagingGroupsEditorQuickSearch(self, QuickSearchText='', **kw):
+		'''	Search for an existing entry '''
+		QuickSearchText = str(QuickSearchText)
+		if QuickSearchText=='*':
+			groups = model.InvGrpPackaging.select(orderBy=[model.InvGrpPackaging.q.Name])
+		else:
+			groups = model.InvGrpPackaging.select(model.InvGrpPackaging.q.Name.contains(QuickSearchText),
+				orderBy=[model.InvGrpPackaging.q.Name])
+		results = []
+		for item in groups:
+			results.append(dict(id=item.id, text=item.Name))
+		return dict(results=results)
+		
+	@expose(html='turbocare.templates.config_CompoundGroupsEditor')
+	@validate(validators={'GroupID':validators.Int()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def CompoundGroupsEditor(self, GroupID=None, **kw):
+		'''	Either load an Compound Groups for editing, or bring up an empty form for adding a new entry 
+		'''
+		if GroupID!=None: # attempt to load the record
+			try:
+				Group = model.InvGrpCompound.get(GroupID)
+			except SQLObjectNotFound:
+				turbogears.flash("The GroupID %d could not be found (deleted?)" % GroupID)
+				Group=None
+				GroupID=None
+		else:
+			Group=None
+		# Prepare our form
+		result = {} # The dictionary we are sending to the web page
+		if GroupID==None: # Create a blank form
+			result['GroupID'] = ''
+			result['DisplayName'] = 'New Entry'
+			result['Name'] = ''
+			result['Description'] = ''
+			result['IsDeleted'] = False
+		else:
+			result['GroupID'] = GroupID
+			result['DisplayName'] = '%s (%d) linked to %d items' % (Group.Name, GroupID, len(Group.Compounds))
+			result['Name'] = Group.Name
+			result['Description'] = Group.Description
+			result['IsDeleted'] = Group.Status=='deleted'
+		return result
+		
+	@expose()
+	@validate(validators={'GroupID':validators.Int(),'Name':validators.String(),'Description':validators.String(),\
+	'Operation':validators.String()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
+	def CompoundGroupsEditorSave(self, GroupID=None,Name='',Description='',Operation='', **kw):
+		'''	Save changes.  Either create a new entry, update an existing entry or attempt to delete an entry 
+			Save/Cancel/New/Delete are the various operations we have
+		'''
+		if GroupID!=None:
+			try:
+				Group = model.InvGrpCompound.get(GroupID)
+			except SQLObjectNotFound: #, errorstr:
+				turbogears.flash("There is an error on a database entry I thought should exist, but doesn't, so all the changes are lost.  Try again.")
+				raise cherrypy.HTTPRedirect('CompoundGroupsEditor')
+		if Operation=='Save': # Either update or create a new entry
+			if GroupID==None: # Create a new entry
+				Group = model.InvGrpCompound(Name=Name,Description=Description)
+				GroupID = Group.id
+				turbogears.flash('New Entry Created (id: %d)' % GroupID)
+			else: # Update an entry
+				Group.Name = str(Name)
+				Group.Description = str(Description)
+				turbogears.flash('Recorded Updated')
+		elif Operation=='Delete' and GroupID!=None:
+			# Just check to make sure no one is using the room at the time
+			if len(Group.Compounds) > 0:
+				# Mark the item deleted
+				Group.Status = 'deleted'
+				turbogears.flash('Record Marked Deleted')
+			else:
+				Group.destroySelf()
+				GroupID = None
+				turbogears.flash('Record Deleted')
+		elif Operation=='Un-Delete' and GroupID!=None:
+			Group.Status = ''
+			turbogears.flash('Record Un-Deleted')
+		elif Operation=='Cancel':
+			turbogears.flash('Updates Cancelled')
+		elif Operation=='New':
+			GroupID=''
+		else:
+			turbogears.flash('Error in processing request')
+		if GroupID in ['',None]:
+			raise cherrypy.HTTPRedirect('CompoundGroupsEditor')
+		else:
+			raise cherrypy.HTTPRedirect('CompoundGroupsEditor?GroupID=%d' % GroupID)
+		
+	@expose(format='json')
+	def CompoundGroupsEditorQuickSearch(self, QuickSearchText='', **kw):
+		'''	Search for an existing entry '''
+		QuickSearchText = str(QuickSearchText)
+		if QuickSearchText=='*':
+			groups = model.InvGrpCompound.select(orderBy=[model.InvGrpCompound.q.Name])
+		else:
+			groups = model.InvGrpCompound.select(model.InvGrpCompound.q.Name.contains(QuickSearchText),
+				orderBy=[model.InvGrpCompound.q.Name])
+		results = []
+		for item in groups:
+			results.append(dict(id=item.id, text=item.Name))
+		return dict(results=results)

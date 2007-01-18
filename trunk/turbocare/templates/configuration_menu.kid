@@ -48,49 +48,49 @@
 					</div>
 				</div>
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href=""></a>Insurance Options</div>
+					<div style="text-align: left" class="clear"><a href="InsuranceEditor">Insurance Options</a></div>
 					<div style="text-align: left" class="clear">
 						Manage the list of Insurance providers
 					</div>
 				</div>
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href=""></a>Packaging Types</div>
+					<div style="text-align: left" class="clear"><a href="PackagingTypesEditor">Packaging Types</a></div>
 					<div style="text-align: left" class="clear">
 						Manage the list of Packaging Types
 					</div>
 				</div>
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href=""></a>Item Master (Catalog Item) Groups</div>
+					<div style="text-align: left" class="clear"><a href="CatalogItemGroupsEditor">Item Master (Catalog Item) Groups</a></div>
 					<div style="text-align: left" class="clear">
 						Manage the list of Item Master (Catalog Item) Groups
 					</div>
 				</div>
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href=""></a>Location Groups</div>
+					<div style="text-align: left" class="clear"><a href="LocationGroupsEditor">Location Groups</a></div>
 					<div style="text-align: left" class="clear">
 						Manage the list of Location Groups
 					</div>
 				</div>
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href=""></a>Customer Groups</div>
+					<div style="text-align: left" class="clear"><a href="CustomerGroupsEditor">Customer Groups</a></div>
 					<div style="text-align: left" class="clear">
 						Manage the list of Customer Groups
 					</div>
 				</div>
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href=""></a>Vendor Groups</div>
+					<div style="text-align: left" class="clear"><a href="VendorGroupsEditor">Vendor Groups</a></div>
 					<div style="text-align: left" class="clear">
 						Manage the list of Vendor Groups
 					</div>
 				</div>
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href=""></a>Packaging Groups</div>
+					<div style="text-align: left" class="clear"><a href="PackagingGroupsEditor">Packaging Groups</a></div>
 					<div style="text-align: left" class="clear">
 						Manage the list of Packaging Groups
 					</div>
 				</div>
 				<div class="row">
-					<div style="text-align: left" class="clear"><a href=""></a>Compound Groups</div>
+					<div style="text-align: left" class="clear"><a href="CompoundGroupsEditor">Compound Groups</a></div>
 					<div style="text-align: left" class="clear">
 						Manage the list of Compound Groups
 					</div>

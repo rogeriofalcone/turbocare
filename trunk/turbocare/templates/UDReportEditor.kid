@@ -52,9 +52,11 @@
 	<br />
 	<div id="QueryDefinition" class="QryMkrTbl">
 	</div>
-	 <DIV >Step 3: <A href="javascript:qry.SerializeQuery()">Run the query</A>
-		[<A href="javascript:rr.HideDetails()">Hide all details</A> ||
-		<A href="javascript:rr.ShowDetails()">Show all details</A>]
+	 <DIV >Step 3: <A href="javascript:qry.SerializeQuery()">Run the query</A> 
+	 [Render report as a series of flat tables <INPUT id="RenderFlat" name="RenderFlat" type="checkbox" value="true"/>]
+		<br/>[<A href="javascript:rr.HideDetails()">Hide all details</A> ||
+		<A href="javascript:rr.ShowDetails()">Show all details</A> ||
+		<A href="javascript:rr.RemoveHiddenSections()">Remove</A> any hidden sections from the report display]
 	</DIV>
 	<DIV id='RenderReport' style="font-size:10px">
 	</DIV>
