@@ -26,7 +26,11 @@ _sudo apt-get install apache2 libapache2-mod-python2.4_
 
 _sudo easy_install -UZ  setuptools_
 
-_sudo easy_install -UZ  TuboGears
+_wget http://files.turbogears.org/eggs/TurboJson-0.9.9-py2.4.egg_
+
+_sudo -Zf TurboJson-0.9.9-py2.4.egg_
+
+_sudo easy_install -Z  TuboGears_
 
 _wget http://files.turbogears.org/eggs/SQLObject-0.7.1dev_r1860-py2.4.egg_
 
