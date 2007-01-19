@@ -122,51 +122,55 @@ sqlobject.dburi="mysql://root@localhost:3306/care2x"
 Make sure turbocare.basedir="/home/USERNAME/turbocare" points to where turbocare username is installed. 
 
 You can also change the log file locations if you want to.
+{{{
+cp turbocare/turbocare_modpython-sample.py turbocare/turbocare_modpython.py
 
-_cp turbocare/turbocare_modpython-sample.py turbocare/turbocare_modpython.py_
-
-_vi turbocare/turbocare_modpython.py_
+vi turbocare/turbocare_modpython.py
+}}}
 
 Update the configuration file location in this file to where you have installed turbocare.  
 
-_sudo python setup.py install_
+`sudo python setup.py install`
 
 We need to install the files for apache to be able to find them.  
 
 Note after every update you need to run this command.
 
-_sudo cp modpython_gateway.py /usr/lib/python2.4/site-packages/_
+`sudo cp modpython_gateway.py /usr/lib/python2.4/site-packages/`
 
 Copy Modpython Gateway to pythons sitepackages.  This lets us use TurboGears with mod_python. 
 
 
 ===Apache Configuration===
 
-_sudo cp apache-turbocare.conf /etc/apache2/sites-available/turbocare_
+{{{
+sudo cp apache-turbocare.conf /etc/apache2/sites-available/turbocare
 
-_sudo cp apache-ssl-turbocare.conf /etc/apache2/sites-available/turbocare-ssl_
+sudo cp apache-ssl-turbocare.conf /etc/apache2/sites-available/turbocare-ssl
 
+}}}
 Copy Apache def files
 
-_sudo vi /etc/apache2/sites-available/turbocare_
+`sudo vi /etc/apache2/sites-available/turbocare`
 
 Change any references to /home/david to the home/USER where user is the user in which you have done the installation with.
 
-_sudo vi /etc/apache2/sites-available/turbocare-ssl_
+`sudo vi /etc/apache2/sites-available/turbocare-ssl`
 
 Change any references to /home/david to the home/USER where user is the user in which you have done the installation with.
 
-_sudo vi /etc/apache2/ports.conf_
+`sudo vi /etc/apache2/ports.conf`
 
 Add a new line with _Listen 443_ on it.
 
-_sudo apache2-ssl-certificate -days 365_
+{{{
+sudo apache2-ssl-certificate -days 365
 
-_sudo mkdir /var/www/.egg_
-
+sudo mkdir /var/www/.egg
+}}}
 Setup temp egg directory.
 
-_sudo chown -R www-data /var/www/.egg_
+`sudo chown -R www-data /var/www/.egg`
 
 
 Install ssl certificate.
@@ -174,23 +178,23 @@ Install ssl certificate.
 
 
 ===Enable sites and modules===
-_sudo a2enmod mod_python_
+`sudo a2enmod mod_python`
 
 Enable mod_python for apache2
 
-_sudo a2enmod  ssl_
+`sudo a2enmod  ssl`
 
 Enable ssl for apache2
 
-_sudo a2dissite default_
+`sudo a2dissite default`
 
 Disable the default site as we want turbocare to be new default.
 
-_sudo a2ensite turbocare_
+`sudo a2ensite turbocare`
 
 Enable turbocare site
 
-_sudo a2ensite turbocare-ssl_
+`sudo a2ensite turbocare-ssl`
 
 Enable ssl version of turbocare.
 
@@ -199,15 +203,16 @@ Enable ssl version of turbocare.
 
 Now we need to change some permissions to make sure Apache's user can write reports.
 
-_cd ~/turbocare_
+{{{
+cd ~/turbocare
 
-_sudo chown  www-data turbocare/static/reports_
+sudo chown  www-data turbocare/static/reports
 
-_sudo chown  www-data turbocare/static/user_reports_
-
+sudo chown  www-data turbocare/static/user_reports
+}}}
 
 ===Finishing off===
-_sudo /etc/init.d/apache2 restart_
+`sudo /etc/init.d/apache2 restart`
 
 Restart Apache2 to get it to load changes. 
 
@@ -219,15 +224,15 @@ Both should display first page of turbocare.
 
 ==Upgrades==
 To upgrade turbocare
+{{{
+cd ~/turbocare
 
-_cd ~/turbocare_
+svn update
 
-_svn update_
+sudo python setup.py install
 
-_sudo python setup.py install_
-
-_sudo /etc/init.d/apache2 restart_
-
+sudo /etc/init.d/apache2 restart
+}}}
 
 =References=
 My instructions are based on the following websites.  However I was able to simplify as we removed some of the work for mod_python by including necessary files in our svn version of turbocare. 
