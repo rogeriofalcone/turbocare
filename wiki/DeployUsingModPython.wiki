@@ -6,21 +6,24 @@ Commands are in _italics_.
 ==Procedure==
 ===Install mysql, turbocare, python, and apache2 packages.===
 
-'sudo vi /etc/apt/sources.list'
+`sudo vi /etc/apt/sources.list`
 
 Remove "#" on deb http://in.archive.ubuntu.com/ubuntu/ dapper universe
 and on  deb-src http://in.archive.ubuntu.com/ubuntu/ dapper universe lines.
 
-_sudo apt-get update_
+{{{
 
+sudo apt-get update
 
-_sudo apt-get install gcc libc6-dev  build-essential_
+sudo apt-get install gcc libc6-dev  build-essential
 
-_sudo apt-get install mysql-server python-reportlab subversion_
+sudo apt-get install mysql-server python-reportlab subversion
 
-_sudo apt-get install python-pysqlite2 python-mysqldb python-imaging  python-dev python-setuptools_
+sudo apt-get install python-pysqlite2 python-mysqldb python-imaging  python-dev python-setuptools
 
-_sudo apt-get install apache2 libapache2-mod-python2.4_
+sudo apt-get install apache2 libapache2-mod-python2.4
+
+}}}
 
 ===Install turbogears===
 
