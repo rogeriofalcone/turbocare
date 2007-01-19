@@ -24,7 +24,8 @@ _sudo apt-get install apache2 libapache2-mod-python2.4_
 
 ===Install turbogears===
 
-{{{sudo easy_install -UZ  setuptools
+{{{
+sudo easy_install -UZ  setuptools
 
 wget http://files.turbogears.org/eggs/TurboJson-0.9.9-py2.4.egg
 
@@ -34,7 +35,8 @@ sudo easy_install -Z  TuboGears
 
 wget http://files.turbogears.org/eggs/SQLObject-0.7.1dev_r1860-py2.4.egg
 
-sudo easy_install -fZ SQLObject-0.7.1dev_r1860-py2.4.egg}}}
+sudo easy_install -fZ SQLObject-0.7.1dev_r1860-py2.4.egg
+}}}
 
 Note you may need to specify v0.7 as 0.8 and 0.9 have caused me some troubles 
 
