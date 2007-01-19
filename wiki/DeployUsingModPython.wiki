@@ -46,42 +46,50 @@ Note you may need to specify v0.7 as 0.8 and 0.9 have caused me some troubles
 Note when using easy_install we need to specify the install as unziped eggs as this stops apache from trying to extract the eggs into its own home directory.
 
 ===Install turbocare===
-_cd  ~/_
 
-_svn checkout http://turbocare.googlecode.com/svn/trunk/  turbocare_
+{{{
+cd  ~/
+
+svn checkout http://turbocare.googlecode.com/svn/trunk/  turbocare
+}}}
 
 ===Setup database===
 We should add a password to MySQL's root user but I will add that later. 
 
-_mysql -u root -p_
+`mysql -u root -p`
 
 just press enter if you have no password yet.
 
 at the prompt type:
 
-_create database turbocare;_
+`create database turbocare;`
 
 press enter and then ctrl-D to exit. 
 
 
-_cd ~/turbocare_
+{{{
 
-_python mysql_schema.py -d turbocare -u root -o schema_updt -f turbocare_schema.data_ 
+cd ~/turbocare
 
-_python mysql_schema.py -d turbocare -u root -o restore -f turbocare_backup.data_ 
+python mysql_schema.py -d turbocare -u root -o schema_updt -f turbocare_schema.data
 
+python mysql_schema.py -d turbocare -u root -o restore -f turbocare_backup.data
+
+}}}
 ===Check standalone turbocare===
-_cp dev-sample.cfg dev.cfg_
+{{{
+cp dev-sample.cfg dev.cfg
 
-_vi dev.cfg_
+vi dev.cfg
 
+}}}
 Check that all the variables are right. Particularly the sqlobject.dburi string.
 
-_cp turbocare/ReportDefinition-Sample.py turbocare/ReportDefinition.py_
+{{{
+cp turbocare/ReportDefinition-Sample.py turbocare/ReportDefinition.py
 
-
-
-_python start-turbocare.py_ 
+python start-turbocare.py
+}}}
 
 If this loads without errors you have installed turbocare. 
 
@@ -97,11 +105,13 @@ Now to get mod_python working
 
 ===Setup Turbocare for production===
 
-_cd ~/turbocare_
+{{{
+cd ~/turbocare
 
-_cp prod-sample.cfg prod.cfg_
+cp prod-sample.cfg prod.cfg
 
-_vi prod.cfg_
+vi prod.cfg
+}}}
 
 This is the production configuration file.  
 
