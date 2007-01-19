@@ -29,7 +29,7 @@ sudo easy_install -UZ  setuptools
 
 wget http://files.turbogears.org/eggs/TurboJson-0.9.9-py2.4.egg
 
-sudo -Zf TurboJson-0.9.9-py2.4.egg
+sudo easy_install -Zf TurboJson-0.9.9-py2.4.egg
 
 sudo easy_install -Z  TuboGears
 
