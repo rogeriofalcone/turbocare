@@ -6,7 +6,7 @@ Commands are in _italics_.
 ==Procedure==
 ===Install mysql, turbocare, python, and apache2 packages.===
 
-_sudo vi /etc/apt/sources.list_
+'sudo vi /etc/apt/sources.list'
 
 Remove "#" on deb http://in.archive.ubuntu.com/ubuntu/ dapper universe
 and on  deb-src http://in.archive.ubuntu.com/ubuntu/ dapper universe lines.
