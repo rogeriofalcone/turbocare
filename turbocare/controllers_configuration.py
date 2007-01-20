@@ -1574,7 +1574,7 @@ class Configuration(controllers.RootController):
 			log.debug('...Save')
 			# Silly but necessary date manipulations (I really wish the validators for dates worked!!!)
 			if not DateBirth in ['',None]:
-				DateBirth = datetime.fromtimestamp(time.mktime(time.strptime(DateCreate[0:10],DATE_FORMAT)))
+				DateBirth = datetime.fromtimestamp(time.mktime(time.strptime(DateBirth[0:10],DATE_FORMAT)))
 			else:
 				DateBirth = None
 			# Update the Closed Beds variable - NOTE, the variable actually returns back the beds which are NOT closed

@@ -163,6 +163,9 @@ class Store(turbogears.controllers.Controller):
 			PackagingID = ''
 		else:
 			catalogitem = model.InvCatalogItem.get(CatalogItemID)
+			# Do some obvious record fixing
+			if catalogitem.ParentItemID == catalogitem.id: # This circular reference can cause major memory problems.
+				catalogitem.ParentItemID = None
 			# Get childitems
 			catalogitems = model.InvCatalogItem.select(AND (model.InvCatalogItem.q.ParentItemID==CatalogItemID, \
 				model.InvCatalogItem.q.Status != 'deleted'),orderBy=[model.InvCatalogItem.q.Name])
@@ -258,7 +261,8 @@ class Store(turbogears.controllers.Controller):
 			catalogitem.Name = Name
 			catalogitem.Description = Description
 			catalogitem.Accounting = Accounting
-			catalogitem.ParentItemID = ParentItemID
+			if ParentItemID != CatalogItemID: # Only update the catalog item id if we're not setting it to itself
+				catalogitem.ParentItemID = ParentItemID
 			catalogitem.CompoundID = CompoundID
 			catalogitem.PackagingID = PackagingID
 			catalogitem.IsFixedAsset = IsFixedAsset
@@ -430,16 +434,24 @@ class Store(turbogears.controllers.Controller):
 		oldPOs = [] # POs which are completed, but recent (the last 8 completed)
 		items = model.InvPurchaseOrder.select(orderBy=[-model.InvPurchaseOrder.q.CreateTime])
 		for item in items:
-			#log.debug('....PO id: %d' % item.id)
-			if item.Vendor == None or len(item.Items)==0 or item.POSentOnDate == None or item.POSentOnDate == '':
-				newPOs.append(dict(id=item.id,name=item.Name()))
-			elif item.POSentOnDate != None and item.PercentComplete() <= 0.0:
-				# log.debug('....Sent PO added')
-				sentPOs.append(dict(id=item.id,name=item.Name()))
-			elif item.POSentOnDate != None and (0 < item.PercentComplete() < 1):
-				unfinishedPOs.append(dict(id=item.id,name=item.Name()))
-			elif item.PercentComplete() == 1 and len(oldPOs) < 8:
-				oldPOs.append(dict(id=item.id,name=item.Name()))
+			try:
+				#log.debug('....PO id: %d' % item.id)
+				if item.Vendor == None or len(item.Items)==0 or item.POSentOnDate == None or item.POSentOnDate == '':
+					newPOs.append(dict(id=item.id,name=item.Name()))
+				elif item.POSentOnDate != None and item.PercentComplete() <= 0.0:
+					# log.debug('....Sent PO added')
+					sentPOs.append(dict(id=item.id,name=item.Name()))
+				elif item.POSentOnDate != None and (0 < item.PercentComplete() < 1):
+					unfinishedPOs.append(dict(id=item.id,name=item.Name()))
+				elif item.PercentComplete() == 1 and len(oldPOs) < 8:
+					oldPOs.append(dict(id=item.id,name=item.Name()))
+			except SQLObjectNotFound, errorstr:
+				errorArr = errorstr[0].split(' ')
+				table = errorArr[2]
+				id = errorArr[6]
+				if table == 'InvVendor':
+					turbogears.flash("Error: It seems that the Vendor (id=%s) doesn't exist on Purchase Order id=%d.  You'll need to figure out which Vendor should be attached to this Purchase Order" % (id,item.id))
+					item.VendorID = None
 		# Configure display for Purchase order
 		if PurchaseOrderID == None: # Initial screen when no item is selected
 			# Make a blank entry
@@ -452,12 +464,22 @@ class Store(turbogears.controllers.Controller):
 			ExpectedDeliveryDate = ''
 			Notes = ''
 		else:
-			purchaseorder = model.InvPurchaseOrder.get(PurchaseOrderID)
+			try:
+				purchaseorder = model.InvPurchaseOrder.get(PurchaseOrderID)
+			except SQLObjectNotFound, errorstr:
+				errorArr = errorstr[0].split(' ')
+				table = errorArr[2]
+				id = errorArr[6]
+				if table == 'InvVendor':
+					turbogears.flash("Error: It seems that the Vendor (id=%s) doesn't exist.  You'll need to figure out which Vendor should be attached to this Purchase Order" % id)
+					purchaseorder.VendorID = None
 			# Get the regular variables
 			Name = purchaseorder.Name()
 			VendorID = purchaseorder.VendorID
 			if VendorID != None:
 				VendorName = purchaseorder.Vendor.Name
+			else:
+				VendorName = 'Not Assigned'
 			items = [] #MultipleJoin("InvPOItems",joinColumn="purchase_order_id")
 			for item in purchaseorder.Items:
 				if item.Status != 'deleted':
@@ -578,6 +600,10 @@ class Store(turbogears.controllers.Controller):
 			turbogears.flash('No Items Selected')
 			raise cherrypy.HTTPRedirect('PurchaseOrdersEditor')
 		else:
+			if isinstance(CatalogItemID, basestring):
+				CatalogItemID = [int(CatalogItemID)]
+			else:
+				CatalogItemID = [int(x) for x in CatalogItemID]
 			CatalogItems = []
 			for ID in CatalogItemID:
 				item = model.InvCatalogItem.get(ID)
@@ -594,13 +620,34 @@ class Store(turbogears.controllers.Controller):
 		'''
 		log.debug('PurchaseOrderCreateNewSave')
 		POs = {}
+		# Convert our lists to the correct data type
+		if isinstance(Vendor, basestring):
+			Vendor = [int(Vendor)]
+		else:
+			Vendor = [int(x) for x in Vendor]
+		if isinstance(CatalogItem, basestring):
+			CatalogItem = [int(CatalogItem)]
+		else:
+			CatalogItem = [int(x) for x in CatalogItem]
+		if isinstance(QuantityRequested,basestring):
+			QuantityRequested= [float(QuantityRequested)]
+		else:
+			QuantityRequested= [float(x) for x in QuantityRequested]
+		if isinstance(QuotePrice,basestring):
+			QuotePrice= [float(QuotePrice)]
+		else:
+			QuotePrice= [float(x) for x in QuotePrice]
+		if isinstance(Notes,basestring):
+			Notes= [str(Notes)]
+		else:
+			Notes= [str(x) for x in Notes]
 		if len(Counter) == 0:
 			turbogears.flash("Some values were not entered correctly (and so the PO(s) might be incomplete)")
 			cherrypy.HTTPRedirect('PurchaseOrdersEditor')	
 		if len(Counter) == 1: # For POs with only one item
-			PurchaseOrder = model.InvPurchaseOrder(VendorID = int(Vendor))
-			POItem = model.InvPOItems(PurchaseOrderID=PurchaseOrder.id, CatalogItemID=int(CatalogItem),\
-				 QuantityRequested = float(QuantityRequested), QuotePrice = float(QuotePrice), Notes = str(Notes), Status='')
+			PurchaseOrder = model.InvPurchaseOrder(VendorID = Vendor[0])
+			POItem = model.InvPOItems(PurchaseOrderID=PurchaseOrder.id, CatalogItemID=CatalogItem[0],\
+				 QuantityRequested = QuantityRequested[0], QuotePrice = QuotePrice[0], Notes = Notes[0], Status='')
 			POID = str(PurchaseOrder.id)
 		else: #for POs with more than one item
 			for cat_id, ven_id, qtyreq, qtprce, note in zip(CatalogItem, Vendor, QuantityRequested, QuotePrice, Notes):
@@ -611,8 +658,8 @@ class Store(turbogears.controllers.Controller):
 					PurchaseOrderId = PurchaseOrder.id
 					POs[ven_id] = PurchaseOrderId
 				try:
-					QR = float(qtyreq)
-					QP = float(qtprce)
+					QR = qtyreq
+					QP = qtprce
 				except ValueError:
 					turbogears.flash("Some values were not entered correctly (and so the PO(s) might be incomplete)")
 					raise cherrypy.HTTPRedirect('PurchaseOrdersEditor')
