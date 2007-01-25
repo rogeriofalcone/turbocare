@@ -41,7 +41,7 @@ wget http://files.turbogears.org/eggs/SQLObject-0.7.1dev_r1860-py2.4.egg
 sudo easy_install -fZ SQLObject-0.7.1dev_r1860-py2.4.egg
 }}}
 
-Note you may need to specify v0.7 as 0.8 and 0.9 have caused me some troubles 
+Note the manual installation of TurboJson and SQLObject is to overcome a conflict with turbocare and the later versions of these modules.  In the future it is hoped to correct this problem.
 
 Note when using easy_install we need to specify the install as unziped eggs as this stops apache from trying to extract the eggs into its own home directory.
 
