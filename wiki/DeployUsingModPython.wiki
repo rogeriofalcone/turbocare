@@ -245,7 +245,7 @@ At the time of writing there were incompatiblities with the current version of t
 
 sudo apt-get remove python2.4-pysqlite2
 
-sudo apt-get install libsqlite3-0-dev
+sudo apt-get install libsqlite3-dev
 
 sudo easy_install -Z pysqlite
 
