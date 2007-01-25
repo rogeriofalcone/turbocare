@@ -237,6 +237,19 @@ sudo python setup.py install
 sudo /etc/init.d/apache2 restart
 }}}
 
+==Ubuntu Dapper and SQLite==
+
+At the time of writing there were incompatiblities with the current version of turbocare and the version of sqlite which comes with Dapper.  To fix this follow these steps
+
+{{{
+
+sudo apt-get remove python2.4-pysqlite2
+
+sudo apt-get install libsqlite3-0-dev
+
+sudo easy_install -Z pysqlite
+
+}}}
 =References=
 My instructions are based on the following websites.  However I was able to simplify as we removed some of the work for mod_python by including necessary files in our svn version of turbocare. 
 
