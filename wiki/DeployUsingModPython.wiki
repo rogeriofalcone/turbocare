@@ -117,7 +117,7 @@ This is the production configuration file.
 
 Make sure the database variable is right. 
 
-sqlobject.dburi="mysql://root@localhost:3306/care2x"
+sqlobject.dburi="mysql://root@localhost:3306/turbocare"
 
 Make sure turbocare.basedir="/home/USERNAME/turbocare" points to where turbocare username is installed. 
 
@@ -128,7 +128,10 @@ cp turbocare/turbocare_modpython-sample.py turbocare/turbocare_modpython.py
 vi turbocare/turbocare_modpython.py
 }}}
 
-Update the configuration file location in this file to where you have installed turbocare.  
+Update the configuration file location in this file to where you have installed turbocare.  It should be on a line like this
+turbogears.update_config(configfile="/home/david/turbocare/prod.cfg")
+
+
 
 `sudo python setup.py install`
 
