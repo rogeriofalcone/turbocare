@@ -118,13 +118,13 @@ On HIS1
 {{{
 mysqldump --user=root -p --extended-insert --master-data turbocare > /tmp/backup.sql
 
-scp /tmp/backup.sql user@10.0.0.2:/tmp/
+scp /tmp/backup.sql user@10.0.0.3:/tmp/
 }}}
 
 Where user is the local username you use to login on HIS2.
 
 {{{
-scp /tmp/backup.sql user@10.0.0.3:/tmp/
+scp /tmp/backup.sql user@10.0.0.2:/tmp/
 }}}
 
 Where user is the local username you use to login on BKP1.
