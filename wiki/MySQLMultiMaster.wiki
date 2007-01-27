@@ -32,11 +32,11 @@ MySQL Replication Network:
 
 Change IP's to 
 
-HIS 1: 10.0.0.1
+HIS 1: 10.0.0.3
 
-HIS 2: 10.0.0.2
+HIS 2: 10.0.0.4
 
-BKP1: 10.0.0.3
+BKP1: 10.0.0.2
 
 Subnet: 255.255.255.0 
 
@@ -50,12 +50,12 @@ Enter in your mysql root password you set in step 2.
 
 _GRANT REPLICATION SLAVE, REPLICATION CLIENT
     ON *.*
-    TO 'HIS2'@'10.0.0.2'
+    TO 'HIS2'@'10.0.0.4'
     IDENTIFIED BY 'HIS2 PASSWORD';_
 
 _GRANT REPLICATION SLAVE, REPLICATION CLIENT
     ON *.*
-    TO 'BKP1'@'10.0.0.3'
+    TO 'BKP1'@'10.0.0.2'
     IDENTIFIED BY 'BKP1 PASSWORD';_
 
 Note replace HIS2 PASSWORD and BKP1 PASSWORD with a real password.  Keep this password as we will need it later on.
@@ -70,7 +70,7 @@ Enter in your mysql root password you set in step 2.
 
 _GRANT REPLICATION SLAVE, REPLICATION CLIENT
     ON *.*
-    TO 'HIS1'@'10.0.0.1'
+    TO 'HIS1'@'10.0.0.3'
     IDENTIFIED BY 'HIS1 PASSWORD';_
 _exit_
 
