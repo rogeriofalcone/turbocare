@@ -236,13 +236,15 @@ On HIS1
 mysql -u root -p
 
 CHANGE MASTER TO MASTER_HOST='10.0.0.4', MASTER_PORT=3306,
-    MASTER_USER='HIS2', MASTER_PASSWORD='HIS2 PASSWORD';
+    MASTER_USER='HIS1', MASTER_PASSWORD='HIS1 PASSWORD';
+
 }}}
 
-Note BKP1 PASSWORD is the Password you set in the GRANT section of the Howto.
-start slave;
+Note HIS2 PASSWORD is the Password you set in the GRANT section of the Howto.
 
 {{{
+start slave;
+
 show slave status\G;
 }}}
 
