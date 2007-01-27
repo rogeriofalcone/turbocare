@@ -118,7 +118,7 @@ On HIS1
 {{{
 mysqldump --user=root -p --extended-insert --master-data turbocare > /tmp/backup.sql
 
-scp /tmp/backup.sql user@10.0.0.3:/tmp/
+scp /tmp/backup.sql user@10.0.0.4:/tmp/
 }}}
 
 Where user is the local username you use to login on HIS2.
@@ -147,7 +147,7 @@ On HIS2
 {{{
 mysql -u root -p
 
-CHANGE MASTER TO MASTER_HOST=10.0.0.1, MASTER_PORT=3306,
+CHANGE MASTER TO MASTER_HOST=10.0.0.3, MASTER_PORT=3306,
     MASTER_USER=HIS2, MASTER_PASSWORD=HIS2 PASSWORD;
 }}}
 Note HIS2 PASSWORD is the Password you set in the GRANT section of the Howto.
@@ -213,7 +213,7 @@ On BKP1
 {{{
 mysql -u root -p
 
-CHANGE MASTER TO MASTER_HOST=10.0.0.1, MASTER_PORT=3306,
+CHANGE MASTER TO MASTER_HOST=10.0.0.3, MASTER_PORT=3306,
     MASTER_USER=BKP1, MASTER_PASSWORD=BKP1 PASSWORD;
 }}}
 
@@ -234,7 +234,7 @@ On HIS1
 {{{
 mysql -u root -p
 
-CHANGE MASTER TO MASTER_HOST=10.0.0.2, MASTER_PORT=3306,
+CHANGE MASTER TO MASTER_HOST=10.0.0.4, MASTER_PORT=3306,
     MASTER_USER=HIS2, MASTER_PASSWORD=HIS2 PASSWORD;
 }}}
 
