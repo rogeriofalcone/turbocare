@@ -44,35 +44,40 @@ Subnet: 255.255.255.0
 
 On HIS1
 
-_mysql -u root -p_ 
-
+{{{
+mysql -u root -p
+}}}
 Enter in your mysql root password you set in step 2.
-
-_GRANT REPLICATION SLAVE, REPLICATION CLIENT
+{{{
+GRANT REPLICATION SLAVE, REPLICATION CLIENT
     ON *.*
     TO 'HIS2'@'10.0.0.4'
-    IDENTIFIED BY 'HIS2 PASSWORD';_
+    IDENTIFIED BY 'HIS2 PASSWORD';
 
-_GRANT REPLICATION SLAVE, REPLICATION CLIENT
+GRANT REPLICATION SLAVE, REPLICATION CLIENT
     ON *.*
     TO 'BKP1'@'10.0.0.2'
-    IDENTIFIED BY 'BKP1 PASSWORD';_
-
+    IDENTIFIED BY 'BKP1 PASSWORD';
+}}}
 Note replace HIS2 PASSWORD and BKP1 PASSWORD with a real password.  Keep this password as we will need it later on.
-
-_exit_
-
+{{{
+exit;
+}}}
 ON HIS2
 
-_mysql -u root -p_ 
+{{{
+mysql -u root -p
+}}}
 
 Enter in your mysql root password you set in step 2.
 
-_GRANT REPLICATION SLAVE, REPLICATION CLIENT
+{{{
+GRANT REPLICATION SLAVE, REPLICATION CLIENT
     ON *.*
     TO 'HIS1'@'10.0.0.3'
-    IDENTIFIED BY 'HIS1 PASSWORD';_
-_exit_
+    IDENTIFIED BY 'HIS1 PASSWORD';
+exit;
+}}}
 
 Note replace HIS1 PASSWORD with a real password.  Keep this password as we will need it later on.
 
@@ -83,7 +88,6 @@ Extract file
 `tar -xvf mysql-config-Jan07.tar'
 
 Copy etc/mysql/my.cnf-his1 to HIS1 from the extracted archive
-
 {{{
 mv my.cnf-his1 my.cnf
 sudo cp my.cnf /etc/mysql/my.cnf
@@ -100,7 +104,6 @@ sudo /etc/init.d/mysql restart
 
 
 Copy etc/mysql/my.cnf-bckp to BKP1 from the extracted archive
-
 {{{
 mv my.cnf-bckp my.cnf
 sudo cp my.cnf /etc/mysql/my.cnf
@@ -120,35 +123,43 @@ scp /tmp/backup.sql user@10.0.0.2:/tmp/
 
 Where user is the local username you use to login on HIS2.
 
-`scp /tmp/backup.sql user@10.0.0.3:/tmp/`
+{{{
+scp /tmp/backup.sql user@10.0.0.3:/tmp/
+}}}
 
 Where user is the local username you use to login on BKP1.
 
 On HIS2
-
-`mysql -u root -p < /tmp/backup.sql`
-
+{{{
+mysql -u root -p < /tmp/backup.sql
+}}}
 On BKP1
 
-`mysql -u root -p < /tmp/backup.sql`
+{{{
+mysql -u root -p < /tmp/backup.sql
+}}}
 
 Watch for any errors here. 
 
 ===Start Slave Processors=== 
 On HIS2
 
-`mysql -u root -p`
+{{{
+mysql -u root -p
 
-`CHANGE MASTER TO MASTER_HOST=10.0.0.1, MASTER_PORT=3306,
-    MASTER_USER=HIS2, MASTER_PASSWORD=HIS2 PASSWORD;`
-
+CHANGE MASTER TO MASTER_HOST=10.0.0.1, MASTER_PORT=3306,
+    MASTER_USER=HIS2, MASTER_PASSWORD=HIS2 PASSWORD;
+}}}
 Note HIS2 PASSWORD is the Password you set in the GRANT section of the Howto.
-`_start slave;`
+{{{
+_start slave;
+}}}
 
 Wait 20 seconds
 
-`show slave status\G;`
 {{{
+show slave status\G;
+
 mysql> show slave status\G;
 *************************** 1. row ***************************
              Slave_IO_State: Waiting for master to send event
@@ -230,7 +241,9 @@ CHANGE MASTER TO MASTER_HOST=10.0.0.2, MASTER_PORT=3306,
 Note BKP1 PASSWORD is the Password you set in the GRANT section of the Howto.
 start slave;
 
-`show slave status\G;
+{{{
+show slave status\G;
+}}}
 
 
 The most important lines that are Slave_IO_Running: YES and Slave_SQL_Running: YES.  
