@@ -77,64 +77,77 @@ _exit_
 Note replace HIS1 PASSWORD with a real password.  Keep this password as we will need it later on.
 
 ===Update configuration files===
+Download sample config files from http://turbocare.googlecode.com/files/mysql-config-Jan07.tar
 
-Download the sample HIS1 Configuration File from the samples section of the file and save it to ????
+Extract file
+`tar -xvf mysql-config-Jan07.tar'
 
-Download the sample HIS2 Configuration File from the samples section of the file and save it to ????
+Copy etc/mysql/my.cnf-his1 to HIS1 from the extracted archive
 
-Download the sample BKP1 Configuration File from the samples section of the file and save it to ????
+{{{
+mv my.cnf-his1 my.cnf
+sudo cp my.cnf /etc/mysql/my.cnf
+sudo /etc/init.d/mysql restart
+}}}
 
-On HIS1
 
-_sudo /etc/init.d/mysql restart_
+Copy etc/mysql/my.cnf-his2 to HIS2 from the extracted archive
+{{{
+mv my.cnf-his2 my.cnf
+sudo cp my.cnf /etc/mysql/my.cnf
+sudo /etc/init.d/mysql restart
+}}}
 
-On HIS2
 
-_sudo /etc/init.d/mysql restart_
+Copy etc/mysql/my.cnf-bckp to BKP1 from the extracted archive
 
-On BKP1
+{{{
+mv my.cnf-bckp my.cnf
+sudo cp my.cnf /etc/mysql/my.cnf
+sudo /etc/init.d/mysql restart
+}}}
 
-_sudo /etc/init.d/mysql restart_
-
-The main things we do in this is enable binary logging, and set up autoincrement offsets to enable multi-master operation of the system. 
+The main differences between the files is that we set up different autoincrement offsets and server to enable multi-master operation of the system. 
 
 ===Sync DB Files===
 On HIS1 
 
-_mysqldump --user=root -p --extended-insert --master-data turbocare > /tmp/backup.sql_
+{{{
+mysqldump --user=root -p --extended-insert --master-data turbocare > /tmp/backup.sql
 
-_scp /tmp/backup.sql user@10.0.0.2:/tmp/_ 
+scp /tmp/backup.sql user@10.0.0.2:/tmp/
+}}}
 
 Where user is the local username you use to login on HIS2.
 
-_scp /tmp/backup.sql user@10.0.0.3:/tmp/_
+`scp /tmp/backup.sql user@10.0.0.3:/tmp/`
 
 Where user is the local username you use to login on BKP1.
 
 On HIS2
 
-mysql -u root -p < /tmp/backup.sql
+`mysql -u root -p < /tmp/backup.sql`
 
 On BKP1
 
-mysql -u root -p < /tmp/backup.sql
+`mysql -u root -p < /tmp/backup.sql`
 
 Watch for any errors here. 
 
 ===Start Slave Processors=== 
 On HIS2
 
-_mysql -u root -p_
+`mysql -u root -p`
 
-_CHANGE MASTER TO MASTER_HOST=10.0.0.1, MASTER_PORT=3306,
-    MASTER_USER=HIS2, MASTER_PASSWORD=HIS2 PASSWORD;_
+`CHANGE MASTER TO MASTER_HOST=10.0.0.1, MASTER_PORT=3306,
+    MASTER_USER=HIS2, MASTER_PASSWORD=HIS2 PASSWORD;`
 
 Note HIS2 PASSWORD is the Password you set in the GRANT section of the Howto.
-_start slave;_
+`_start slave;`
 
-Wait 20 seconds_
+Wait 20 seconds
 
-_show slave status\G;_
+`show slave status\G;`
 {{{
 mysql> show slave status\G;
 *************************** 1. row ***************************
@@ -186,16 +199,20 @@ If these do not say yes then you'll need to do some troubleshooting before going
 
 On BKP1
 
-_mysql -u root -p_
+{{{
+mysql -u root -p
 
-_CHANGE MASTER TO MASTER_HOST=10.0.0.1, MASTER_PORT=3306,
-    MASTER_USER=BKP1, MASTER_PASSWORD=BKP1 PASSWORD;_
+CHANGE MASTER TO MASTER_HOST=10.0.0.1, MASTER_PORT=3306,
+    MASTER_USER=BKP1, MASTER_PASSWORD=BKP1 PASSWORD;
+}}}
 
 Note BKP1 PASSWORD is the Password you set in the GRANT section of the Howto.
 
-_start slave;_
+{{{
+start slave;
 
-_show slave status\G;_
+show slave status\G;
+}}}
 
 
 The most important lines that are Slave_IO_Running: YES and Slave_SQL_Running: YES.  
@@ -203,16 +220,17 @@ The most important lines that are Slave_IO_Running: YES and Slave_SQL_Running: Y
 If these do not say yes then you'll need to do some troubleshooting before going any further.  
 
 On HIS1
+{{{
+mysql -u root -p
 
-_mysql -u root -p_
-
-_CHANGE MASTER TO MASTER_HOST=10.0.0.2, MASTER_PORT=3306,
-    MASTER_USER=HIS2, MASTER_PASSWORD=HIS2 PASSWORD;_
+CHANGE MASTER TO MASTER_HOST=10.0.0.2, MASTER_PORT=3306,
+    MASTER_USER=HIS2, MASTER_PASSWORD=HIS2 PASSWORD;
+}}}
 
 Note BKP1 PASSWORD is the Password you set in the GRANT section of the Howto.
 start slave;
 
-_show slave status\G;_
+`show slave status\G;
 
 
 The most important lines that are Slave_IO_Running: YES and Slave_SQL_Running: YES.  
