@@ -8,12 +8,12 @@
 
 
 
-printers = {'RCT1':{'IP':'127.0.0.1','PORT':'9600','Driver':'TDP646','Description':'Registration Receipt Printer'},
-            'RCT2':{'IP':'192.168.11.2','PORT':'9600','Driver':'TDP646','Description':'Registration Receipt Printer'},
-            'LBL1':{'IP':'192.168.11.3','PORT':'9600','Driver':'TDP646','Description':'Registration Label Printer'},
-            'LBL2':{'IP':'192.168.11.4','PORT':'9600','Driver':'TDP646','Description':'Registration Label Printer'},
-            'RPT1':{'IP':'192.168.11.5','PORT':'9600','Driver':'TDP646','Description':'Registration Report Printer'},
-            'RPT2':{'IP':'192.168.11.10','PORT':'9600','Driver':'TDP646','Description':'Registration Report Printer'}
+printers = {'RCT1':{'IP':'127.0.0.1','PORT':'3444','Driver':'TDP646','Description':'Registration Receipt Printer'},
+            'RCT2':{'IP':'192.168.11.2','PORT':'3444','Driver':'TDP646','Description':'Registration Receipt Printer'},
+            'LBL1':{'IP':'192.168.11.3','PORT':'3444','Driver':'TDP646','Description':'Registration Label Printer'},
+            'LBL2':{'IP':'192.168.11.4','PORT':'3444','Driver':'TDP646','Description':'Registration Label Printer'},
+            'RPT1':{'IP':'192.168.11.5','PORT':'3444','Driver':'TDP646','Description':'Registration Report Printer'},
+            'RPT2':{'IP':'192.168.11.10','PORT':'3444','Driver':'TDP646','Description':'Registration Report Printer'}
             }
 
 
