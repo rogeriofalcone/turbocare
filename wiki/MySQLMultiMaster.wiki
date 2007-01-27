@@ -131,12 +131,15 @@ Where user is the local username you use to login on BKP1.
 
 On HIS2
 {{{
-mysql -u root -p < /tmp/backup.sql
+mysql -u root -p turbocare < /tmp/backup.sql
 }}}
 On BKP1
 
 {{{
-mysql -u root -p < /tmp/backup.sql
+mysql -u root -p
+create database turbocare;
+exit;
+mysql -u root -p turbocare < /tmp/backup.sql
 }}}
 
 Watch for any errors here. 
@@ -146,13 +149,11 @@ On HIS2
 
 {{{
 mysql -u root -p
-
-CHANGE MASTER TO MASTER_HOST=10.0.0.3, MASTER_PORT=3306,
-    MASTER_USER=HIS2, MASTER_PASSWORD=HIS2 PASSWORD;
+CHANGE MASTER TO MASTER_HOST='10.0.0.3', MASTER_PORT=3306, MASTER_USER='HIS2', MASTER_PASSWORD='HIS2 PASSWORD';
 }}}
 Note HIS2 PASSWORD is the Password you set in the GRANT section of the Howto.
 {{{
-_start slave;
+start slave;
 }}}
 
 Wait 20 seconds
@@ -213,8 +214,8 @@ On BKP1
 {{{
 mysql -u root -p
 
-CHANGE MASTER TO MASTER_HOST=10.0.0.3, MASTER_PORT=3306,
-    MASTER_USER=BKP1, MASTER_PASSWORD=BKP1 PASSWORD;
+CHANGE MASTER TO MASTER_HOST='10.0.0.3', MASTER_PORT=3306,
+    MASTER_USER='BKP1', MASTER_PASSWORD='BKP1 PASSWORD';
 }}}
 
 Note BKP1 PASSWORD is the Password you set in the GRANT section of the Howto.
@@ -234,8 +235,8 @@ On HIS1
 {{{
 mysql -u root -p
 
-CHANGE MASTER TO MASTER_HOST=10.0.0.4, MASTER_PORT=3306,
-    MASTER_USER=HIS2, MASTER_PASSWORD=HIS2 PASSWORD;
+CHANGE MASTER TO MASTER_HOST='10.0.0.4', MASTER_PORT=3306,
+    MASTER_USER='HIS2', MASTER_PASSWORD='HIS2 PASSWORD';
 }}}
 
 Note BKP1 PASSWORD is the Password you set in the GRANT section of the Howto.
