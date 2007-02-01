@@ -877,7 +877,7 @@ class Billing(controllers.RootController):
 	def BillingPrintReceipt(self, ReceiptID, **kw):
 		'''	Calls the PrintReceipt function in "printer_inventory.py" and passes it the receipt id to print
 		'''
-		return dict(result_msg=PrintReceipt(ReceiptID,cherrypy.request.remoteAddr))
+		return dict(result_msg=PrintReceipt(ReceiptID,cherrypy.request.remoteHost))
 
 	#Map billing back to the index
 	billing = index
