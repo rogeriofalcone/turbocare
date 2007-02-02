@@ -1,5 +1,6 @@
 Installation instructions
 
+THIS DOCUMENT IS CURRENTLY OUT OF DATE.  FOR USABLE INSTRUCTIONS REFER TO DeployUsingModPython guide.
 = Introduction =
 
 TurboCare is based on the Python web framework called TurboGears.  It uses MySQL for the back-end database.  Up until now, I've been working on Ubuntu, so I'll be using that distribution as the starting point for explaining on how to install the program and get it running.
