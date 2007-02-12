@@ -330,9 +330,11 @@ def QuoteAddQuoteItems(self, Id='', id='', data='', **kw):
 def QuoteSearch(self, Name='', VendorName='', ValidOn='', field_num='', show_del=True, **kw):
 	qArgs = ""
 	if Name != '':
-		qArgs+="model.InvQuote.q.Vendor.Name.contains('"+ Name + "'),"
+		qArgs+="model.InvVendor.q.Name.contains('"+ Name + "'),"
+		qArgs+="model.InvVendor.q.id==model.InvQuote.q.VendorID,"
 	if VendorName != '':
-		qArgs+="model.InvQuote.q.Vendor.Name.contains('"+ VendorName + "'),"
+		qArgs+="model.InvVendor.q.Name.contains('"+ VendorName + "'),"
+		qArgs+="model.InvVendor.q.id==model.InvQuote.q.VendorID,"
 	if ValidOn != '':
 		qArgs+="model.InvQuote.q.ValidOn.contains('"+ ValidOn + "'),"
 	if len(qArgs) > 0:
