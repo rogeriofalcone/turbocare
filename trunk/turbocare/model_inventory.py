@@ -176,13 +176,17 @@ class InvCatalogItem(SQLObject):
 			specific stock items.
 	"""
 	#def _set_ParentItemID(self, value):
-		#if value==self.id:
-		#	if self.ParentItemID==self.id:
-		#		value = None
-		#	else:
-		#		value = self.ParentItemID
-        #        value = self.ParentItemID
-	#	self._SO_set_ParentItemID(value)	
+	#	try:
+	#		if value==self.id:
+	#			if self.ParentItemID==self.id:
+	#				value = None
+	#			else:
+	#				value = self.ParentItemID
+	#		value = self.ParentItemID
+	#		self._SO_set_ParentItemID(value)
+	#	except AttributeError:
+	#		self._SO_set_ParentItemID(value)
+			
 	def _set_ModifyId(self, value):
 		value = cur_user_id()
 		self._SO_set_ModifyId(value)	
