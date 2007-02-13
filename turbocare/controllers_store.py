@@ -295,6 +295,8 @@ class Store(turbogears.controllers.Controller):
 			# Make a new unique entry but with a copy of the current supplied values
 			if Name in ['', None]:
 				Name = "New Catalog Item"
+			if ParentItemID in [0,None,'']:
+				ParentItemID = None
 			catalogitem = model.InvCatalogItem(Name=Name,Description=Description,Accounting=\
 				Accounting,IsFixedAsset=IsFixedAsset,IsService=IsService,IsForSale=IsForSale,IsDispensable=\
 				IsDispensable,IsSelectable=IsSelectable,MinStockAmt=MinStockAmt,ReorderAmt=ReorderAmt,\
