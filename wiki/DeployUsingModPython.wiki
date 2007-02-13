@@ -93,6 +93,13 @@ Check that all the variables are right. Particularly the sqlobject.dburi string.
 
 {{{
 cp turbocare/ReportDefinition-Sample.py turbocare/ReportDefinition.py
+}}}
+This file is used for defining custom formatting of reports. 
+{{{
+
+cp turbocare/printer_list.py-example turbocare/printer_list.py
+}}}
+This file is used to setup printers.  
 
 python start-turbocare.py
 }}}
@@ -136,11 +143,7 @@ vi turbocare/turbocare_modpython.py
 
 Update the configuration file location in this file to where you have installed turbocare.  It should be on a line like this
 turbogears.update_config(configfile="/home/david/turbocare/prod.cfg")
-{{{
 
-cp turbocare/printer_list.py-example turbocare/printer_list.py
-}}}
-This file is used to setup printers.  
 
 {{{
 sudo python setup.py install
