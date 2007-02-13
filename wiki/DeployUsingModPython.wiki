@@ -95,12 +95,12 @@ Check that all the variables are right. Particularly the sqlobject.dburi string.
 cp turbocare/ReportDefinition-Sample.py turbocare/ReportDefinition.py
 }}}
 This file is used for defining custom formatting of reports. 
-{{{
 
+{{{
 cp turbocare/printer_list.py-example turbocare/printer_list.py
 }}}
 This file is used to setup printers.  
-
+{{{
 python start-turbocare.py
 }}}
 
