@@ -2962,14 +2962,17 @@ class Store(turbogears.controllers.Controller):
 				StockTransferRequestName = ''
 				StockTransferRequestItemID = ''
 			Qty = ST.Qty
-			DateTransferred = ST.DateTransferred.strftime(DATE_FORMAT)
+			if ST.DateTransferred in ['', None]:
+				DateTransferred = None
+			else:
+				DateTransferred = ST.DateTransferred.strftime(DATE_FORMAT)
 			if ST.IsComplete:
 				CompletedStatus = 'Completed'
 			else:
 				CompletedStatus = 'Not Complete'
 			if ToStockLocationID != None:
 				if ST.ToStockLocation.LocationID==int(self.LocationID):
-					CanComplete = True
+					CanComplete = not ST.IsComplete
 				else:
 					CanComplete = False
 			Status = ST.Status
@@ -3246,7 +3249,9 @@ class Store(turbogears.controllers.Controller):
 			StockTransferID = None
 		elif Operation == 'Complete' and StockTransferID!=None:
 			ST = model.InvStockTransfer.get(StockTransferID)
-			if ST.ToStockLocation.LocationID==int(self.LocationID):
+			if ST.IsComplete:
+				turbogears.flash('The Transfer is already complete!')
+			elif ST.ToStockLocation.LocationID==int(self.LocationID):
 				# Once the transfer completes, deduct the stock from the source location.  The stock already exists in
 				# the destination.
 				ST.ToStockLocation.Quantity += ST.Qty
