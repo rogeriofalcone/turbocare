@@ -16,7 +16,12 @@ log = logging.getLogger("turbocare.controllers")
 # Lists of users, groups and permissions which the program will refuse to delete
 mandatory_users = ['admin']
 mandatory_groups = ['admin', 'superuser']
-mandatory_permissions =  ['admin_users']
+mandatory_permissions =  ['admin_users', 'bill_create', 'bill_edit', 'bill_pay', 'bill_view', 'bill_delete', \
+	'reg_view', 'reg_create', 'reg_edit', 'stores_catalog_view', 'stores_catalog_edit', 'stores_gr_view',\
+	'stores_gr_edit', 'stores_quote_edit', 'stores_quoterequest_view', 'stores_vendor_view', 'stores_stock_view',\
+	'stores_stock_eidt', 'stores_stocktransferrequest_view', 'stores_stocktransferrequest_view', 'stores_stocktransfer_view',\
+	'stores_stocktransfer_edit', 'stores_po_view', 'stores_po_edit', 'report_editor', 'bill_refund',\
+	'admin_controllers_configuration']
 mandatory_user_group = [('admin','admin'),('admin','superuser')]
 mandatory_group_permission = [('admin','admin_users'),('superuser','admin_users')]
 
@@ -28,7 +33,7 @@ class UserManager(controllers.RootController):
 		for user in mandatory_users:
 			users = model.User.select(model.User.q.user_name==user)
 			if users.count() == 0:
-				User = model.User(user_name=user, display_name=user, password=user)
+				User = model.User(user_name=user, display_name=user, password=user, email_address='Nothing')
 		# Check groups
 		for group in mandatory_groups:
 			groups = model.Group.select(model.Group.q.group_name==group)

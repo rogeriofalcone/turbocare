@@ -2582,8 +2582,12 @@ class InvStockTransfer(SQLObject):
 				StockName = self.ToStockLocation.StockItem.Name
 			else:
 				StockName = self.FromStockLocation.StockItem.Name
+			if self.DateTransferred in ['', None]:
+				DateTransferred = '(no date selected)'
+			else:
+				DateTransferred = self.DateTransferred.strftime(DATE_FORMAT)
 			value = '%s%d of %s moved from %s to %s on %s %s' % (Deleted, self.Qty, StockName, FromLocation,\
-				ToLocation, self.DateTransferred.strftime(DATE_FORMAT), note)
+				ToLocation, DateTransferred, note)
 		except AttributeError:
 			value = 'NEW ENTRY (ERR)'
 		return value
