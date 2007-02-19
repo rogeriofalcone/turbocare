@@ -1,0 +1,11 @@
+#summary Initializing the database with Care2x data
+#labels Phase-Deploy
+
+= Introduction =
+
+Before using the patient registration screen, you'll need to have some data enetered into the database.
+
+
+= Details =
+
+There are two files
