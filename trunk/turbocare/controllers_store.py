@@ -634,7 +634,13 @@ class Store(turbogears.controllers.Controller):
 		if isinstance(QuantityRequested,basestring):
 			QuantityRequested= [float(QuantityRequested)]
 		else:
-			QuantityRequested= [float(x) for x in QuantityRequested]
+			QuantityList = []
+			for Qty in QuantityRequested:
+				if Qty in ['', None]:
+					QuantityList.append(0)
+				else:
+					QuantityList.append(float(x))
+			QuantityRequested= QuantityList
 		if isinstance(QuotePrice,basestring):
 			QuotePrice= [float(QuotePrice)]
 		else:
