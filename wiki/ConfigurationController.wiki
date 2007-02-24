@@ -85,7 +85,7 @@ Editing doctors is very much the same as registering a patient.  If a new doctor
 == Patient Types ==
 
 === Summary ===
-(need revision 197)
+(need revision 208)
 Patient types are classifications like "Self Pay", "Hospital Insurance", "Private Insurance".  This information is entered in during patient registration and can change from visit to visit.  For billing purposes, it is important to have certain values entered into the database (described below).  When a patient is marked as something other than "self_pay" the billing module will require that a patient have an Insurance number of some kind (either a private insurance number, or a hospital insurance number).
 
 === Mandatory Entries ===
