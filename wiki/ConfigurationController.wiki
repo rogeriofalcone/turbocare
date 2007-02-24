@@ -7,6 +7,7 @@ The configuration controller allows system administrators to edit:
 
   # Addresses
   # Ethnic Origins (Tribes)
+  # Departments/Locations
   # Wards/Rooms/Beds
   # Doctors
   # Insurance Options
@@ -22,3 +23,81 @@ To access this controller, you'll need to go to the User Manager and add the "ad
 The menu at the top of the program displays this option as "Configuration Admin".
 
 == Address Table ==
+
+=== Summary ===
+Addresses are used both for patients and vendors.  The structure of the database has addresses stored in two separate but identical tables (which was probably not the best idea, but hey, it makes it easier to separate out the inventory part of the program if needed).
+
+== Tribes Table (Ethnic Origin) ==
+
+=== Summary ===
+Used in Patient Registration.  In tradition Care2x, this is Ethnic origin configuration.  For Tribes to work, you'll need to create a "tribe" entry in the "Ethnic Origins Classification" table (the top part), and then you can create tribes (like "Ao", "Lotha", etc...) in the bottom section.
+
+=== Editing ===
+There are two parts to editing this information.  First is the classification.  The Registration screen currently only shows entries with a classification of "tribe".  To add a the "tribe" entry:
+  # In the top section, press the "New" button
+  # Enter "tribe" in the "Selected Classification (Edit Mode)" edit box
+  # Press the Save button
+
+Next, add some tribes.  To add the "Ao" tribe, do the following:
+  # In the top section, make sure that "tribe" is selected
+  # In the bottom half (the Types editor), press the "New" button
+  # In the "Selected Type (New Entry)" edit box, enter "Ao"
+  # Press the Save button
+
+Now when you go to registration, you should see "Ao" in the list of tribe options.
+
+== Departments\Locations ==
+
+=== Summary ===
+Departments and locations (different names for essentially the same thing).  They are used in both the Hospital portion (Care2x) and Inventory section.  For the hospital operations, Departments are also used by Wards and Rooms.  For Inventory, they are used to store stock and do stock transfers.
+
+Two tables store this data.  The Care2x table contains information regarding departments while the inventory module contains additional information which are properties for inventory (can the department sell items, receive items etc...).
+
+== Wards ==
+
+=== Summary ===
+Wards are used in the Hospital module only.  Wards are linked to Departments (which you edit separately).  Wards are used at the end of registration if the patient is being registered as an in-patient.  Rooms and Beds links to the Wards table, and you have the option of editing the Rooms table directly from this edit screen.
+
+=== Editing ===
+When creating or editing a Ward, you have the option of Editing the rooms directly from here.  If you change the "Room Nr. Start" field or the "Room Nr. End" then the program will go and change the Rooms table (removing or adding rooms).  If you want to edit the table without changing the Rooms table, then use the "Save (No Room Updates)" button instead of the "Save" button
+
+== Rooms/Beds ==
+
+=== Summary ===
+
+
+== Doctors ==
+
+=== Summary ===
+
+== Insurance Options ==
+
+=== Summary ===
+
+== Packaging Types ==
+
+=== Summary ===
+
+== Item Master Groups ==
+
+=== Summary ===
+
+== Location Groups ==
+
+=== Summary ===
+
+== Customer Groups ==
+
+=== Summary ===
+
+== Vendor Groups ==
+
+=== Summary ===
+
+== Packaging Groups ==
+
+=== Summary ===
+
+== Compound Groups ==
+
+=== Summary ===
