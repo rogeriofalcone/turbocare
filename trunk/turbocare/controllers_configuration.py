@@ -2615,3 +2615,105 @@ class Configuration(controllers.RootController):
 		for item in groups:
 			results.append(dict(id=item.id, text=item.Name))
 		return dict(results=results)
+		
+	@expose(html='turbocare.templates.config_PatientTypeEditor')
+	@validate(validators={'PatientTypeID':validators.Int()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def PatientTypeEditor(self, PatientTypeID=None, **kw):
+		'''	Either load an patient type for editing, or bring up an empty form for adding a new entry 
+		'''
+		# Attempt to load our entry
+		if PatientTypeID!=None: # attempt to load the record
+			try:
+				PatientType = model.ClassInsurance.get(PatientTypeID)
+			except SQLObjectNotFound:
+				turbogears.flash("The PatientTypeID %d could not be found (deleted?)" % PatientTypeID)
+				PatientType=None
+				PatientTypeID=None
+		else:
+			PatientType=None
+		# Prepare our form
+		result = {} # The dictionary we are sending to the web page
+		if PatientTypeID==None: # Create a blank form
+			result['PatientTypeID'] = ''
+			result['DisplayName'] = 'New Entry'
+			result['Name'] = ''
+			result['ClassId'] = ''
+			result['Description'] = ''
+			result['IsDeleted'] = False
+		else:
+			result['PatientTypeID'] = PatientTypeID
+			result['DisplayName'] = '%s (%d)' % (PatientType.Name, PatientTypeID)
+			result['Name'] = PatientType.Name
+			result['ClassId'] = PatientType.ClassId
+			result['Description'] = PatientType.Description
+			result['IsDeleted'] = PatientType.Status == 'deleted'
+		return result
+	
+	@expose()
+	@validate(validators={'PatientTypeID':validators.Int(),'Name':validators.String(),'ClassId':validators.String(),\
+	'Description':validators.String()})
+	@identity.require(identity.has_permission("admin_controllers_configuration"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")	
+	def PatientTypeEditorSave(self, PatientTypeID=None,Name='',ClassId='',Description='',Operation='', **kw):
+		'''	Save changes.  Either create a new entry, update an existing entry or attempt to delete an entry 
+			Save/Cancel/New/Delete are the various operations we have
+		'''
+		log.debug('PatientTypeEditorSave')
+		if PatientTypeID!=None:
+			try:
+				PatientType = model.ClassInsurance.get(PatientTypeID)
+			except SQLObjectNotFound: #, errorstr:
+				turbogears.flash("There is an error on a database entry I thought should exist, but doesn't, so all the changes are lost.  Try again.")
+				raise cherrypy.HTTPRedirect('PatientTypeEditor')
+		if Operation=='Save': # Either update or create a new entry
+			log.debug('...Save')
+			if PatientTypeID==None: # Create a new entry
+				log.debug('...New Entry')
+				ClassId = ClassId.lower().replace(' ','_')
+				PatientType = model.ClassInsurance(Name=Name,ClassId=ClassId,Description=Description, LdVar='')
+				PatientTypeID = PatientType.id
+				turbogears.flash('New Entry Created (id: %d)' % PatientTypeID)
+			else: # Update an entry
+				PatientType.Name = str(Name)
+				PatientType.ClassId = str(ClassId.lower().replace(' ','_'))
+				PatientType.Description = str(Description)
+				turbogears.flash('Recorded Updated')
+		elif Operation=='Delete' and PatientTypeID!=None:
+			# Just check to make sure no one is using the room at the time
+			if len(PatientType.Encounters) > 0:
+				# Mark the item deleted
+				PatientType.Status = 'deleted'
+				turbogears.flash('Record Marked Deleted')
+			else:
+				PatientType.destroySelf()
+				PatientTypeID = None
+				turbogears.flash('Record Deleted')
+		elif Operation=='Un-Delete' and PatientTypeID!=None:
+			PatientType.Status = ''
+			turbogears.flash('Record Un-Deleted')
+		elif Operation=='Cancel':
+			turbogears.flash('Updates Cancelled')
+		elif Operation=='New':
+			PatientTypeID=''
+		else:
+			turbogears.flash('Error in processing request')
+		if PatientTypeID in ['',None]:
+			raise cherrypy.HTTPRedirect('PatientTypeEditor')
+		else:
+			raise cherrypy.HTTPRedirect('PatientTypeEditor?PatientTypeID=%d' % PatientTypeID)
+		
+	@expose(format='json')
+	def PatientTypeEditorQuickSearch(self, QuickSearchText='', **kw):
+		'''	Search for an existing location entry '''
+		QuickSearchText = str(QuickSearchText)
+		if QuickSearchText=='*':
+			PatientTypes = model.ClassInsurance.select(orderBy=[model.ClassInsurance.q.Name])
+		else:
+			PatientTypes = model.ClassInsurance.select(model.ClassInsurance.q.Name.contains(QuickSearchText),
+			orderBy=[model.ClassInsurance.q.Name])
+		results = []
+		for item in PatientTypes:
+			results.append(dict(id=item.id, text=item.Name))
+		return dict(results=results)
