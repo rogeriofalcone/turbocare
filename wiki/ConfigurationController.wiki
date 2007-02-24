@@ -64,11 +64,22 @@ When creating or editing a Ward, you have the option of Editing the rooms direct
 == Rooms/Beds ==
 
 === Summary ===
+You can add rooms on their own, but normally rooms are created automatically from the Wards editing screen.  Rooms and Beds are used in patient registration if a patient is registered as an in-patient.
 
+=== Editing ===
+You can either link a Room to a department or a Ward.  If you choose a ward, then the department is automatically selected as the department for the ward.  For the beds, you only have the option of choosing the number of beds, and they are automatically numbered sequentially.  Once beds are added to a room, you have the option for closing specific beds.
+
+You can also see a listing of beds currently in use.
 
 == Doctors ==
 
 === Summary ===
+Doctors are used in patient registration if a patient is seeing a specific Doctor.  Later on, this will also be available for Medical records department to assign patients to doctors in the waiting room.
+
+Eventually, this part will become part of a larger HR module (part of Care2x).
+
+=== Editing ===
+Editing doctors is very much the same as registering a patient.  If a new doctor had visited the hospital in the past (as a customer or patient) then that information can be directly linked to the Employee/Doctor record.  If the doctor doesn't exist in the system, then adding a new doctor will create the "Person" record in the database.
 
 == Insurance Options ==
 
