@@ -1,0 +1,32 @@
+#summary TurboCare Configuration
+#labels Phase-Deploy
+
+= Introduction =
+
+The configuration controller allows system administrators to edit:
+
+1. Addresses
+
+2. Ethnic Origins (Tribes)
+
+3. Wards/Rooms/Beds
+
+4. Doctors
+
+5. Insurance Options
+
+6. Packaging Types
+
+7. Groupings for Item Master, Locations, Customers, Vendors, Packaging, Compounds (groupings are useful for reporting).
+
+= Details =
+
+== Permissions ==
+
+To access this controller, you'll need to go to the User Manager and add the "admin_controllers_configuration" and then add this permission to the groups with the users that you want to edit the TurboCare configuration.
+
+The menu at the top of the program displays this option as "Configuration Admin".
+
+== Address Table ==
+
+
