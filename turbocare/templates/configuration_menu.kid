@@ -48,6 +48,12 @@
 					</div>
 				</div>
 				<div class="row">
+					<div style="text-align: left" class="clear"><a href="PatientTypeEditor">Patient Types</a></div>
+					<div style="text-align: left" class="clear">
+						Manage the list of Patient types (Self-Pay, Insurance, etc...)
+					</div>
+				</div>
+				<div class="row">
 					<div style="text-align: left" class="clear"><a href="InsuranceEditor">Insurance Options</a></div>
 					<div style="text-align: left" class="clear">
 						Manage the list of Insurance providers
