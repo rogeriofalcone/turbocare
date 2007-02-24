@@ -1,0 +1,15 @@
+#summary Features going to be developed
+
+= Introduction =
+
+A list of features which we're going to program
+
+
+= Details =
+
+Coming Features:
+
+  # Waiting Room: After patients register, there will be a screen to show the queue of patients which are waiting.
+  # Patient Editor: Edit patient information (physical stats).
+  # Doctor Assignment:  For Medical Records department, the ability to assign patients (in the waiting room) to Doctors
+  # Consultation Screens: View/Edit patient information during a doctor consultation
