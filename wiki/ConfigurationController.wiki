@@ -84,31 +84,41 @@ Editing doctors is very much the same as registering a patient.  If a new doctor
 == Insurance Options ==
 
 === Summary ===
+Insurance options are used on patient registration.  If a patient is covered by insurance and has the required identification, then you can assign them the correct insurance company.  Billing sees this, and never asks for cash from the patient, assuming that the insurance company will cover 100% of the payment.
 
 == Packaging Types ==
 
 === Summary ===
+Packaging types are used in Item Master editing in the Inventory module.  Packaging types describe how inventory items are contained, such as 100ml Bottles, 10x10x10cm boxes, etc...
 
 == Item Master Groups ==
 
 === Summary ===
+If you want to Group your Item Master entries for reporting and program searching purposes.  Currently, the program doesn't filter on any of these, but in the future, there might be some Item Master (Catalog Item) groups which might become essential for program operation.
+
+Item Master grouping is probably a very important grouping.
 
 == Location Groups ==
 
 === Summary ===
+Group Inventory Locations (Departments) for reporting purposes.
 
 == Customer Groups ==
 
 === Summary ===
+Group Customers into groups for reporting purposes.
 
 == Vendor Groups ==
 
 === Summary ===
+Group Vendors for reporting purposes.
 
 == Packaging Groups ==
 
 === Summary ===
+Group packaging types for reporting purposes.
 
 == Compound Groups ==
 
 === Summary ===
+Group Compounds for reporting purposes.
