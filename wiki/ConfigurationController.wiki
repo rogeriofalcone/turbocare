@@ -5,17 +5,13 @@
 
 The configuration controller allows system administrators to edit:
 
-  #Addresses
-  #Ethnic Origins (Tribes)
-  #Wards/Rooms/Beds
-
-4. Doctors
-
-5. Insurance Options
-
-6. Packaging Types
-
-7. Groupings for Item Master, Locations, Customers, Vendors, Packaging, Compounds (groupings are useful for reporting).
+  # Addresses
+  # Ethnic Origins (Tribes)
+  # Wards/Rooms/Beds
+  # Doctors
+  # Insurance Options
+  # Packaging Types
+  # Groupings for Item Master, Locations, Customers, Vendors, Packaging, Compounds (groupings are useful for reporting).
 
 = Details =
 
