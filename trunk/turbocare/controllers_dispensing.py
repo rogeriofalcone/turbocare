@@ -131,7 +131,7 @@ class Dispensing(controllers.RootController):
 		ReceiptItemsPaid = [] # for all patients
 		ReceiptItemsUnpaid = [] # for inpatients, they get this as well as the above list
 		for receipt in record.Receipts: # Go through all the receipts
-			if (not receipt.IsDispensed()) and (receipt.TotalPaid == receipt.TotalPayment):
+			if (not receipt.IsDispensed()) and receipt.IsPaidFor():
 				for item in receipt.CatalogItems:
 					#log.debug('Item %s is from location ids %s' % (item.ShortName(), reduce(lambda x,y: x+','+y, item.FromLocationIDList())))
 					if (not item.IsDispensed()) and (item.IsPaid()) and (self.LocationID in item.FromLocationIDList()):

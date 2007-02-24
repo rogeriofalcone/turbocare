@@ -1590,6 +1590,16 @@ class InvReceipt(SQLObject):
 			if not item.IsDispensed():
 				return False
 		return True
+		
+	def IsPaidFor(self):
+		'''	True if all items are paid for, false otherwise
+			This is used by the dispensing logic to see if we
+			can dispense the items.  It should match the logic
+			used in the StatusText function to figure out
+			if the stuff is paid for.
+		'''
+		self.TotalPayment = self.TotalPaymentCalc()
+		return (self.TotalPaid == self.TotalPayment and self.IsSatisfied())
 			
 	def FromLocationList(self):
 		'''	List of locations where the items were originally from
