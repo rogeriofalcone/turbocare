@@ -5,9 +5,9 @@
 
 The configuration controller allows system administrators to edit:
 
-#Addresses
-#Ethnic Origins (Tribes)
-#Wards/Rooms/Beds
+  #Addresses
+  #Ethnic Origins (Tribes)
+  #Wards/Rooms/Beds
 
 4. Doctors
 
