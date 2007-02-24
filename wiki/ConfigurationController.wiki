@@ -10,6 +10,7 @@ The configuration controller allows system administrators to edit:
   # Departments/Locations
   # Wards/Rooms/Beds
   # Doctors
+  # Patient Types
   # Insurance Options
   # Packaging Types
   # Groupings for Item Master, Locations, Customers, Vendors, Packaging, Compounds (groupings are useful for reporting).
@@ -80,6 +81,20 @@ Eventually, this part will become part of a larger HR module (part of Care2x).
 
 === Editing ===
 Editing doctors is very much the same as registering a patient.  If a new doctor had visited the hospital in the past (as a customer or patient) then that information can be directly linked to the Employee/Doctor record.  If the doctor doesn't exist in the system, then adding a new doctor will create the "Person" record in the database.
+
+== Patient Types ==
+
+=== Summary ===
+(need revision 197)
+Patient types are classifications like "Self Pay", "Hospital Insurance", "Private Insurance".  This information is entered in during patient registration and can change from visit to visit.  For billing purposes, it is important to have certain values entered into the database (described below).  When a patient is marked as something other than "self_pay" the billing module will require that a patient have an Insurance number of some kind (either a private insurance number, or a hospital insurance number).
+
+=== Mandatory Entries ===
+Billing requires the following entries:
+  # Short name = "self_pay", Name = "Self Pay"
+  # Short name = "private", Name = "Private Insurance"
+  # Short name = "hospital", Name = "Hospital Insurance"
+
+The short name must be as above, but the Name can be modified (since it is used mostly for display purposes).
 
 == Insurance Options ==
 
