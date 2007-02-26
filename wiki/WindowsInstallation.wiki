@@ -5,33 +5,88 @@
 
 How To Install TurboCare on Windows
 
-
 = Details =
 
-= Install MySQL =
+= Install the Software =
 
-1. Go to http://www.mysql.org/
-2. Download the latest version of MySQL version 5.0 or 5.1
-3. Install MySQL Server as a service
+== Install MySQL ==
 
-= Install Python =
+  # Go to http://www.mysql.org/
+  # Download the latest version of MySQL version 5.0 or 5.1
+  # Install MySQL Server as a service
 
-1. Go to http://www.python.org/
-2. Download the latest version of Python version 2.4 (NOTE: version 2.5 is too new, it hasn't been tested)
-3. Install Python in the default folder
+== Install Python ==
 
-= Install TurboGears =
+  # Go to http://www.python.org/
+  # Download the latest version of Python version 2.4 (NOTE: version 2.5 is too new, it hasn't been tested)
+  # Install Python in the default folder
 
-1. Instructions coming
+== Install TurboGears ==
 
-= Install Subversion =
+  # Go to http://docs.turbogears.org/1.0/InstallWindows
+  # Follow the above installation instructions in the "Installing TurboGears" section
 
-1. Instructions coming
+== Install MySQL-Python module ==
+  # Go to "http://sourceforge.net/project/showfiles.php?group_id=22307"
+  # Download "MySQL-python.exe-1.2.1_p2.win32-py2.4.exe" or newer
+  # Install the module
 
-= Download TurboCare Source =
+== Install the Python Imaging Library ==
+  # Open a command line window
+  # Type: `easy_install pil`
 
-1. Instructions coming
+== Install ReportLab ==
+  # Download the Report lab DLLs from "http://www.reportlab.org/ftp/win32-dlls-py24.zip"
+  # Unzip the contents to "C:\Python24\DLLs"
+  # Download "http://www.reportlab.org/ftp/ReportLab_2_0.zip"
+  # Unzip the file and copy the the "reportlab" folder to "C:\Python24\Lib\site-packages" (Note: not the "reportlab_2_0" folder, the "reportlab" folder)
+
+== Install PySQLite 2 ==
+  # Download "http://initd.org/pub/software/pysqlite/releases/2.3/2.3.3/pysqlite-2.3.3.win32-py2.4.exe"
+  # Install the program after downloading
+
+== Install Subversion ==
+
+  # Go to: http://subversion.tigris.org/project_packages.html
+  # Look for the Windows download link (http://subversion.tigris.org/servlets/ProjectDocumentList?folderID=91)
+  # Download "svn-1.4.2-setup.exe" or newer
+  # Install Subversion
+
+== Download TurboCare Source ==
+
+  # Create a folder on your computer where you want to install the source code for TurboCare
+  # Open a command line window, and change to the folder you created
+  # Follow the instructions at http://code.google.com/p/turbocare/source
+  # svn checkout http://turbocare.googlecode.com/svn/trunk/ turbocare
 
 = Initial configuration =
 
-1. Instructions under development
+== MySQL Database ==
+
+  # Make sure that the database is running (under services)
+  # From the Start Menu, select "Start \ All Programs \ MySQL \ MySQL Server 5.0 \ MySQL Command Line Client"
+  # `create database turbocare;`
+  # `exit;`
+  # In a command line window, change to the folder where you installed the TurboCare source
+  # Change to the "turbocare" sub-folder
+  # NOTE: make sure to put your root password in place of "password" in the two commands below
+  # `python mysql_schema.py -d turbocare -u root -p password -o schema_updt -f turbocare_schema.data`
+  # This next line will put in some sample data!!  Don't execute if you don't want sample data
+  # `python mysql_schema.py -d turbocare -u root -p password -o restore -f turbocare_backup.data`
+  # Open up the Query Browser window: "Start \ All Programs \ MySQL \ MySQL Query Browser"
+  # Make sure to use "turbocare" as the default schema, and "localhost" as the "Server Host"
+  # Select "File \ Open Script"
+  # Open the file called "care2x_preload_data.sql" located in the main TurboCare folder and execute it.
+  # In the same way, open and execute the "care2x_preload_data_icd10_en.sql"
+
+== Custom Python Files ==
+  # Copy "dev-sample.cfg" to "dev.cfg"
+  # Edit the "dev.cfg" file and Check that all the variables are right. Particularly the sqlobject.dburi string.  `sqlobject.dburi="mysql://root:password@localhost:3306/turbocare"` and make password your root password.
+  # Copy "turbocare\ReportDefinition-Sample.py" to  "turbocare\ReportDefinition.py" (This file is used for defining custom formatting of reports).
+  # Copy "turbocare\printer_list.py-example" to "turbocare\printer_list.py"
+
+
+== Test run ==
+  # Open a command line window and change to the TurboCare folder
+  # `python start-turbocare.py`
+  # When windows firewall will ask permission for this program to run. Say yes.
