@@ -31,6 +31,18 @@ How To Install TurboCare on Windows
   # Download "MySQL-python.exe-1.2.1_p2.win32-py2.4.exe" or newer
   # Install the module
 
+== Downgrade SQLObject to version 0.7.1dev ==
+  # Go to http://files.turbogears.org/eggs/
+  # Download "SQLObject-0.7.1dev_r1860-py2.4.egg"
+  # In the same folder where you downloaded the file:
+  # execute `easy_install -fZ SQLObject-0.7.1dev_r1860-py2.4.egg`
+
+== Downgrade TurboJSON ==
+  # Go to http://files.turbogears.org/eggs/
+  # Download "TurboJson-0.9.9-py2.4.egg"
+  # In the same folder where you downloaded the file:
+  # execute `easy_install -fZ TurboJson-0.9.9-py2.4.egg`
+
 == Install the Python Imaging Library ==
   # Open a command line window
   # Type: `easy_install pil`
