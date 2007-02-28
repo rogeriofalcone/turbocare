@@ -292,6 +292,9 @@ class Configuration(controllers.RootController):
 		'''
 		# Load the classifications
 		classifications = [dict(id=x.id, name=(x.Name+' '+x.Status).strip(), selected=None) for x in model.ClassEthnicOrig.select(orderBy=[model.ClassEthnicOrig.q.Name])]
+		if len(classifications)==0:
+			model.ClassEthnicOrig(Name='tribe',LdVar='')
+			classifications = [dict(id=x.id, name=(x.Name+' '+x.Status).strip(), selected=None) for x in model.ClassEthnicOrig.select(orderBy=[model.ClassEthnicOrig.q.Name])]
 		EditClassName = classifications[0]['name']
 		EditClassID = classifications[0]['id']
 		classifications[0]['selected'] = 'selected'
