@@ -1,4 +1,5 @@
 #summary Features going to be developed
+#labels Phase-Design
 
 = Introduction =
 
@@ -9,7 +10,6 @@ A list of features which we're going to program
 
 Coming Features:
 
-  # Patient Types Configuration: Add this to the configuration controller
   # Waiting Room: After patients register, there will be a screen to show the queue of patients which are waiting.
   # Patient Editor: Edit patient information (physical stats).
   # Doctor Assignment:  For Medical Records department, the ability to assign patients (in the waiting room) to Doctors
