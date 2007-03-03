@@ -1007,11 +1007,11 @@ class Configuration(controllers.RootController):
 			if not DateCreate in ['',None]:
 				DateCreate = datetime.fromtimestamp(time.mktime(time.strptime(DateCreate[0:10],DATE_FORMAT)))
 			else:
-				DateCreate = ''
+				DateCreate = None
 			if not DateClose in ['',None]:
 				DateClose = datetime.fromtimestamp(time.mktime(time.strptime(DateClose[0:10],DATE_FORMAT)))
 			else:
-				DateClose = ''
+				DateClose = None
 			if WardID==None: # Create a new entry
 				log.debug('...New Entry')
 				Ward = model.Ward(WardId=Name.lower().replace(' ','_'), Name=Name, DateCreate=DateCreate,

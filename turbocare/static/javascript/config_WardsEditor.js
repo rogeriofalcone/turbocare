@@ -355,6 +355,23 @@ connect(window, 'onload', function(){
 			}
 		});
 	}
+	if (getElement('btnSave')!=null){
+		connect('btnSave','onclick',function(e) {
+			if (getElement('DeptNrIDval').value=='') {
+				e.stop();
+				alert('You need to enter a Department');
+			}
+		});
+	}
+	if (getElement('btnSaveNoRoom')!=null){
+		connect('btnSaveNoRoom','onclick',function(e) {
+			if (getElement('DeptNrIDval').value=='') {
+				e.stop();
+				alert('You need to enter a Department');
+			}
+		});
+	}
+
 });
 //Connect on onload for the document to open the document using javascript
 connect(window, 'onload', config.OpenOnLoad);
