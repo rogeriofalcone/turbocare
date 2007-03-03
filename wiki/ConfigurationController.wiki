@@ -62,6 +62,8 @@ Wards are used in the Hospital module only.  Wards are linked to Departments (wh
 === Editing ===
 When creating or editing a Ward, you have the option of Editing the rooms directly from here.  If you change the "Room Nr. Start" field or the "Room Nr. End" then the program will go and change the Rooms table (removing or adding rooms).  If you want to edit the table without changing the Rooms table, then use the "Save (No Room Updates)" button instead of the "Save" button
 
+When making a room prefix, I'm not sure what we should do, but I was thinking of using the prefix to help the program classify the rooms, using COMM for common rooms, CMPR for semi-private and PRIV for private.
+
 == Rooms/Beds ==
 
 === Summary ===
