@@ -1,0 +1,12 @@
+#summary Notes about version updates
+#labels Phase-Design
+
+= Introduction =
+
+Some versions have important notes.  Read below for important information regarding updating to a specific version.
+
+
+= Revision 216 =
+
+  # In the turbocare installation folder run: `python mysql_schema.py -o schema_updt -d turbocare -p 123 -f turbocare_schema.data`
+  # This fixes an issue with the care_ward table.
