@@ -43,7 +43,7 @@
 							<div style="width:200px" class="label"><input id="btnDeptNrID" type="button" value="Department" ></input></div>
 							<div id="DeptNrID">
 								<a href="LocationsEditor?DepartmentID=${DeptNrID}">${DeptNrName}</a>
-								<INPUT name="DeptNrID" type="hidden" value="${DeptNrID}"></INPUT>
+								<INPUT id="DeptNrIDval" name="DeptNrID" type="hidden" value="${DeptNrID}"></INPUT>
 							</div>
 						</div>
 						<div class="row">
