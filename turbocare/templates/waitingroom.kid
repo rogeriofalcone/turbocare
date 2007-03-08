@@ -9,23 +9,30 @@
     <title>Waiting Room</title>
 </head>
 <body>
-	<DIV  style="display: none" id="customer_id">${customer_id}</DIV>
 	<DIV style="display: table; width: 100%">
+		<DIV style="background-color: gray; display: table-row">
+			<DIV style="display: table-cell; width: 50%">Name
+			</DIV>
+			<DIV style="display: table-cell">Doctor
+			</DIV>
+			<DIV style="display: table-cell">Room #
+			</DIV>
+		</DIV>
 		<DIV style="display: table-row">
-		<DIV style="display: table-cell; width: 50%">
-			<DIV style="text-align:left; list-style-type: none" class="ListItemRow" id="CurrentItemsTitle"> Nothing loaded
+			<DIV style="display: table-cell; width: 50%">Joe Smith
 			</DIV>
-			<FORM name="CustomerItems" id="CustomerItems">
-				<div style="position:relative; font-size:14px" class="divtable_list" id="CustomerItemsTable">
-
-				</div>
-			</FORM>
-		</DIV>
-		<DIV style="display: table-cell">
-			<DIV style="text-align:left" class="ListItemRow" id="PendingItemsTitle">0 Pending Items</DIV>
-			<DIV style="position:relative; font-size:14px" class="listing" id="PendingItems">
+			<DIV style="display: table-cell">Dr. Sangeeta
+			</DIV>
+			<DIV style="display: table-cell">23
 			</DIV>
 		</DIV>
+		<DIV style="display: table-row">
+			<DIV style="display: table-cell; width: 50%">Jane Smith
+			</DIV>
+			<DIV style="display: table-cell">Dr. Jack Daniels
+			</DIV>
+			<DIV style="display: table-cell">33
+			</DIV>
 		</DIV>
 	</DIV>
 </body>
