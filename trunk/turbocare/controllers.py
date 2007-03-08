@@ -16,6 +16,7 @@ import controllers_UDReport
 import controllers_saved_reports
 import controllers_configuration
 import controllers_user_manager
+import controllers_waitingroom
 from turbocare import json
 
 log = logging.getLogger("turbocare.controllers")
@@ -56,7 +57,8 @@ class Root(controllers.RootController):
     registration = controllers_registration.Registration()
     registration = identity.SecureObject(registration,identity.has_permission('reg_view'))
     
-    #reports = controllers_reports.Reports()
+    waitingroom = controllers_waitingroom.WaitingRoom()
+    
     user_reports = controllers_UDReport.UserDefinedReport()
     
     # Dispensing locations

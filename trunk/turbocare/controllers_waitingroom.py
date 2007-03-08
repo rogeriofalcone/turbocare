@@ -23,8 +23,8 @@ class WaitingRoom(controllers.RootController):
 		
 	@expose(html='turbocare.templates.waitingroom')
 	@identity.require(identity.has_permission("dispensing_view"))
-	def index(self, CustomerID='', **kw):
-		return dict(title='%s dispensing' % self.LocationName, customer_id=CustomerID)
+	def index(self, **kw):
+		return dict(title='Waiting Room')
 	
 	@expose(html='turbocare.templates.programmingerror')
 	def idFail(error):
