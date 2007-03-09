@@ -1,4 +1,5 @@
 #summary A listing of Inventory services you should add
+#labels Phase-Deploy
 
 = Introduction =
 
@@ -8,6 +9,7 @@ When the Registering a new patient, the program has to pick an inventory service
 = Details =
 
 Add the following items to the Item Master:
+  # Registration
   # Consultation Common
   # Consultation Common+Private
   # Consultation Private
