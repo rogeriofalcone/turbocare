@@ -293,8 +293,10 @@ class Store(turbogears.controllers.Controller):
 			pass
 		elif (Operation in ['New', 'New sub item']) or (Operation == 'Save' and CatalogItemID==None):
 			# Make a new unique entry but with a copy of the current supplied values
-			if Name in ['', None]:
-				Name = "New Catalog Item"
+			if Name in ['',None] and (Operation=='Save'):
+				Name = "New Item"
+			else:
+				Name = "New Item"
 			if ParentItemID in [0,None,'']:
 				ParentItemID = None
 			catalogitem = model.InvCatalogItem(Name=Name,Description=Description,Accounting=\
