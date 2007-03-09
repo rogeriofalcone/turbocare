@@ -1,0 +1,24 @@
+#summary A listing of Inventory services you should add
+
+= Introduction =
+
+When the Registering a new patient, the program has to pick an inventory service to charge the patient/customer.  This page lists what entries you should enter and edit for inventory services needed for hospital operation.
+
+
+= Details =
+
+Add the following items to the Item Master:
+  # Consultation Common
+  # Consultation Common+Private
+  # Consultation Private
+  # Consultation Very Private
+  # Nursing Common
+  # Nursing Common+Private
+  # Nursing Private
+  # Nursing Very Private
+  # Room Common
+  # Room Common+Private
+  # Room Private
+  # Room Very Private
+
+All these items should be marked as: Service, For Sale, Selectable, Dispensable.
