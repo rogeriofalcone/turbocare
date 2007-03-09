@@ -204,8 +204,8 @@ class Billing(controllers.RootController):
 			location.  Most customers should have a location already defined, but we need
 			a default just in case
 		'''
-		items = model.InvLocation.select(model.InvLocation.Name.contains('Customer'))
-		if len(items) > 0:
+		items = model.InvLocation.select(model.InvLocation.q.Name.contains('Customer'))
+		if items.count() > 0:
 			return items[0].id
 		else:
 			return None

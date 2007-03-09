@@ -24,7 +24,9 @@ log = logging.getLogger("turbocare.controllers")
 class Root(controllers.RootController):
 	
     def __init__(self):
+	    # Map the services
 	    # Dynamically create Store and dispensing locations from locations which we have in the database
+	    self.MapServices()
 	    Locations = model.InvLocation.select()
 	    for location in Locations:
 		    name_store = '%s_store' % location.Name.lower().replace(' ','_')
@@ -38,10 +40,12 @@ class Root(controllers.RootController):
 				    setattr(self,name_disp,eval('identity.SecureObject(controllers_dispensing.Dispensing(%d),identity.has_permission("%s_view"))' % (location.id, name_disp)))
 	    
     # NOTE: CatWalk is no longer required to manager user accounts
+
     #catwalk = CatWalk(model,allowedHosts=['127.0.0.1','192.168.11.3','192.168.11.120'])
     #catwalk = CatWalk(model_userperm) #Create a user admininstrator CatWalk with the custom User Model.
     #catwalk = identity.SecureObject(catwalk,identity.has_permission('admin_catwalk'))  #Securing objects is good. 
     #tempwalk = CatWalk(model_userperm) #Create a user admininstrator CatWalk with the custom User Model.
+    
     user_manager = controllers_user_manager.UserManager()
     user_manager = identity.SecureObject(user_manager,identity.has_permission('admin_users'))
     billing = controllers_billing.Billing()
@@ -179,3 +183,46 @@ class Root(controllers.RootController):
 	if identity.not_anonymous():
 		results.append(dict(link='/user_reports',name='User Reports',sub_menu=[]))
         return results
+
+    def MapServices(self):
+	log.debug('Mapping Services')
+	Service = model.InvCatalogItem.select(model.InvCatalogItem.q.Name=='Consultation Common')
+	if Service.count() > 0:
+		model.DFLT_CONSLT_COMMON = {'name':'Consultation Common', 'catalogid':Service[0].id}
+		log.debug('Mapping Consultation Common')
+		log.debug('Service id: %d' % model.DFLT_CONSLT_COMMON['catalogid'])
+	Service = model.InvCatalogItem.select(model.InvCatalogItem.q.Name=='Consultation Common+Private')
+	if Service.count() > 0:
+		model.DFLT_CONSLT_PRIVCOM = {'name':'Consultation Common+Private', 'catalogid':Service[0].id}
+	Service = model.InvCatalogItem.select(model.InvCatalogItem.q.Name=='Consultation Private')
+	if Service.count() > 0:
+		model.DFLT_CONSLT_PRIVATE = {'name':'Consultation Private', 'catalogid':Service[0].id}
+	Service = model.InvCatalogItem.select(model.InvCatalogItem.q.Name=='Consultation Very Private')
+	if Service.count() > 0:
+		model.DFLT_CONSLT_VRYPRIV = {'name':'Consultation Very Private', 'catalogid':Service[0].id}
+	Service = model.InvCatalogItem.select(model.InvCatalogItem.q.Name=='Nursing Common')
+	if Service.count() > 0:
+		model.DFLT_NURSE_COMMON = {'name':'Nursing Common', 'catalogid':Service[0].id}
+	Service = model.InvCatalogItem.select(model.InvCatalogItem.q.Name=='Nursing Common+Private')
+	if Service.count() > 0:
+		model.DFLT_NURSE_PRIVCOM = {'name':'Nursing Common+Private', 'catalogid':Service[0].id}
+	Service = model.InvCatalogItem.select(model.InvCatalogItem.q.Name=='Nursing Private')
+	if Service.count() > 0:
+		model.DFLT_NURSE_PRIVATE = {'name':'Nursing Private', 'catalogid':Service[0].id}
+	Service = model.InvCatalogItem.select(model.InvCatalogItem.q.Name=='Nursing Very Private')
+	if Service.count() > 0:
+		model.DFLT_NURSE_VRYPRIV = {'name':'Nursing Very Private', 'catalogid':Service[0].id}
+	Service = model.InvCatalogItem.select(model.InvCatalogItem.q.Name=='Room Common')
+	if Service.count() > 0:
+		model.DFLT_ROOM_COMMON = {'name':'Room Common', 'catalogid':Service[0].id}
+	Service = model.InvCatalogItem.select(model.InvCatalogItem.q.Name=='Room Common+Private')
+	if Service.count() > 0:
+		model.DFLT_ROOM_PRIVCOM = {'name':'Room Common+Private', 'catalogid':Service[0].id}
+	Service = model.InvCatalogItem.select(model.InvCatalogItem.q.Name=='Room Private')
+	if Service.count() > 0:
+		model.DFLT_ROOM_PRIVATE = {'name':'Room Private', 'catalogid':Service[0].id}
+	Service = model.InvCatalogItem.select(model.InvCatalogItem.q.Name=='Room Very Private')
+	if Service.count() > 0:
+		model.DFLT_ROOM_VRYPRIV = {'name':'Room Very Private', 'catalogid':Service[0].id}
+	model.DFLT_ROOMPREFIX= {'COMM':model.DFLT_ROOM_COMMON['catalogid'],'CMPR':model.DFLT_ROOM_PRIVCOM['catalogid'],'PRIV':model.DFLT_ROOM_PRIVATE['catalogid']}
+	model.CATID_ROOMPREFIX= {model.DFLT_ROOM_COMMON['catalogid']:'COMM',model.DFLT_ROOM_PRIVCOM['catalogid']:'CMPR',model.DFLT_ROOM_PRIVATE['catalogid']:'PRIV'}

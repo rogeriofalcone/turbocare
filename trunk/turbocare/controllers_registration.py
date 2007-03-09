@@ -1125,10 +1125,17 @@ class Registration(turbogears.controllers.Controller):
 					LocationNr=Bed,GroupNr=Ward,DischargeTypeNrID=0) #defaults take care of the rest
 		# Get the Catalog id for this room (for billing purposes)
 		if newward != None:
-			return model.DFLT_ROOMPREFIX[newward.WardNr.Roomprefix]
+			RoomPrefix = self.GetRoomPrefix(newward.LocationNr)
+			return model.DFLT_ROOMPREFIX[RoomPrefix]
 		else:
-			return model.DFLT_ROOMPREFIX[curward.WardNr.Roomprefix]
-				
+			RoomPrefix = self.GetRoomPrefix(curward.LocationNr)
+			return model.DFLT_ROOMPREFIX[RoomPrefix]
+	
+	def GetRoomPrefix(self, WardID):
+		''' Get the room prefix for the ward '''
+		Ward = model.Ward.get(WardID)
+		return Ward.Roomprefix
+		
 	# Bed assignment receipt item
 	def RegistrationBedReceipt(self, EncounterID, ReceiptID):
 		'''	Make sure there are Receipt entries for all current
