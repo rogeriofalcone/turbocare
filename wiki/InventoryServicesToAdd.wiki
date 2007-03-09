@@ -26,3 +26,5 @@ Add the following items to the Item Master:
 All these items should be marked as: Service, For Sale, Selectable, Dispensable.
 
 After adding these items to the Item Master, then go to the "Stock Editor".  Add stock quantities for these services.  The quantity that you should add should be the estimate for the yearly use.  It isn't important if your estimate is wrong.  When creating new stock quantities of these services, remember to link it to the Item Master entry.  You do not need a purchase order for these entries.
+
+NOTE: Be careful which deparment (location) you create these Stock Services in.  I would create a department called MRD (Medical Records Department), and then store these services in this department.  Of course, items of this stock type can still be moved to another department using stock transfers.  This is helpful for doing reports.
