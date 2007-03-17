@@ -9,7 +9,7 @@
     <title>Waiting Room</title>
 </head>
 <body>
-	<DIV style="display: table; width: 100%">
+	<DIV id="WaitingRoomList" style="display: table; width: 100%">
 		<DIV style="background-color: gray; display: table-row">
 			<DIV style="display: table-cell; width: 50%">Name
 			</DIV>
