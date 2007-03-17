@@ -1,83 +1,3 @@
-//Document wide variables
-var barcode = {};//The barcode object
-//The barcode value
-barcode.CustomerID = ''; //Defined as 20 numeric characters followed by a enter key
-barcode.StockItemID = '';//Defined as 22 numeric characters followed by a enter key
-barcode.DispenseAll = '';//captures the text "dispenseall" followed by the enter key (needs to be lower case, no spaces)
-//capture the keypress event.  We're looking for 20 consecutive numeric values
-//followed by an enter key.  The enter key is captured by a separate function.
-barcode.keypress = function(dom_obj){
-	var DispenseAllText = 'dispenseall';
-	if (dom_obj.modifier()['any'] == false){
-		var key = dom_obj.key()['string'];
-		if (isNaN(key)) {
-			barcode.CustomerID = '';
-			barcode.StockItemID = '';
-			barcode.DispenseAll = barcode.DispenseAll + key;
-		} else {
-			barcode.CustomerID = barcode.CustomerID + key;
-			barcode.StockItemID = barcode.StockItemID + key;
-			barcode.DispenseAll = '';
-		}
-		if (barcode.CustomerID.length > 20) {
-			barcode.CustomerID = '';
-		}
-		if (barcode.StockItemID.length > 22) {
-			barcode.StockItemID = '';
-		}
-		if ((barcode.DispenseAll.length > 12) || (barcode.DispenseAll != DispenseAllText.slice(0,barcode.DispenseAll.length))) {
-			barcode.DispenseAll = '';
-		}
-	} else {
-		barcode.CustomerID = '';
-		barcode.StockItemID = '';
-	}
-}
-//Capture the enter key.  If our barcode is full when an enter key is pressed
-//We are most likely entering a barcode.  At this point, we signal a barcode event!
-barcode.keydown = function(dom_obj) {
-	var DispenseAllText = 'dispenseall';
-	if ((dom_obj.key()['string']=='KEY_ENTER') && (barcode.CustomerID.length==20)){
-		signal(document,'customerid',barcode.CustomerID);
-	} else if ((dom_obj.key()['string']=='KEY_ENTER') && (barcode.StockItemID.length==22)){
-		signal(document,'stockitemid',barcode.StockItemID);
-	} else if ((dom_obj.key()['string']=='KEY_ENTER') && (barcode.DispenseAll==DispenseAllText)){
-		signal(document,'dispenseall','dispense all');
-	} else if (dom_obj.key()['string']=='KEY_ENTER') {
-		barcode.CustomerID = '';
-		barcode.StockItemID = '';
-		barcode.DispenseAll = '';
-	}
-}
-/*
-	Events for the barcode reader.  The connect operations are made at the bottom of the document
-*/
-//When a customerid event (custom event) is fired, we process it here
-barcode.LoadCustomerID = function(dom_obj) {
-	//Load the items available for the customer
-  	var postVars = 'barcode='+barcode.CustomerID;
-	barcode.CustomerID = '';
-	obj.LoadDocs('LoadPatient',postVars);
-//  	d = postJSON('LoadPatient',postVars);
-//  	d.addCallbacks(obj.LoadPatient,obj.error_report);
-}
-//When a stockitemid event (custom event) is fired, we process it here
-barcode.LoadStockItemID = function(dom_obj) {
-	//check if the stock item id is available in the current items
-	var ID = parseInt(barcode.StockItemID);
-	var form = getElement('CustomerItems');
-	var Inputs = getElementsByTagAndClassName('INPUT',null,form);
-	for (i=0; i<Inputs.length; i++){
-		if ((getNodeAttribute(Inputs[i],'name')=='StockItemId') && (Inputs[i].value == ID)){
-			if (getNodeAttribute(Inputs[i],'class')=='row') {
-				swapElementClass(Inputs[i],'row','row_go');
-			} else {
-				swapElementClass(Inputs[i],'row_lite','row_go');
-			}
-		}
-	}
-	barcode.StockItemID = '';
-}
 // The dipense all event is caught by another function!! obj.DispenseAll()
 
 /*
@@ -239,7 +159,7 @@ obj.merge_hidden_inputs = function(parentid){
 	postVars: if we're posting vars, then the variables to post
 	
 */
-obj.LoadDocs = function(name,postVars){
+obj.LoadDocs = function(){
 	//cancel any pending events and reset
 	if (obj.deferreds != null) {
 		//This even is normally the timer event which goes every minute (or two minutes)
@@ -247,89 +167,18 @@ obj.LoadDocs = function(name,postVars){
 		obj.deferreds.cancel();
 	}
 	//configure new events
-	if (name == 'LoadPatient') {
-		obj.toggle_message("Loading data...");
-		var d1 = postJSON('LoadPatient',postVars);
-		var d2 = loadJSONDoc('GetListOfCustomers');
-		// a list of deferreds
-		var list = new DeferredList([d1, d2], false, false, true);
-		list.addCallback(function (resultList) {
-			if ( ! resultList[0][0] || ! resultList[1][0])  {
-				obj.error_report();
-			} else  {
-				obj.RenderPendingItems(resultList[1][1]);
-				obj.LoadPatient(resultList[0][1]);
-                        }
-		});
-		obj.deferreds = list;
-	} else if (name == 'SaveReceiptItems') {
-		obj.toggle_message("Saving data...");
-		var d1 = postJSON('SaveReceiptItems',postVars);
-		var d2 = loadJSONDoc('GetListOfCustomers');
-		// a list of deferreds
-		var list = new DeferredList([d1, d2], false, false, true);
-		list.addCallback(function (resultList) {
-			if ( ! resultList[0][0] || ! resultList[1][0])  {
-				obj.error_report();
-			} else  {
-				obj.RenderPendingItems(resultList[1][1]);
-				obj.LoadPatient(resultList[0][1]);
-                        }
-		});
-		obj.deferreds = list;	
-	} else {
-		obj.toggle_message("Loading listing...");
-		var d2 = loadJSONDoc('GetListOfCustomers');
-		d2.addCallbacks(obj.RenderPendingItems,obj.error_report);
-		obj.deferreds = d2;
-	}
+	obj.toggle_message("Loading listing...");
+	var d2 = loadJSONDoc('GetListOfPatients');
+	d2.addCallbacks(obj.RenderWaitingRoom,obj.error_report);
+	obj.deferreds = d2;
 }
-/*
-	Dispense one item of the items listed
-	1. Find the receipt item id for the row
-	2. Send the request to the server
-	3. Reload the customer's information (should be 1 item less)
-*/
-obj.DispenseLine = function(btn){
-	var elem = btn.src();
-	var col = elem.parentNode;
-	var Inputs = getElementsByTagAndClassName('INPUT',null,col);
-	for (i=0; i<Inputs.length; i++){
-		if (getNodeAttribute(Inputs[i],'name') == 'ReceiptItemId') {
-			var ReceiptItemId = Inputs[i].value;
-		}
-	}
-	var postVars = 'CustomerID='+obj.CustomerId+'&Counter=1&ReceiptItemId='+ReceiptItemId;
-	obj.LoadDocs('SaveReceiptItems',postVars);
-}
-/*
-	Dispense all items listed
-	1. Send the entire form's data
-	2. Send the request to the server
-*/
-obj.DispenseAll = function(){
-	var postVars = obj.collectPostVars(getElement('CustomerItems'));
-	postVars = postVars + '&CustomerID='+obj.CustomerId;
-	obj.LoadDocs('SaveReceiptItems',postVars);
-}
-
 /*
 	There is 1 parameter: customer_id located in a div
 	If there is an id there, then call "OpenPatient" to load that patient's data
 	Initiate the function to reload the pending items list
 */
 obj.OpenOnLoad = function() {
-	var elem = getElement('customer_id');
-	var CustomerID = scrapeText(elem);
-	if (CustomerID != '') {
-		var postVars = 'barcode='+CustomerID;
-		obj.LoadDocs('LoadPatient',postVars);
-//		d = postJSON('LoadPatient',postVars);
-//		d.addCallbacks(obj.LoadPatient,obj.error_report);
-	} else {
-		obj.LoadDocs('GetListOfCustomers',postVars);
-//	obj.LoadPendingItems();
-	}
+	obj.LoadDocs();
 }
 /*
 	Pending Items List:  This list is reloaded every minute.
@@ -337,7 +186,7 @@ obj.OpenOnLoad = function() {
 	another Ajson event?
 */
 obj.LoadPendingItems = function(){
-	obj.LoadDocs('GetListOfCustomers','');
+	obj.LoadDocs();
 }
 /*
 	AJSON Reactions to the above actions
@@ -451,103 +300,39 @@ obj.LoadPatient = function(data){
 /* 
 	Patient/customer data and receipt information is loaded in this step
 */
-obj.RenderPendingItems = function(data){
-	var AddCustomerRow = function(CustomerId,CustomerInfo,CustomerItems){
-		var Name = CustomerInfo.name;
-		var row = createDOM('DIV',{'id':CustomerId,'class':'ListItemRow'},Name + ' with ' + CustomerItems.length + ' items');
-		for (j=0; j<CustomerItems.length; j++){
-			if (CustomerItems[j].paid) {
-				row.appendChild(createDOM('LI',null,CustomerItems[j].name));
-			} else {
-				row.appendChild(createDOM('LI',{'class':'lite'},CustomerItems[j].name));
-			}
-		}
+obj.RenderWaitingRoom = function(data){
+	var TitleRow = function(){
+		var row = createDOM('DIV',{'style':'background-color: gray; display:table-row'});
+		var Name = createDOM('DIV',{'style':'display:table-cell; width: 50%'},'Patient Name');
+		var Doctor = createDOM('DIV',{'style':'display:table-cell'},'Doctor Name');
+		var Room = createDOM('DIV',{'style':'display:table-cell'},'Room Number');
+		appendChildNodes(row,Name,Doctor,Room);
+		return row;
+	}
+	var AddPatientRow = function(PatientName,DoctorName,RoomNumber){
+		var row = createDOM('DIV',{'style':'display:table-row'});
+		var Name = createDOM('DIV',{'style':'display:table-cell'},PatientName);
+		var Doctor = createDOM('DIV',{'style':'display:table-cell'},DoctorName);
+		var Room = createDOM('DIV',{'style':'display:table-cell'},RoomNumber);
+		appendChildNodes(row,Name,Doctor,Room);
 		return row;
 	}
 	//Reset the message
 	obj.toggle_message("");
-	var CustomerIDs = data.customer_ids;
-	var CustomerInfo = data.customer_info;
-	var CustomerItems = data.customer_items;
-	//Make the list of pending items
-	var listing = getElement('PendingItems');
+	var Patients = data.Patients;
+	//Make the list of waiting patients
+	var listing = getElement('WaitingRoomList');
 	Items = 0;
 	replaceChildNodes(listing,null);
-	for (i=0; i<CustomerIDs.length; i++){
-		Items = Items + CustomerItems[CustomerIDs[i]].length;
-		listing.appendChild(AddCustomerRow(CustomerIDs[i],CustomerInfo[CustomerIDs[i]],CustomerItems[CustomerIDs[i]]));
+	listing.appendChild(TitleRow());
+	for (i=0; i<Patients.length; i++){
+		listing.appendChild(AddPatientRow(Patients[i].Patient,Patients[i].Doctor,''));
 	}
-	//Change pending items title
-	var title = getElement('PendingItemsTitle');
-	replaceChildNodes(title,Items + " Pending Items");
-	//After one minute call the procedure again
-	var d = callLater(60,obj.LoadPendingItems);
+	//After half a minute call the procedure again
+	var d = callLater(30,obj.LoadPendingItems);
 	obj.deferreds = d;
 }
 
 
-//Configure our events using the Mochikit signal library
-/* DEFINE OUR EVENT FUNCTIONS */
-connect(document,'onkeydown', barcode.keydown);
-connect(document,'onkeypress', barcode.keypress);
-connect(document,'customerid', barcode.LoadCustomerID);
-connect(document,'stockitemid', barcode.LoadStockItemID);
-connect(document,'dispenseall', obj.DispenseAll);
-
-//custom short-cuts
-connect(document,'onkeypress',shortcuts.keypress);
-connect(document,'onkeydown', shortcuts.keydown);
-//Connect our buttons to events -- need to do this on document load
-/*connect(window, 'onload', function(){
-	connect('btnSearch','onclick',obj.Save);
-	connect('btnEdit','onclick',obj.Edit);
-	connect('btnAppend','onclick',obj.Append);
-	connect('btnPrint','onclick',obj.Print);
-	connect('btnCancel','onclick',obj.Cancel);
-	connect('btnNew','onclick',obj.New);
-	connect('btnPay','onclick',obj.renderPayment);
-	});*/
 //Connect on onload for the document to open the document using javascript
 connect(window, 'onload', obj.OpenOnLoad);
-
-
-/*
-	Small dialog box, for entering the customer id
-*/
-
-obj.customeriddialog_remove = function(){
-	swapDOM('customerid_dialog',null);
-	swapDOM('customerid_shadow',null);
-}
-obj.renderCustomerIdDialog = function(){
-	var StringEdit = function(name, label, value){
-		var row = createDOM('TR',null);
-		var label = createDOM('TD',label);
-		var data = createDOM('TD',null);
-		var edit = createDOM('INPUT',{'type':'text','name':name,'id':'dialog_'+name, 'value':value});
-		data.appendChild(edit);
-	  	row.appendChild(label);
-	  	row.appendChild(data);
-	  	return row;
-	}
-	obj.toggle_message("");
-	//This is the big div box that surrounds the entire selection process
-	var dialog = createDOM('DIV',{'class':'dialogbox','id':'customerid_dialog','style':'height:70px'});
-	var shadow = createDOM('DIV',{'class':'dialogbox_shadow','id':'customerid_shadow','style':'height:80px'});
-	//Close link
-	var close_link = createDOM('A',{'href':'javascript:obj.customeriddialog_remove()'},"Close");
-	dialog.appendChild(close_link);
-	//The main table
-	var table = createDOM('TABLE',{'class':'regular'});
-	var tbody = createDOM('TBODY',null);
-	// Add field
-	tbody.appendChild(StringEdit('CustomerID','Customer ID',''));
-	//Create our dialog
-	table.appendChild(tbody);
-	dialog.appendChild(table);
-	document.body.appendChild(shadow);
-	setOpacity(shadow,0.5);
-	document.body.appendChild(dialog);
-	//Attach the button event
-	getElement('dialog_CustomerID').focus();
-}

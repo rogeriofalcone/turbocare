@@ -1036,7 +1036,7 @@ class Registration(turbogears.controllers.Controller):
 		'''
 		DoctorName = DoctorName.lower()
 		items=model.Personell.select(AND (model.Personell.q.JobFunctionTitle == 'Doctor',\
-			model.Personell.q.Status != 'deleted', model.Personell.q.IsDischarged == False))
+			model.Personell.q.Status != 'deleted', model.Personell.q.IsDischarged == False),distinct=True)
 		doctors = [x.DisplayName() for x in items]
 		if len(doctors) > 0:
 			return dict(doctors=filter(lambda doctor: DoctorName in doctor.lower(), doctors))

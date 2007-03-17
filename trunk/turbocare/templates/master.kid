@@ -62,8 +62,7 @@ CiHSR&nbsp;-&nbsp;TurboCare</div>
     <div py:replace="[item.text]+item[:]"/>
 
 	<p/>
-	<p class="docfooter">Copyright (c) 2006 Wesley Penner, uber web-designer</p>
- 	<p class="docfooter">I'm not too proud, honest</p>
+	<p class="docfooter">TurboCare is OpenSource</p>
 </body>
 
 </html>
