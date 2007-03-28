@@ -13,9 +13,11 @@
 		<DIV style="background-color: gray; display: table-row">
 			<DIV style="display: table-cell; width: 50%">Name
 			</DIV>
+			<DIV style="display: table-cell; width: 50%">Financial Class
+			</DIV>
 			<DIV style="display: table-cell">Doctor
 			</DIV>
-			<DIV style="display: table-cell">Room #
+			<DIV style="display: table-cell">Assign
 			</DIV>
 		</DIV>
 	</DIV>
