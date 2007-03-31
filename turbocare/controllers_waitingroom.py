@@ -98,5 +98,11 @@ class WaitingRoom(controllers.RootController):
 				else:
 					DoctorName = Encounter.ConsultingDr
 				Patients.append({'Patient':Consultation.Receipt.Customer.Name,'Doctor':DoctorName})
-
 		return dict(Patients=Patients)
+
+	@expose(format='json')
+	@identity.require(identity.has_permission("dispensing_view"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def AssignDoctors(self, **kw):
+		''' Assign Doctors to patients '''
+		
