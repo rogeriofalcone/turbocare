@@ -5,8 +5,8 @@
 <head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
     <LINK HREF="/static/css/table.css" TYPE="text/css" REL="stylesheet"/>
-    <SCRIPT SRC="/static/javascript/waitingroom.js" TYPE="text/javascript"></SCRIPT>
-    <title>Waiting Room</title>
+    <SCRIPT SRC="/static/javascript/waitingroom_assign_doctors.js" TYPE="text/javascript"></SCRIPT>
+    <title>Assign Patients to Doctors</title>
 </head>
 <body>
 	<DIV id="WaitingRoomList" style="display: table; width: 100%">

@@ -435,7 +435,7 @@ class Registration(turbogears.controllers.Controller):
 		if DateBirth=='' or DateBirth==None:
 			Age = None
 		else:
-			Age = int(((datetime.datetime.now().date() - patient.DateBirth).days+0.5)/365.25)
+			Age = int(((datetime.datetime.now().date() - DateBirth).days+0.5)/365.25)
 		# Load our patient types: similar to titles
 		log.debug(PatientType)
 		if PatientType == '':
