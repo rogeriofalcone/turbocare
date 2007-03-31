@@ -15,9 +15,11 @@ To initialize your data with care2x data:
   # run the following two commands, but REPLACE "--password=123" with your mysql root password.  If you have no password, then don't include the option.  Replace "turbocare" with your database name.
 
 `mysql --user=root --password=123 turbocare < care2x_preload_data.sql`
+
 `mysql --user=root --password=123 turbocare < care2x_preload_data_icd10_en.sql`
 
 if you don't use a password:
 
 `mysql --user=root turbocare < care2x_preload_data.sql`
+
 `mysql --user=root turbocare < care2x_preload_data_icd10_en.sql`
