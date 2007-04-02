@@ -612,11 +612,15 @@ class Registration(turbogears.controllers.Controller):
 			else:
 				patient.EthnicOrig = int(Tribe)
 		else:
+			if Tribe in ['',None]:
+				Tribe = None
+			else:
+				Tribe = int(Tribe)
 			bday = time.strptime(str(DateBirth),DATE_FORMAT)
 			bdate = datetime.datetime(bday.tm_year,bday.tm_mon,bday.tm_mday)
 			patient = model.Person(NameFirst=NameFirst,NameLast=NameLast,NameMiddle=NameMiddle,\
 				AddrStr=AddressStreet,AddrCitytownNrID=AddrCitytownNrID,Sex=Gender,Religion=Religion,\
-				DateBirth=bdate, EthnicOrig=int(Tribe))
+				DateBirth=bdate, EthnicOrig=Tribe)
 			citytown = model.AddressCityTown.get(AddrCitytownNrID)
 			AddressLabel = '%s\n%s\n%s, %s\n%s\n%s' % (AddressStreet, citytown.Name, citytown.Block, citytown.District, citytown.State, citytown.ZipCode)			
 			PatientName = ('%s %s,%s,%s' % (Title, NameFirst, NameMiddle, NameLast)).replace(',,',',').replace(',', ' ').strip()
