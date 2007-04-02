@@ -147,7 +147,7 @@
 								<div ><INPUT name="BookletPrinting" type="checkbox" checked="${BookletPrinting}" size="40"></INPUT></div>
 							</div>
 						</div>
-						<div id="buttons" style="position:static" class="topbuttons">
+						<div id="buttons" style="position:static; width:600px" class="topbuttons">
 							<input type="hidden" name="PatientID" id="PatientID" value="${PatientID}" />
 							<input type="hidden" name="PatientClass" value="${PatientClass}" />
 							<input type="hidden" name="CustomerID" id="CustomerID" value="${CustomerID}" />
