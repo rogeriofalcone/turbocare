@@ -73,7 +73,7 @@
 								</div>
 							</div>
 						</div>
-						<div id="buttons" class="topbuttons">
+						<div id="buttons" style="position:static; width:600px" class="topbuttons">
 							<input type="hidden" name="PatientID" value="${PatientID}" />
 							<input type="hidden" name="CustomerID" value="${CustomerID}" />
 							<input type="hidden" name="EncounterID" value="${EncounterID}" />
