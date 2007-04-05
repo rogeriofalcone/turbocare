@@ -141,7 +141,7 @@
 							<div ><INPUT id="Country" name="Country" type="text" value="${Country}" size="40"></INPUT></div>
 						</div>			
 					</div>
-					<div id="buttons" class="topbuttons">
+					<div id="buttons" style="position:static; width:600px" class="topbuttons">
 						<input type="hidden" name="PatientID" value="${PatientID}" />
 						<input type="hidden" name="CustomerID" value="${CustomerID}" />
 						<input id="btnSave" type="submit" value="Save/Next" ></input>
