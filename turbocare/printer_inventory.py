@@ -9,7 +9,7 @@ import printer_map
 
 # Standard vars
 #HOST_PORT = 3444
-log = logging.getLogger("care2x.controllers")
+log = logging.getLogger("turbocare.controllers")
 # Initialize printer
 
 def PrintReceipt(ReceiptID, ClientIP):
@@ -114,20 +114,24 @@ def PrintReceipt(ReceiptID, ClientIP):
 def PrintBookletLabel(ReceiptID, ClientIP):
 	'''	Load a receipt from the database and print to the printer.
 	'''
+	log.debug("printer_inventory.PrintBookletLabel")
 	clientPrinter=printer_map.GetPrinter(ClientIP,'LabelPrinter')
 	if clientPrinter==None:
             return "No printer found"
         
 	#Load the Patient
-	Patient = model.Person.get(model.InvReceipt.get(ReceiptID).Customer.ExternalID)
+	patient = model.Person.get(model.InvReceipt.get(ReceiptID).Customer.ExternalID)
 
-	#Print the receipt
-	printer = TDP643(label='book')
 	#Receipt header
+	#log.debug('HIN: %d  NAME: %s  SEX: %s' % (patient.id, patient.DisplayNameAsContact(), patient.Sex))
+	#log.debug('D.O.B.: %s  SERVICE: Unknown  1st VISIT DATE: %s' % (patient.DateBirth.strftime(model.DATE_FORMAT), patient.DateReg.strftime(model.DATE_FORMAT)))
+	#log.debug('00000000000000000000' + str(patient.id))
+	#Print the receipt
+	printer = TDP643() # label="book"
 	printer.write_hr_single()
-	printer.write_line('HIN: %d  NAME: %s  SEX: %s' % (Patient.id, Patient.DisplayNameAsContact(), Patient.Sex))
-	printer.write_line('D.O.B.: %s  SERVICE: Unknown  1st VISIT DATE: %s' % (Patient.DateBirth.strftime(model.DATE_FORMAT), Patient.DateReg.strftime(model.DATE_FORMAT)))
-	barcode = '00000000000000000000' + str(Patient.id)
+	printer.write_line('HIN: %d  NAME: %s  SEX: %s' % (patient.id, patient.DisplayNameAsContact(), patient.Sex))
+	printer.write_line('D.O.B.: %s  SERVICE: Unknown  1st VISIT DATE: %s' % (patient.DateBirth.strftime(model.DATE_FORMAT), patient.DateReg.strftime(model.DATE_FORMAT)))
+	barcode = '00000000000000000000' + str(patient.id)
 	printer.write_barcode(barcode=barcode[-18:]) #Print out a barcode with the leading character filled with zeros.  PatientIDs (HIN) is 18 characters
 	printer.write_hr_single()
 	#Make a server connection
