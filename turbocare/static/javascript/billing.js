@@ -91,6 +91,7 @@ billing.Mode = 'View';//Other options: Update, Append, Remove
 billing.EditMode = '';//The RowID for the receipt item currently being edited
 billing.TempQty = '';//When a record is in edit mode, temporarily record the original value in case we cancel the edit
 billing.TempLocation = '';//When a record is in edit mode, temporarily record the original value in case we cancel the edit
+billing.IsBookletPrinting = false;
 // utility functions ===========
 
 billing.collectPostVars = function(f){
@@ -196,6 +197,29 @@ billing.updated = function(data){
 		}
 	}
 	var d = callLater(5,remove_message);
+}
+billing.DoBookletPrinting = function(data){
+	var remove_message = function(data) {
+		if (getNodeAttribute('last_result_msg','class') != null){
+			swapDOM('last_result_msg',null);
+		}
+	}
+	billing.toggle_message("");
+	if (data.result_msg != null) {
+		var display = createDOM('DIV',{'class':'displaymsg','id':'last_result_msg'},data.result_msg);
+		if (getNodeAttribute('last_result_msg','class') == null){
+			document.body.appendChild(display);
+		} else {
+			swapDOM(field.id,display);
+		}
+	}
+	var d = callLater(5,remove_message);
+	billing.BookletPrint();
+}
+billing.DoBookletPrintingError = function(data){
+	billing.toggle_message("ERROR");
+	var d = callLater(5,billing.toggle_message);
+	billing.BookletPrint();
 }
 billing.error_report = function(data){
 	billing.toggle_message("ERROR");
@@ -312,12 +336,21 @@ billing.Print = function(data){
 		if (confirm("Do you want to print a receipt?")) {
 			billing.toggle_message("Printing...");
 			var d = loadJSONDoc('BillingPrintReceipt?ReceiptID='+billing.ReceiptId);
-			d.addCallbacks(billing.updated,billing.error_report);
+			d.addCallbacks(billing.DoBookletPrinting,billing.DoBookletPrintingError);
 		}
 	} else {
 		billing.toggle_message("Printing...");
 		var d = loadJSONDoc('BillingPrintReceipt?ReceiptID='+billing.ReceiptId);
-		d.addCallbacks(billing.updated,billing.error_report);
+		d.addCallbacks(billing.DoBookletPrinting,billing.DoBookletPrintingError);
+	}
+}
+billing.BookletPrint = function(){
+	if (billing.IsBookletPrinting) {
+		if (confirm("Do you want to print a booklet label?")) {
+			billing.toggle_message("Printing Booklet Label...");
+			var d = loadJSONDoc('BillingPrintBookletLabel?ReceiptID='+billing.ReceiptId);
+			d.addCallbacks(billing.updated,billing.error_report);
+		}
 	}
 }
 /*
@@ -473,6 +506,10 @@ billing.LoadPatient = function(data){
 		return col;
 	}
 	var ColOne = function(text){
+		//Special function to detect a BookletPrinting item
+		if (text.toLowerCase()=="booklet printing") {
+			billing.IsBookletPrinting = true;
+		}
 		var col = createDOM('DIV',{'class':'w40', 'name':'col1'},text);
 		return col;
 	}
@@ -585,6 +622,8 @@ billing.LoadPatient = function(data){
 	}
 	//Reset the message
 	billing.toggle_message("");
+	//Reset Booklet Printing
+	billing.IsBookletPrinting = false;
 	var ReceiptItems = data.receipt_items;
 	var ReceiptHistory = data.receipt_history;
 	var Financial = data.financial;
