@@ -879,6 +879,13 @@ class Billing(controllers.RootController):
 		'''
 		return dict(result_msg=PrintReceipt(ReceiptID,cherrypy.request.remoteHost))
 
+	@expose(format='json')
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def BillingPrintBookletLabel(self, ReceiptID, **kw):
+		'''	Calls the PrintBookletLabel function in "printer_inventory.py" and passes it the receipt id to print
+		'''
+		return dict(result_msg=PrintBookletLabel(ReceiptID,cherrypy.request.remoteHost))
+	
 	#Map billing back to the index
 	billing = index
 	#
