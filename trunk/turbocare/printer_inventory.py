@@ -110,3 +110,40 @@ def PrintReceipt(ReceiptID, ClientIP):
 		reply += data
 		data = sock.recv(1024)
 	return 'Completed: ' + reply
+
+def PrintBookletLabel(ReceiptID, ClientIP):
+	'''	Load a receipt from the database and print to the printer.
+	'''
+	clientPrinter=printer_map.GetPrinter(ClientIP,'LabelPrinter')
+	if clientPrinter==None:
+            return "No printer found"
+        
+	#Load the Patient
+	Patient = model.InvReceipt.get(ReceiptID).Customer.ExternalID
+
+	#Print the receipt
+	printer = TDP643(label='book')
+	#Receipt header
+	printer.write_hr_single()
+	printer.write_line('HIN: %d  NAME: %s  SEX: %s' % (Patient.id, Patient.DisplayNameAsContact(), Patient.Sex))
+	printer.write_line('D.O.B.: %s  SERVICE: Unknown  1st VISIT DATE: %s' % (Patient.DateBirth.strftime(model.DATE_FORMAT), Patient.DateReg.strftime(model.DATE_FORMAT)))
+	barcode = '00000000000000000000' + str(Patient.id)
+	printer.write_barcode(barcode=barcode[-18:]) #Print out a barcode with the leading character filled with zeros.  PatientIDs (HIN) is 18 characters
+	printer.write_hr_single()
+	#Make a server connection
+	#HOST = PrinterIP
+	#PORT = HOST_PORT
+	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	#sock.connect((HOST, PORT))
+	sock.connect((clientPrinter['IP'], int(clientPrinter['PORT'])))
+	#Send the data
+	sock.send(printer.write_toPrinter())
+	#sock.flush()
+	sock.shutdown(socket.SHUT_WR)
+	reply = ''
+	#Read the reply
+	data = sock.recv(1024)
+	while data != '':
+		reply += data
+		data = sock.recv(1024)
+	return 'Completed: ' + reply
