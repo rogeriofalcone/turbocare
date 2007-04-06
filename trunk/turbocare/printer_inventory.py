@@ -119,7 +119,7 @@ def PrintBookletLabel(ReceiptID, ClientIP):
             return "No printer found"
         
 	#Load the Patient
-	Patient = model.InvReceipt.get(ReceiptID).Customer.ExternalID
+	Patient = model.Person.get(model.InvReceipt.get(ReceiptID).Customer.ExternalID)
 
 	#Print the receipt
 	printer = TDP643(label='book')
