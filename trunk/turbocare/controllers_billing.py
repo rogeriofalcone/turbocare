@@ -884,6 +884,7 @@ class Billing(controllers.RootController):
 	def BillingPrintBookletLabel(self, ReceiptID, **kw):
 		'''	Calls the PrintBookletLabel function in "printer_inventory.py" and passes it the receipt id to print
 		'''
+		log.debug('Booklet Printing')
 		return dict(result_msg=PrintBookletLabel(ReceiptID,cherrypy.request.remoteHost))
 	
 	#Map billing back to the index
