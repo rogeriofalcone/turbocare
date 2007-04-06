@@ -337,11 +337,17 @@ billing.Print = function(data){
 			billing.toggle_message("Printing...");
 			var d = loadJSONDoc('BillingPrintReceipt?ReceiptID='+billing.ReceiptId);
 			d.addCallbacks(billing.DoBookletPrinting,billing.DoBookletPrintingError);
+		} else {
+			billing.BookletPrint();
 		}
 	} else {
-		billing.toggle_message("Printing...");
-		var d = loadJSONDoc('BillingPrintReceipt?ReceiptID='+billing.ReceiptId);
-		d.addCallbacks(billing.DoBookletPrinting,billing.DoBookletPrintingError);
+		if (confirm("Do you want to print a receipt?")) {
+			billing.toggle_message("Printing...");
+			var d = loadJSONDoc('BillingPrintReceipt?ReceiptID='+billing.ReceiptId);
+			d.addCallbacks(billing.DoBookletPrinting,billing.DoBookletPrintingError);
+		} else {
+			billing.BookletPrint();
+		}
 	}
 }
 billing.BookletPrint = function(){
