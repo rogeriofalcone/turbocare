@@ -16,7 +16,7 @@ class TDP643:
 	""" 	Creates a command file to be sent to the barcode printer 
 		using the TSPL command set used in TSC barcode printers.
 		mandatory parameters:
-		device_name = (string) the device where commands are sent (e.g. /dev/usblp0)
+		device_name = (string) the device where commands are sent (e.g. /dev/usblp0) - *** Not mandatory anymore
 		Optional parameters:
 		continuous = (boolean) True if continuous receipts are the target, false if you're using labels
 		cutter = (boolean) True if you use a cutter at the end, false otherwise
