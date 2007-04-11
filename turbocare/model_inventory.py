@@ -1636,7 +1636,10 @@ class InvReceipt(SQLObject):
 		#Go through the catalog items and figure out what the total payment should be
 		TotalPay = 0.0
 		for item in self.CatalogItems:
-			TotalPay += item.Quantity*item.UnitCost - item.Discount
+			if item.Quantity != None and item.UnitCost != None and item.Discount != None:
+				TotalPay += item.Quantity*item.UnitCost - item.Discount
+			elif item.Quantity != None and item.UnitCost != None:
+				TotalPay += item.Quantity*item.UnitCost
 		TotalPay = float(round(TotalPay))
 		
 		return TotalPay
