@@ -31,14 +31,14 @@
 								</SELECT>
 							</div>
 						</div>
-						<div class="row">
+						<div class="row" id="rowInsuranceProvider">
 							<div class="label">Insurance provider</div>
 							<div><SELECT name="Firm">
 									<OPTION py:for="firm in firms" value="${firm['id']}" selected="${firm['selected']}">${firm['name']}</OPTION>
 								</SELECT>
 							</div>
 						</div>
-						<div class="row">
+						<div class="row" id="rowInsuranceNumber">
 							<div class="label">Insurance number</div>			
 							<div ><INPUT name="InsuranceNumber" type="text" value="${InsuranceNumber}" size="40"></INPUT></div>
 						</div>

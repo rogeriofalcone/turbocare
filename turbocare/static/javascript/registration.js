@@ -129,6 +129,19 @@ reg.AgePickUpdate = function(dom_obj){
 	}
 }
 /*
+	When someone modifies PatientType, show/hide the Insurance Information
+	If Private Insurance, then show Insurance Information, otherwise, hide
+*/
+reg.PatientTypeOnChange = function(evt_obj){
+	if (scrapeText('PatientType',true)[getElement('PatientType').value] == 'Private Insurance') {
+		getElement("rowInsuranceProvider").style.display = '';
+		getElement("rowInsuranceNumber").style.display = '';		
+	} else {
+		getElement("rowInsuranceProvider").style.display = 'None';
+		getElement("rowInsuranceNumber").style.display = 'None';		
+	}
+}
+/*
 	Open a date entry javascript box
 */
 reg.DatePick = function(dom_obj){
@@ -658,6 +671,10 @@ connect(window, 'onload', function(){
 		if (getElement("Ward")!=null) {
 			connect("Ward",'onchange',reg.WardOnChange);
 			connect("Room",'onchange',reg.RoomOnChange);
+		}
+		if (getElement("PatientType")!=null) {
+			connect("PatientType",'onchange',reg.PatientTypeOnChange);
+			reg.PatientTypeOnChange(null);
 		}
 	});
 //Connect on onload for the document to open the document using javascript
