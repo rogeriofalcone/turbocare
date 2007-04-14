@@ -435,7 +435,8 @@ class Registration(turbogears.controllers.Controller):
 		if DateBirth=='' or DateBirth==None:
 			Age = None
 		else:
-			Age = int(((datetime.datetime.now().date() - DateBirth).days+0.5)/365.25)
+			DateBirth = datetime.fromtimestamp(time.mktime(time.strptime(DateBirth[0:10],DATE_FORMAT)))
+			Age = float(((datetime.datetime.now().date() - DateBirth).days+0.5)/365.25)
 		# Load our patient types: similar to titles
 		log.debug(PatientType)
 		if PatientType == '':
@@ -716,10 +717,10 @@ class Registration(turbogears.controllers.Controller):
 		if encounter != None:
 			FinancialClassNr = patient.GetLatestEncounterVar(VarName='FinancialClassNrID')
 		#items=[x[0] for x in conn.queryAll('select distinct name from care_class_financial')]
-		items = [x.Name for x in model.ClassFinancial.select(distinct=True)]
+		items = set([x.Name for x in model.ClassFinancial.select(distinct=True)])
 		financialclassnrs=[]
 		for financialclassnr in items:
-			if financialclassnr == Occupation:
+			if financialclassnr == 'Common':
 				#NOTE: CLASS_FIN is defined in model_inventory.py
 				financialclassnrs.append(dict(id=model.CLASS_FIN[financialclassnr], name=financialclassnr, selected='selected'))
 			else:
