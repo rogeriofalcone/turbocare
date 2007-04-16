@@ -20,6 +20,17 @@ def AddDepartment(Loc):
 		Loc.DepartmentID = Dept.id
 	return Dept
 
+def InitPatientTypes():
+	'''There should be Inpatient and Outpatient entries in the care_class_encounter table.
+	This function checks and updates this table to have these entries.
+	'''
+	patienttypes = model.ClassEncounter.select()
+	if patienttypes.count() == 0:
+		newval = model.ClassEncounter(id=1,ClassId='inpatient',Name='Inpatient',LdVar='LDStationary',Description=\
+					      'Inpatient admission - stays at least in a ward and assigned a bed', HideFrom=False)
+		newval = model.ClassEncounter(id=2,ClassId='outpatient',Name='Outpatient',LdVar='LDAmbulant',Description=\
+					      'Outpatient visit - does not stay in a ward nor assigned a bed', HideFrom=False)
+		
 def InitCatalogItems():
 	'''	TurboCare requires some types of rooms to be defined in the catalog for pricing purposes
 		So I enter some default values for these... they can be changed later  though

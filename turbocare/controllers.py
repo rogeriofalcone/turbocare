@@ -17,6 +17,7 @@ import controllers_saved_reports
 import controllers_configuration
 import controllers_user_manager
 import controllers_waitingroom
+import initialize_database
 from turbocare import json
 
 log = logging.getLogger("turbocare.controllers")
@@ -24,20 +25,22 @@ log = logging.getLogger("turbocare.controllers")
 class Root(controllers.RootController):
 	
     def __init__(self):
-	    # Map the services
-	    # Dynamically create Store and dispensing locations from locations which we have in the database
-	    self.MapServices()
-	    Locations = model.InvLocation.select()
-	    for location in Locations:
-		    name_store = '%s_store' % location.Name.lower().replace(' ','_')
-		    name_disp = '%s_disp' % location.Name.lower().replace(' ','_')
-		    # Create the store location
-		    if getattr(self,name_store,None) == None:
-			    setattr(self,name_store,eval('identity.SecureObject(controllers_store.Store(%d, "%s"),identity.has_permission("%s_view"))' % (location.id, name_store, name_store)))
-		    # Create the dispensing location
-		    if location.CanSell:
-			    if getattr(self,name_disp,None) == None:
-				    setattr(self,name_disp,eval('identity.SecureObject(controllers_dispensing.Dispensing(%d),identity.has_permission("%s_view"))' % (location.id, name_disp)))
+	# Run any initializations that we might need
+	initialize_database.InitPatientTypes()
+	# Map the services
+	# Dynamically create Store and dispensing locations from locations which we have in the database
+	self.MapServices()
+	Locations = model.InvLocation.select()
+	for location in Locations:
+	    name_store = '%s_store' % location.Name.lower().replace(' ','_')
+	    name_disp = '%s_disp' % location.Name.lower().replace(' ','_')
+	    # Create the store location
+	    if getattr(self,name_store,None) == None:
+		    setattr(self,name_store,eval('identity.SecureObject(controllers_store.Store(%d, "%s"),identity.has_permission("%s_view"))' % (location.id, name_store, name_store)))
+	    # Create the dispensing location
+	    if location.CanSell:
+		    if getattr(self,name_disp,None) == None:
+			    setattr(self,name_disp,eval('identity.SecureObject(controllers_dispensing.Dispensing(%d),identity.has_permission("%s_view"))' % (location.id, name_disp)))
 	    
     # NOTE: CatWalk is no longer required to manager user accounts
 
