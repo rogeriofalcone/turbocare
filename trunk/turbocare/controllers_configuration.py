@@ -1580,12 +1580,16 @@ class Configuration(controllers.RootController):
 				DateBirth = datetime.fromtimestamp(time.mktime(time.strptime(DateBirth[0:10],DATE_FORMAT)))
 			else:
 				DateBirth = None
+			if Tribe in ['',None]:
+				Tribe = None
+			else:
+				Tribe = int(Tribe)
 			# Update the Closed Beds variable - NOTE, the variable actually returns back the beds which are NOT closed
 			if PersonellID==None: # Create a new entry
 				if PersonID==None: # Create a new person and customer entry
 					Person = model.Person(NameFirst=NameFirst,NameLast=NameLast,NameMiddle=NameMiddle,\
 						AddrStr=AddressStreet,AddrCitytownNrID=AddrCitytownNrID,Sex=Gender,Religion=Religion,\
-						DateBirth=DateBirth, EthnicOrig=int(Tribe))
+						DateBirth=DateBirth, EthnicOrigID=Tribe)
 					PersonID = Person.id
 					citytown = model.AddressCityTown.get(AddrCitytownNrID)
 					AddressLabel = '%s\n%s\n%s, %s\n%s\n%s' % (AddressStreet, citytown.Name, citytown.Block, citytown.District, citytown.State, citytown.ZipCode)			
