@@ -2974,7 +2974,7 @@ class TypeRoom(SQLObject):
 
 	Type = StringCol(length=35,dbName='type')
 	Name = StringCol(length=35,dbName='name')
-	LdVar = StringCol(length=35,dbName='LD_var')
+	LdVar = StringCol(length=35,dbName='LD_var',default='')
 	Description = StringCol(length=255,dbName='description')
 	Status = StringCol(length=25,default='')
 	ModifyId = StringCol(length=35,default=cur_user_id())#varchar(35) NOT NULL default '',
