@@ -32,18 +32,24 @@ def PrintReceipt(ReceiptID, ClientIP):
 	EncounterDate = encounter.EncounterDate 
 	InsuranceType = encounter.InsuranceClassNr.ClassId #class_id.  e.g. self_pay, private, charity, hospital, common (state run for everyone in the state)
 	InsuranceName = encounter.InsuranceClassNr.Name #name
-	if InsuranceType != 'self_pay':
-		try:
-			firm = model.InsuranceFirm.get(encounter.InsuranceFirmId)
-			InsuranceFirm = 'Firm: %s' % firm.Name #People who provide insurance, not valid with self pay
-			InsuranceNumber = 'Number: %s' % encounter.InsuranceNr #Policy Number
-		except SQLObjectNotFound:
+	if InsuranceType == 'private':
+		if encounter.InsuranceFirmID != None:
+			try:
+				firm = model.InsuranceFirm.get(encounter.InsuranceFirmId)
+				InsuranceFirm = 'Firm: %s' % firm.Name #People who provide insurance, not valid with self pay
+				InsuranceNumber = 'Number: %s' % encounter.InsuranceNr #Policy Number
+			except SQLObjectNotFound:
+				firm = None
+				InsuranceFirm = 'Unknown insurance firm: Probably a registration ERROR'
+				InsuranceNumber = 'Unknown insurance number: Check registration!!'
+		else:
 			firm = None
 			InsuranceFirm = 'Unknown insurance firm: Probably a registration ERROR'
 			InsuranceNumber = 'Unknown insurance number: Check registration!!'
+			
 	else:
-		InsuranceFirm = 'Firm: None (self pay)'
-		InsuranceNumber = 'Number: None (self pay)'
+		InsuranceFirm = 'Firm: Not applicable'
+		InsuranceNumber = 'Number: Not applicable'
 
 	#Print the receipt
 	printer = TDP643()
