@@ -13,12 +13,12 @@ log = logging.getLogger("turbocare.controllers")
 # Initialize printer
 
 def PrintReceipt(ReceiptID, ClientIP):
-	'''	Load a receipt from the database and print to the printer.
+	'''     Load a receipt from the database and print to the printer.
 	'''
 	clientPrinter=printer_map.GetPrinter(ClientIP,'ReceiptPrinter')
 	if clientPrinter==None:
-            return "No printer found"
-        
+		return "No printer found"
+	
 	#Load the receipt
 	receipt = model.InvReceipt.get(ReceiptID)
 	#Load Financial information
@@ -118,13 +118,13 @@ def PrintReceipt(ReceiptID, ClientIP):
 	return 'Completed: ' + reply
 
 def PrintBookletLabel(ReceiptID, ClientIP):
-	'''	Load a receipt from the database and print to the printer.
+	'''     Load a receipt from the database and print to the printer.
 	'''
 	log.debug("printer_inventory.PrintBookletLabel")
 	clientPrinter=printer_map.GetPrinter(ClientIP,'LabelPrinter')
 	if clientPrinter==None:
-            return "No printer found"
-        
+		return "No printer found"
+	
 	#Load the Patient
 	patient = model.Person.get(model.InvReceipt.get(ReceiptID).Customer.ExternalID)
 
