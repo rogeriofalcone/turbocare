@@ -61,8 +61,13 @@ CiHSR&nbsp;-&nbsp;TurboCare</div>
 
     <div py:replace="[item.text]+item[:]"/>
 
-	<p/>
-	<p class="docfooter">TurboCare is OpenSource</p>
+	<?python
+	import socket
+	myhostname = socket.gethostname()
+	?>
+	
+	<p class="docfooter" py:content="myhostname"></p>
+	TurboCare is OpenSource
 </body>
 
 </html>
