@@ -66,8 +66,8 @@ CiHSR&nbsp;-&nbsp;TurboCare</div>
 	myhostname = socket.gethostname()
 	?>
 	
-	<p class="docfooter" py:content="myhostname"></p>
-	TurboCare is OpenSource
+	<p class="docfooter">Host name: ${myhostname}<br />
+	TurboCare is OpenSource</p>
 </body>
 
 </html>
