@@ -70,7 +70,7 @@ class WaitingRoom(controllers.RootController):
 					DoctorName = 'Not Assigned'
 				else:
 					DoctorName = Encounter.ConsultingDr
-				Patients.append({'Patient':Consultation.Receipt.Customer.Name,'Doctor':DoctorName})
+				Patients.append({'Patient':Consultation.Receipt.Customer.Name,'Doctor':DoctorName,'EncounterID':Encounter.id})
 		for Consultation in ConsultationsPrivate:
 			if not Consultation.IsDispensed():
 				# Get the Assigned Doctor
@@ -79,7 +79,7 @@ class WaitingRoom(controllers.RootController):
 					DoctorName = 'Not Assigned'
 				else:
 					DoctorName = Encounter.ConsultingDr
-				Patients.append({'Patient':Consultation.Receipt.Customer.Name,'Doctor':DoctorName})
+				Patients.append({'Patient':Consultation.Receipt.Customer.Name,'Doctor':DoctorName,'EncounterID':Encounter.id})
 		for Consultation in ConsultationsPrivCom:
 			if not Consultation.IsDispensed():
 				# Get the Assigned Doctor
@@ -88,7 +88,7 @@ class WaitingRoom(controllers.RootController):
 					DoctorName = 'Not Assigned'
 				else:
 					DoctorName = Encounter.ConsultingDr
-				Patients.append({'Patient':Consultation.Receipt.Customer.Name,'Doctor':DoctorName})
+				Patients.append({'Patient':Consultation.Receipt.Customer.Name,'Doctor':DoctorName,'EncounterID':Encounter.id})
 		for Consultation in ConsultationsCommon:
 			if not Consultation.IsDispensed():
 				# Get the Assigned Doctor
@@ -97,7 +97,7 @@ class WaitingRoom(controllers.RootController):
 					DoctorName = 'Not Assigned'
 				else:
 					DoctorName = Encounter.ConsultingDr
-				Patients.append({'Patient':Consultation.Receipt.Customer.Name,'Doctor':DoctorName})
+				Patients.append({'Patient':Consultation.Receipt.Customer.Name,'Doctor':DoctorName,'EncounterID':Encounter.id})
 		return dict(Patients=Patients)
 
 	@expose(format='json')
@@ -105,4 +105,5 @@ class WaitingRoom(controllers.RootController):
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
 	def AssignDoctors(self, **kw):
 		''' Assign Doctors to patients '''
+		
 		
