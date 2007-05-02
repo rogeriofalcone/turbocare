@@ -276,6 +276,165 @@ Zmanda's MySQL backup software looks pretty nice.  I will put up a howto soon he
 =Troubleshooting=
 Please give me feedback on any errors you have and I will update this section with common problems and their solutions. 
 
+=If Replication has failed=
+NOTE THIS WILL ERASE DB ON HIS2. 
+
+==Resync HIS1 and HIS2==
+
+On HIS1 
+
+{{{
+mysqldump --user=root -p --extended-insert --master-data turbocare > /tmp/backup.sql
+
+scp /tmp/backup.sql user@10.0.0.4:/tmp/
+}}}
+
+Where user is the local username you use to login on HIS2.
+
+{{{
+scp /tmp/backup.sql user@10.0.0.2:/tmp/
+}}}
+
+Where user is the local username you use to login on BKP1.
+
+On HIS2
+{{{
+mysql -u root -p turbocare < /tmp/backup.sql
+}}}
+On BKP1
+
+{{{
+mysql -u root -p
+create database turbocare;
+exit;
+mysql -u root -p turbocare < /tmp/backup.sql
+}}}
+
+Watch for any errors here. 
+
+===Start Slave Processors=== 
+On HIS2
+
+{{{
+mysql -u root -p
+CHANGE MASTER TO MASTER_HOST='10.0.0.3', MASTER_PORT=3306, MASTER_USER='HIS2', MASTER_PASSWORD='HIS2 PASSWORD';
+}}}
+Note HIS2 PASSWORD is the Password you set in the GRANT section of the Howto.
+{{{
+start slave;
+}}}
+
+Wait 20 seconds
+
+{{{
+show slave status\G;
+
+mysql> show slave status\G;
+*************************** 1. row ***************************
+             Slave_IO_State: Waiting for master to send event
+                Master_Host: 10.211.55.6
+                Master_User: slave_user
+                Master_Port: 3306
+              Connect_Retry: 60
+            Master_Log_File: mysql-bin.000056
+        Read_Master_Log_Pos: 98
+             Relay_Log_File: LindaHottie-relay-bin.000049
+              Relay_Log_Pos: 239
+      Relay_Master_Log_File: mysql-bin.000056
+           Slave_IO_Running: Yes
+          Slave_SQL_Running: Yes
+            Replicate_Do_DB: 
+        Replicate_Ignore_DB: 
+         Replicate_Do_Table: 
+     Replicate_Ignore_Table: 
+    Replicate_Wild_Do_Table: 
+Replicate_Wild_Ignore_Table: 
+                 Last_Errno: 0
+                 Last_Error: 
+               Skip_Counter: 0
+        Exec_Master_Log_Pos: 98
+            Relay_Log_Space: 22343
+            Until_Condition: None
+             Until_Log_File: 
+              Until_Log_Pos: 0
+         Master_SSL_Allowed: No
+         Master_SSL_CA_File: 
+         Master_SSL_CA_Path: 
+            Master_SSL_Cert: 
+          Master_SSL_Cipher: 
+             Master_SSL_Key: 
+      Seconds_Behind_Master: 0
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+}}}
+
+Sample output of the command.  
+
+The most important lines that are Slave_IO_Running: YES and Slave_SQL_Running: YES.  
+
+If these do not say yes then you'll need to do some troubleshooting before going any further.  
+
+
+On BKP1
+
+{{{
+mysql -u root -p
+
+CHANGE MASTER TO MASTER_HOST='10.0.0.3', MASTER_PORT=3306,
+    MASTER_USER='BKP1', MASTER_PASSWORD='BKP1 PASSWORD';
+}}}
+
+Note BKP1 PASSWORD is the Password you set in the GRANT section of the Howto.
+
+{{{
+start slave;
+
+show slave status\G;
+}}}
+
+
+The most important lines that are Slave_IO_Running: YES and Slave_SQL_Running: YES.  
+
+If these do not say yes then you'll need to do some troubleshooting before going any further.  
+
+On HIS1
+{{{
+mysql -u root -p
+
+CHANGE MASTER TO MASTER_HOST='10.0.0.4', MASTER_PORT=3306,
+    MASTER_USER='HIS1', MASTER_PASSWORD='HIS1 PASSWORD';
+
+}}}
+
+Note HIS2 PASSWORD is the Password you set in the GRANT section of the Howto.
+
+{{{
+start slave;
+
+show slave status\G;
+}}}
+
+
+The most important lines that are Slave_IO_Running: YES and Slave_SQL_Running: YES.  
+
+If these do not say yes then you'll need to do some troubleshooting before going any further.  
+
+
+=Testing=
+
+Load Turbocare on HIS1 and HIS2. 
+
+Add a new patient on HIS1 server and see if that patient appears on HIS2.  
+
+Then add a new patient on HIS2 and see if it appears on HIS1.  
+
+There is lots of fun to be had testing out that replication works fully.  
+
+The rest of the testing though is an exercise left to the reader, as I am in need of a cup of tea. 
+
+
 =References=
 
 
