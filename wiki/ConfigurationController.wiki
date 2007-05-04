@@ -28,6 +28,18 @@ The menu at the top of the program displays this option as "Configuration Admin"
 === Summary ===
 Addresses are used both for patients and vendors.  The structure of the database has addresses stored in two separate but identical tables (which was probably not the best idea, but hey, it makes it easier to separate out the inventory part of the program if needed).
 
+=== Fields ===
+ * City Name - The name of the city
+ * Block/Locality - Often used in cities
+ * PIN Code - Numeric code used for mail
+ * District - Area within a state
+ * State - The state within the country
+ * Country Code - A 3 letter code for the country
+ * Un ECE Modifier [optional] - Not sure - Not necessary at this point
+ * Un ECE LO Code [optional] - Not sure - Not necessary at this point
+ * Un ECE LO Code Type - Not sure - Not necessary at this point
+ * Un ECE Coordinate - Not sure - Not necessary at this point
+
 == Tribes Table (Ethnic Origin) ==
 
 === Summary ===
@@ -54,6 +66,15 @@ Departments and locations (different names for essentially the same thing).  The
 
 Two tables store this data.  The Care2x table contains information regarding departments while the inventory module contains additional information which are properties for inventory (can the department sell items, receive items etc...).
 
+=== Field Notes ===
+ * Has on call Doc - If the department has an "On call Doctor" then check this box.
+ * Admit inpatient - If the department has patient admission for inpatients, then check this box (a department with wards would be one)
+ * Admit out patient - If the department has out-patients (like the outpatient department) then check this box.
+ * Has on call Nurse - If the department has an On call nurse, then check this box
+ * Does Surgery - If the department does surgery, then check this box.
+ * This Institution - If the department belongs to the hospital, then check this box (this is almost always checked)
+ * Department Type - Choose what type of department it is.  Example, Computer department is Non medical.
+
 == Wards ==
 
 === Summary ===
@@ -64,6 +85,11 @@ When creating or editing a Ward, you have the option of Editing the rooms direct
 
 When making a room prefix, I'm not sure what we should do, but I was thinking of using the prefix to help the program classify the rooms, using COMM for common rooms, CMPR for semi-private and PRIV for private.
 
+=== Field Notes ===
+ * Room Prefix - As mentioned above, the room prefix should indicate it's financial classification.  If rooms in the Ward are private, then mark the Ward "Room Prefix" as PRIV.  If it's common, then mark it "COMM", if it's common/private, then mark it "CMPR".
+ * Closing Date - The date when the Ward is closed (not using it anymore).
+ * Is Temp Closed - If the Ward is temporarily closed, then check this box.  Uncheck it when the ward re-opens.
+
 == Rooms/Beds ==
 
 === Summary ===
@@ -73,6 +99,8 @@ You can add rooms on their own, but normally rooms are created automatically fro
 You can either link a Room to a department or a Ward.  If you choose a ward, then the department is automatically selected as the department for the ward.  For the beds, you only have the option of choosing the number of beds, and they are automatically numbered sequentially.  Once beds are added to a room, you have the option for closing specific beds.
 
 You can also see a listing of beds currently in use.
+
+To close a bed, un-check it when editing the room.
 
 == Doctors ==
 
