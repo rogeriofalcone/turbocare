@@ -743,6 +743,7 @@ class ClassEncounter(SQLObject):
 		Name = StringCol(length=35,dbName='name')
 		LdVar = StringCol(length=25,dbName='LD_var')
 		Description = StringCol(length=255,dbName='description')
+		Encounters = MultipleJoin("Encounter",joinColumn="encounter_class_nr")
 		HideFrom = IntCol(dbName='hide_from')
 		ModifyId = StringCol(length=35,default=cur_user_id())
 		ModifyTime = DateTimeCol(default=cur_date_time())
@@ -815,6 +816,10 @@ class Encounter(SQLObject):
 						if (location.DischargeTypeNrID == None or location.DischargeTypeNrID == 0) and location.TypeNr.Type == 'bed':
 								return location.LocationNr
 				return None
+			
+		def TotalVisitCount(self):
+			""" The number of visits that this patient has in total """
+			return len(self.P.Encounters)
 
 		Pid = ForeignKey("Person", dbName='pid')
 		EncounterDate = DateTimeCol(default=cur_date_time(), dbName='encounter_date')
@@ -2861,6 +2866,10 @@ class Room(SQLObject):
 				'''
 				beds = GetBedActivityInformation(RoomID=self.id)
 				return beds
+			
+		def AvailableBedCount(self):
+			""" The current number of beds available for use """
+			return self.NrOfBeds - len(GetBedActivityInformation(RoomID=self.id))
 		
 		def Description(self):
 				'''     Give some bits of info for the room'''

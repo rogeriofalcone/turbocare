@@ -106,4 +106,32 @@ class WaitingRoom(controllers.RootController):
 	def AssignDoctors(self, **kw):
 		''' Assign Doctors to patients '''
 		
+	@expose(format='json')
+	@identity.require(identity.has_permission("dispensing_view"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def SaveAssignDoctors(self, **kw):
+		''' Save the Assigned Doctor to the patients '''
+
+	@expose(format='json')
+	@identity.require(identity.has_permission("dispensing_view"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	def ListDoctors(self, EncounterID=None, **kw):
+		''' List available doctors and their current waiting list '''
+		doctors = model.Personell.select(AND (model.Personell.q.JobFunctionTitle=='Doctor',model.Personell.q.IsDischarged==False))
+		doctor_list = []
+		for doctor in doctors:
+			doctor_list.append({'id':doctor.id,'name':doctor.DisplayName(),'count':self.GetDoctorWaitingList(doctor.id)})
+		return doctor_list
+		
+	def GetDoctorWaitingList(self, PersonellID):
+		''' Return the number of people waiting for the doctor '''
+		ConsultIDs = [DFLT_CONSLT_COMMON['catalogid'], DFLT_CONSLT_PRIVATE['catalogid'], DFLT_CONSLT_PRIVCOM['catalogid'], DFLT_CONSLT_VRYPRIV['catalogid']]
+		Counter = 0
+		encounters = model.Encounter.select(model.Encounter.q.CurrentAttDrNrID==PersonellID)
+		for receipt in encounters.Reciepts:
+			for receipt_item in receipt.CatalogItems:
+				if receipt_item.CatalogItemID in ConsultIDs and not receipt_item.IsDispensed():
+					Counter += 1
+		return Counter
+		
 		
