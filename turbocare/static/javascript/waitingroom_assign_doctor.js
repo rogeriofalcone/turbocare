@@ -205,14 +205,10 @@ obj.RenderWaitingRoom = function(data){
 		appendChildNodes(row,Name,Doctor,Room);
 		return row;
 	}
-	var AddPatientRow = function(PatientName,DoctorName,RoomNumber){
+	var AddPatientRow = function(PatientName,DoctorName,RoomNumber,EncounterID){
 		var row = createDOM('DIV',{'style':'display:table-row'});
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Add a link on the patient name which will open a box where we can assign a doctor to the patient
-and then save that back to the database and then reload the page to show the changes.
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		var NameLink = createDOM('A',{''});
-		var Name = createDOM('DIV',{'style':'display:table-cell'},PatientName);
+		var NameLink = createDOM('A',{'href':'javascript:obj.AssignDoctor('+EncounterID+')'},PatientName);
+		var Name = createDOM('DIV',{'style':'display:table-cell'},NameLink);
 		var Doctor = createDOM('DIV',{'style':'display:table-cell'},DoctorName);
 		var Room = createDOM('DIV',{'style':'display:table-cell'},RoomNumber);
 		appendChildNodes(row,Name,Doctor,Room);
@@ -233,7 +229,20 @@ and then save that back to the database and then reload the page to show the cha
 	var d = callLater(30,obj.LoadPendingItems);
 	obj.deferreds = d;
 }
-
+/*
+	Assign a Doctor to a patient
+	1. Send a request to get a list of doctors, and their current waiting list
+	2. If the assign button is pressed, then save the doctor as the assigned doctor
+*/
+obj.AssignDoctor = function(EncounterID){
+	obj.toggle_message("Loading...");
+	var postVars = 'EncounterID=' + EncounterID;
+	var d = postJSON('ListDoctors',postVars);
+	d.addCallbacks(obj.RenderAssignDoctor,obj.error_report);
+}
+obj.RenderAssignDoctor = function(data){
+}
+obj.SaveAssignDoctor = function()
 
 //Connect on onload for the document to open the document using javascript
 connect(window, 'onload', obj.OpenOnLoad);
