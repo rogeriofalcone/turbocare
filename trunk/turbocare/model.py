@@ -322,6 +322,19 @@ class Person(SQLObject):
 						Name+=' '+self.NameLast
 						Name = Name.strip()
 				return Name
+			
+		def PersonType(self):
+			''' A text representation of the type of person: Patient, Doctor, Nurse, Customer, Unknown '''
+			# I pick the first available and return that value
+			for p in self.Personell:
+				if not p.IsDischarged:
+					return p.JobFunctionTitle
+			if len(self.Encounters) > 0:
+				return "Patient"
+			elif len(self.Customer) > 0:
+				return "Customer"
+			else:
+				return "Unknown"
 
 		def GetLatestEncounter(self, MaxEncounterDate=datetime(2100,1,1)):
 				EncounterID = None

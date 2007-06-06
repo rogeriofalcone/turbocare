@@ -11,6 +11,7 @@ from turbogears import exception_handler
 import model
 import datetime, time
 from model import DATE_FORMAT
+from person_widget import *
 
 log = logging.getLogger("turbocare.controllers")
 
@@ -31,6 +32,7 @@ class PersonManager(turbogears.controllers.Controller):
 				return "checked"
 			else:
 				return None
+			
 		def CreateCustomer(Person):
 			"""	Create a customer record based on the Person record """
 			citytown = model.AddressCityTown.get(Person.AddrCitytownNrID)
