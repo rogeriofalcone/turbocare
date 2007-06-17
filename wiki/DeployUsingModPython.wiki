@@ -245,6 +245,15 @@ sudo chown  www-data turbocare/static/reports
 sudo chown  www-data turbocare/static/user_reports
 }}}
 
+===Report Writer===
+There is a file that is used when constructing custom reports.  By default, there is a sample of this file.  It is necessary to rename the file for the application to run.
+
+{{{
+cp turbocare/ReportDefinition-Sample.py turbocare/ReportDefinition.py
+}}}
+
+This file can be customized for your installation.
+
 ===Finishing off===
 {{{
 sudo /etc/init.d/apache2 restart
