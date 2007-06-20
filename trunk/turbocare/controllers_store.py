@@ -295,7 +295,7 @@ class Store(turbogears.controllers.Controller):
 			# Make a new unique entry but with a copy of the current supplied values
 			if Name in ['',None] and (Operation=='Save'):
 				Name = "New Item"
-			else:
+			elif Operation == 'New sub item' or Operation == 'New':
 				Name = "New Item"
 			if ParentItemID in [0,None,'']:
 				ParentItemID = None
