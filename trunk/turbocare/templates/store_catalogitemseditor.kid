@@ -77,7 +77,7 @@
 								<div ><INPUT name="IsSelectable" type="checkbox" checked="${IsSelectable}"></INPUT></div>
 							</div>
 							<div style="width:400px" >
-								<div style="width:300px" class="label">Diespensable (item needs to be dispensed)</div>
+								<div style="width:300px" class="label">Dispensable (item needs to be dispensed)</div>
 								<div ><INPUT name="IsDispensable" type="checkbox" checked="${IsDispensable}"></INPUT></div>
 							</div>
 						</div>

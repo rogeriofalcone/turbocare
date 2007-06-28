@@ -374,7 +374,8 @@ class Billing(controllers.RootController):
 			#Check/Update the receipt item
 			record_rcpt_item = model.InvReceiptItems.get(ReceiptItemId)
 			#If the receipt Item is finished (i.e. already transferred) then no editing allowed!!
-			if not record_rcpt_item.IsFinished():
+			#if not record_rcpt_item.IsFinished():
+			if not record_rcpt_item.IsDispensed(): # Changed to IsDispensed because otherwise we can't edit services.
 				#Update/verify stock location
 				if not (StockLocationIDset in [None,'None','null','Null', '']): #We already had a transfer configured, so we need to check it
 					log.debug('....modifying a pre-defined StockLocationID')
@@ -587,13 +588,22 @@ class Billing(controllers.RootController):
 					item.UnitCost = item.StockItems[0].StockItem.SalePrice
 			else:
 				item.UnitCost = item.StockItems[0].StockItem.SalePrice
-		# Apply the payment to our Receipt and linked items
+		# Apply the payment to our Receipt and linked items.  Note: record = current receipt
 		record.TotalPayment = record.TotalPaymentCalc()
 		NewAmt = CurrCredit + InsrAmt # This is what we have to spend
 		record.TotalPaid += NewAmt
 		# Cap the total paid to the payment required
 		if record.TotalPaid > record.TotalPayment:
 			record.TotalPaid = record.TotalPayment
+			# For cash amounts in excess of the required payment, limit the amount applied
+			if CashAmt > record.TotalPayment:
+				CashAmt = record.TotalPayment
+			# Limit insurance amount payments
+			if InsrAmt > record.TotalPayment:
+				InsrAmt = record.TotalPayment
+			# For combo payments, Insurance is reduced and cash is used as the greater part when needed.
+			if (CashAmt + InsrAmt) > record.TotalPayment:
+				InsrAmt = record.TotalPayment - CashAmt
 		log.debug('....Money to spend: %d' % record.TotalPaid)
 		# The TotalAmt is what we have for making payments on our stock location items
 		TotalAmt = record.TotalPaid
