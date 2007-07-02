@@ -389,4 +389,69 @@ def GenerateReportDefinitions():
 	f.write("}")
 	f.close()
 	
+DFLT_PERMISSIONS = {'bill_create': 'Create Bill',
+	       'bill_edit': 'Edit Bill',
+	       'bill_pay': 'Pay Bills',
+	       'bill_view': 'View Bills',
+	       'bill_delete': 'Delete Bills',
+	       'billing_report': 'Report Billing',
+	       'dispensing_view': 'View Dispensing',
+	       'dispensing_dispense': 'Dispensing',
+	       'reg_view': 'Registration view',
+	       'reg_create': 'Registration create',
+	       'reg_edit': 'Registration Edit',
+	       'stores_catalog_view': 'Stores Catalog view',
+	       'stores_catalog_edit': 'Stores Catalog edit',
+	       'stores_gr_view': 'Goods received view',
+	       'stores_gr_edit': 'Goods received edit',
+	       'stores_quote_view': 'Store quote view',
+	       'stores_quote_edit': 'Store quote edit',
+	       'stores_quoterequest_view': 'Quote Request View',
+	       'stores_vendor_view': 'Vendor view',
+	       'stores_quoterequest_edit': 'Quote request edit',
+	       'stores_vendor_edit': 'Vendor edit',
+	       'stores_stock_view': 'Stock view',
+	       'stores_stock_edit': 'Stock edit',
+	       'stores_stocktransferrequest_view': 'Stock transfer request view',
+	       'stores_stocktransferrequest_edit': 'Stock transfer request edit',
+	       'stores_stocktransfer_view': 'Stock transfer view',
+	       'stores_stocktransfer_edit': 'Stock transfer edit',
+	       'admin_controllers_inventory': 'Inventory controller admin',
+	       'admin_catwalk': 'User Administration (with Catwalk)',
+	       'stores_po_view': 'Purchase order view',
+	       'stores_po_edit': 'Purchase order edit',
+	       'report_editor': 'Report Editor',
+	       'admin_users': 'Administer Users',
+	       'bill_refund': 'Perform billing refunds',
+	       'admin_controllers_configuration': 'Configuration controller access'}
+	
+def InitAdmin(name='admin', password=None):
+	''' Initialize an administrative account with a login id and password (name and password) '''
+	# Step 1: make sure all the default permissions exist in the tg_permissions table (model.Permission)
+	for perm in DFLT_PERMISSIONS.keys():
+		permission = model.Permission.select(model.Permission.q.permission_name == perm)
+		if permission.count() == 0:
+			NewPermission = model.Permission(permission_name = perm, description = DFLT_PERMISSIONS[perm])
+	# Step 2: Create/check for a group called 'superuser'
+	supergroup_list = model.Group.select(model.Group.q.group_name == 'superuser')
+	if supergroup_list.count() == 0:
+		supergroup = model.Group(group_name = 'superuser', display_name = 'Super User')
+	else:
+		supergroup = supergroup_list[0]
+	# Step 3: Make sure all permissions are assigned to this group
+	permission_id_list = [x.id for x in supergroup.permissions]
+	for permission in model.Permission.select():
+		if permission.id not in permission_id_list:
+			supergroup.addPermission(permission)
+	# Step 4: Check for or Create the admin user
+	users = model.User.select(model.User.q.user_name == name)
+	if users.count() == 0:
+		admin_user = model.User(user_name = name, email_address = name, display_name = name, password = password)
+	else:
+		admin_user = users[0]
+	# Step 5: Make sure the supergroup is included in the admin_user
+	if supergroup.id not in [x.id for x in admin_user.groups]:
+		admin_user.addGroup(supergroup)
+	# DONE!!
+	
 
