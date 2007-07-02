@@ -40,6 +40,11 @@ CATID_ROOMPREFIX= {DFLT_ROOM_COMMON['catalogid']:'COMM',DFLT_ROOM_PRIVCOM['catal
 CLASS_INSR = {'self_pay':3, 'private':1, 'charity':4, 'hospital':5}
 CLASS_ENCR = {'inpatient':1, 'outpatient':2}
 CLASS_FIN = {'common':9,'private + common':10,'private':11,'private plus':12}
+# For Hospital based Insurance (for employees for example) the insurance Firm will be set to the Hospital Insurance firm
+# This is defined here as Id = 1, but it gets reassigned when the application starts to the first entry that is equal
+# to "Hospital".  Therefore, do not add any Insurance Firms with the name "Hospital" since this is done automatically by the program
+# if none already exist
+HospitalFirmID = 1
 # types (in the future, load these values on startup)
 TYPE_DISCHARGE = {'regular':1,'own':2,'emergeny':3,'change_ward':4,'change_room':5,'change_bed':6,'death':6,'change_dept':8}
 TYPE_LOCATION = {'ward':2,'room':4,'bed':5,'clinic':6,'dept':1,'firm':3}	
@@ -929,30 +934,36 @@ class InvCustomer(SQLObject):
 		
 	def CalcPaymentsMade(self):
 		'''	From Customer Payments: This uses the payments table to track
-			how much has actually been exchanged
+			how much has actually been exchanged and then it looks at receipt insurance amounts
+			and adds that in.
 		'''
 		total = 0.0
 		for item in self.Payments:
 			total += item.Amount
+		for receipt in self.Receipts:
+			total += receipt.TotalInsurance
 		return total
 		
 	def CalcBalance(self, DoNotIncludReceiptID=None):
 		'''	How much the customer owes us (if positive) or we owe (if negative)
-			This is done by taking Sum(TotalSelfPay) - Sum(CustomerPayments)
+			This is done by taking Sum(TotalSelfPay) - Sum(CustomerPayments) - Sum(InsurancePayments)
 		'''
 		SumTotalSelfPay = 0.0
+		SumInsurancePayments = 0.0
 		if DoNotIncludReceiptID==None:
 			for receipt in self.Receipts:
 				SumTotalSelfPay += receipt.TotalPaymentCalc() # receipt.TotalSelfPay
+				SumInsurancePayments += receipt.TotalInsurance
 		else:
 			DoNotIncludReceiptID = int(DoNotIncludReceiptID)
 			for receipt in self.Receipts:
 				if receipt.id != DoNotIncludReceiptID:
 					SumTotalSelfPay += receipt.TotalPaymentCalc() # receipt.TotalSelfPay
+					SumInsurancePayments += receipt.TotalInsurance
 		SumCustomerPayments = 0.0
 		for payment in self.Payments:
 			SumCustomerPayments += payment.Amount
-		return SumTotalSelfPay - SumCustomerPayments
+		return SumTotalSelfPay - SumCustomerPayments - SumInsurancePayments
 
 	def MostRecentReceipt(self):
 		last_purchase = None

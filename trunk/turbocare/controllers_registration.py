@@ -652,8 +652,12 @@ class Registration(turbogears.controllers.Controller):
 		if encounter == None:
 			#Add a new encounter, NOTE CLASS_ENCR is defined in model_inventory.py
 			if int(PatientType) != model.CLASS_INSR['private']:
-				InsuranceNumber = None
-				Firm = None
+				if int(PatientType) == model.CLASS_INSR['self_pay']:
+					InsuranceNumber = None
+					Firm = None
+				else:
+					InsuranceNumber = str(patient.id)
+					Firm = model.HospitalFirmID
 			encounter = model.Encounter(Pid=patient.id, EncounterType='Outpatient', \
 				EncounterClassNrID=model.CLASS_ENCR['outpatient'], InsuranceClassNrID=int(PatientType),\
 				InsuranceNr=InsuranceNumber, InsuranceFirmId=Firm, FinancialClassNrID=model.CLASS_FIN['common'])
@@ -662,9 +666,12 @@ class Registration(turbogears.controllers.Controller):
 			encounter.InsuranceClassNrID = int(PatientType)
 			#CLASS_INSR is defined in "model_inventory.py"
 			if int(PatientType) == model.CLASS_INSR['private']:
-				encounter.InsuranceClassNrID=int(PatientType)
+				#encounter.InsuranceClassNrID=int(PatientType)
 				encounter.InsuranceNr = InsuranceNumber
 				encounter.InsuranceFirmId = Firm
+			elif int(PatientType) != model.CLASS_INSR['self_pay']:
+				encounter.InsuranceNr = str(patient.id)
+				encounter.InsuranceFirmId = model.HospitalFirmID
 		# Create/Update a new bill/receipt
 		# First check if we have a receipt for this encounter with an un-paid registration.  Assume the unpaid registration
 		# IS the current registration (back button was pressed)
