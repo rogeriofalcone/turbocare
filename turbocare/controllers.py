@@ -42,6 +42,14 @@ class Root(controllers.RootController):
 			if location.CanSell:
 					if getattr(self,name_disp,None) == None:
 							setattr(self,name_disp,eval('identity.SecureObject(controllers_dispensing.Dispensing(%d),identity.has_permission("%s_view"))' % (location.id, name_disp)))
+		# HospitalFirmID configuration: if it exists, make sure our variable is mapped to the right number, create it if it doesn't exist yet
+		HospitalFirm = model.InsuranceFirm.select(model.InsuranceFirm.q.Name == 'Hospital')
+		if HospitalFirm.count() == 0:
+			NewHospitalFirm = model.InsuranceFirm(Name = 'Hospital', FirmId='000')
+			NewHospitalFirm.FirmId = str(NewHospitalFirm.id)
+			model.HospitalFirmID = NewHospitalFirm.id
+		else:
+			model.HospitalFirmID = HospitalFirm[0].id
 			
 	# NOTE: CatWalk is no longer required to manager user accounts
 
