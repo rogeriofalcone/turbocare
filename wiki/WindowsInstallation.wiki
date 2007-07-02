@@ -102,3 +102,22 @@ How To Install TurboCare on Windows
   # Open a command line window and change to the TurboCare folder
   # `python start-turbocare.py`
   # When windows firewall will ask permission for this program to run. Say yes.
+
+== Creating an Administrative account ==
+Revision 263 has a new function documented here:
+
+ # Go to the project folder in a command line window
+ # type: 
+{{{
+tg-admin shell
+}}}
+ # In the TurboGears python shell, type (Substitute "Admin" for the user name you want, and "Password" for the new password you want) 
+{{{
+import utils
+utils.InitAdmin('Admin','Password')
+}}}
+ # NOTE: some warning messages will scroll past during the command
+ # Exit the shell window (Linux/Unix <Ctrl>+d, windows <Ctrl>+z ??)
+ # When it asks to commit the transactions, choose "yes"
+ # Restart the server, you should be able to log-in with administrative rights using the new login
+
