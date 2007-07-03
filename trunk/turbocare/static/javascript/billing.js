@@ -278,6 +278,7 @@ billing.deleteObj = function(){
 	}
 	if (billing.cur_def.id != null) {
 		if (confirm("Are you sure you want to delete?")) {
+			alert(billing.cur_def.Del);
 			billing.toggle_message("Deleting...");
 			url = billing.cur_def.Del;
 			var d = postJSON(url,'id='+billing.cur_def.id);

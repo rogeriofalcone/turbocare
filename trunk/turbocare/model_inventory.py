@@ -1818,7 +1818,7 @@ class InvReceiptItems(SQLObject):
 			
 	def IsPaid(self):
 		'''	Determine if the expected payment amount
-			has been paid
+			has been paid.
 		'''
 		return (self.TotalPayment() == self.TotalPaid())
 		
@@ -1834,9 +1834,11 @@ class InvReceiptItems(SQLObject):
 				
 	def IsFinished(self):
 		'''	A receipt item is considered finished if it IsSatisfied
-			and for non-services, the item is marked as transferred
+			and for non-services, the item is marked as transferred.
+			When 0 items are requested, then the item is not marked
+			as Finished (so that it can be removed from a receipt).
 		'''
-		if self.IsSatisfied() and self.IsPaid():
+		if self.IsSatisfied() and self.IsPaid() and self.Quantity > 0:
 			for stock in self.StockItems:
 				if not stock.IsService():
 					if not stock.NoPendingTransfers():
