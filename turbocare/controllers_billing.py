@@ -656,6 +656,7 @@ class Billing(controllers.RootController):
 		'''	Delete a specific receipt item from a receipt
 			It won't delete any completed items or items for which a payment has been made
 		'''
+		log.debug("Deleting receipt item id = %s" % ReceiptItemID)
 		record = model.InvReceiptItems.get(ReceiptItemID)
 		ReceiptID = record.ReceiptID
 		if not record.IsFinished():
@@ -668,6 +669,8 @@ class Billing(controllers.RootController):
 				record_stck_location = model.InvStockLocation.get(item)
 				record_stck_location.destroySelf()
 			record.destroySelf()
+		else:
+			log.debug(" This receipt item is finished")
 		receipt = model.InvReceipt.get(ReceiptID)
 		receipt.TotalPayment = receipt.TotalPaymentCalc()
 		return self.LoadPatientData(ReceiptID=ReceiptID)
