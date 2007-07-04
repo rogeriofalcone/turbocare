@@ -18,7 +18,7 @@ import controllers_configuration
 import controllers_user_manager
 import controllers_waitingroom
 import initialize_database
-# import controllers_person_manager
+import controllers_person_manager
 from turbocare import json
 
 log = logging.getLogger("turbocare.controllers")
@@ -77,8 +77,8 @@ class Root(controllers.RootController):
 	
 	user_reports = controllers_UDReport.UserDefinedReport()
 	
-#	p_manager = controllers_person_manager.PersonManager()
-#	p_manager = identity.SecureObject(p_manager,identity.has_group('superuser'))
+	p_manager = controllers_person_manager.PersonManager()
+	p_manager = identity.SecureObject(p_manager,identity.in_group('superuser'))
 	
 	# Dispensing locations
 	# warehouse_main = identity.SecureObject(controllers_dispensing.Dispensing(1) ,identity.has_permission('warehouse_main_view'))

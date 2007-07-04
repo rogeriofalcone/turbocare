@@ -183,6 +183,13 @@ class AddressCityTown(SQLObject):
 				Text = Text.replace('unknown','?').replace('Unknown','?')
 				return  Text
 								
+		def DisplayNameShort(self):
+				'''     Address formatted as a one line entry - short version
+				'''
+				Text = '%s: %s, %s' % (self.Name, self.Block, self.District)
+				Text = Text.replace('unknown','?').replace('Unknown','?')
+				return  Text
+			
 		#care_address_citytown
 #       nr #int primary key
 		UneceModifier = StringCol(length=2, default='') #char 2 
