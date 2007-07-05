@@ -14,7 +14,12 @@ input { font-size: 85%;
 			text-align: left;
 			vertical-align: middle;
 			}
-
+ul {font-family: verdana, arial, sans-serif;}
+li {font-family: verdana, arial, sans-serif;
+    font-size: 10px;
+    background-color: white;
+    list-style-type: none;
+}
 
 /* 
 	displayable works with .mark-shown and .mark-hidden
