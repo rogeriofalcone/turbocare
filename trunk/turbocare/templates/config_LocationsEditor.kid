@@ -7,9 +7,9 @@
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
     <title>${getattr(self,'title','Department/Locations Editor')}</title>
     <LINK HREF="/tg_static/css/widget.css" TYPE="text/css" REL="stylesheet"/>
-    <LINK HREF="/static/javascript/calendar/calendar-green.css" TYPE="text/css" REL="stylesheet"/>
+    <LINK HREF="/static/javascript/calendar_custom/calendar-green.css" TYPE="text/css" REL="stylesheet"/>
     <LINK HREF="/static/css/table.css" TYPE="text/css" REL="stylesheet"/>
-    <SCRIPT SRC="/static/javascript/calendar/calendar.js" TYPE="text/javascript">
+    <SCRIPT SRC="/static/javascript/calendar_custom/calendar.js" TYPE="text/javascript">
   </SCRIPT>
     <SCRIPT SRC="/static/javascript/config_LocationsEditor.js" TYPE="text/javascript"></SCRIPT>
     <SCRIPT SRC="/tg_widgets/turbogears.widgets/calendar/lang/calendar-en.js" TYPE="text/javascript">

@@ -8,7 +8,7 @@
     <title>${getattr(self,'title','Forms Tutorial')}</title>
     <LINK HREF="/tg_static/css/widget.css" TYPE="text/css" REL="stylesheet"/>
     <LINK HREF="/static/css/table.css" TYPE="text/css" REL="stylesheet"/>
-    <SCRIPT SRC="/static/javascript/calendar/calendar.js" TYPE="text/javascript">
+    <SCRIPT SRC="/static/javascript/calendar_custom/calendar.js" TYPE="text/javascript">
   </SCRIPT>
     <SCRIPT SRC="/tg_static/js/widget.js" TYPE="text/javascript">
     </SCRIPT>

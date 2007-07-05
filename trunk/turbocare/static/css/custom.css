@@ -9,6 +9,12 @@ input { font-size: 85%;
     cursor: move;
     position: relative;
 }
+.fieldlabel { font-family: verdana, arial, sans-serif;
+			font-size: 10px;
+			text-align: left;
+			vertical-align: middle;
+			}
+
 
 /* 
 	displayable works with .mark-shown and .mark-hidden

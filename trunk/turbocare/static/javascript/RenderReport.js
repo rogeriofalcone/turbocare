@@ -370,7 +370,7 @@ rr.Template = rr.Template + '<meta content="text/html; charset=UTF-8" http-equiv
 rr.Template = rr.Template + '    <title>Print Preview</title>';
 rr.Template = rr.Template + '   <link rel="stylesheet" href="/static/css/custom.css" type="text/css" />';
 rr.Template = rr.Template + '<LINK HREF="/tg_static/css/widget.css" TYPE="text/css" REL="stylesheet"/>';
-rr.Template = rr.Template + '    <LINK HREF="/static/javascript/calendar/calendar-green.css" TYPE="text/css" REL="stylesheet"/>';
+rr.Template = rr.Template + '    <LINK HREF="/static/javascript/calendar_custom/calendar-green.css" TYPE="text/css" REL="stylesheet"/>';
 rr.Template = rr.Template + '    <LINK HREF="/static/css/table.css" TYPE="text/css" REL="stylesheet"/>';
 rr.Template = rr.Template + '</head>';
 rr.Template = rr.Template + '<body>';
