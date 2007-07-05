@@ -56,25 +56,26 @@ class PersonManager(turbogears.controllers.Controller):
 				return customers[0]
 		# Attempt to load our objects
 		person_form = widgets.TableForm(name="person_form", fields=widgets_person.PersonForm()) #, validator=EmailFormSchema())
-		return dict(person_form=person_form)
-	
-	#CityFkSearch = widgets_person.CityFkSearch
-	@expose(format='json')
-	def CityFkSearch(self, city_id = None, city_name = None, **kw):
-		log.debug(kw)
-		cities = []
-		if city_name:
-			search = model.AddressCityTown.select(model.AddressCityTown.q.Name.contains(str(city_name)))
-			for city in search:
-				cities.append((city.id, city.DisplayNameShort()))
-		else:
-			try:
-				city = model.AddressCityTown.get(int(city_id))
-				cities.append((city.id, city.DisplayNameShort()))
-			except:
-				pass
-		return dict(cities=cities)
+		tabber = widgets.Tabber()
+		person_search = widgets.RemoteForm(update = 'search_results', fields = [widgets.TextField("searchtext",label="Search")],name="person_search",action = "PersonSearch")  
+		return dict(person_form=person_form,tabber=tabber,person_search=person_search)
+	# These lines include the search functions locally - a necessary step
+	CityFkSearch = widgets_person.CityFkSearch
 	EthnicOrigFkSearch = widgets_person.EthnicOrigFkSearch
+	
+	@expose()
+	def PersonSearch(self, searchtext=None, **kw):
+		""" Search for a person... currently, only a name search """
+		html = "<ul><h4>Results:</h4>"
+		if searchtext:
+			search = model.Person.select(OR (model.Person.q.NameFirst.contains(str(searchtext)), 
+						     model.Person.q.NameLast.contains(str(searchtext))))
+			if search.count() > 0:
+				for person in search:
+					html += '<li><a href="?pid=%s">%s</li>' % (str(person.id), person.DisplayName())
+		#log.debug(html)
+		html += "</ul>"
+		return html
 
 	@expose(html='turbocare.templates.programmingerror')
 	def idFail(error):

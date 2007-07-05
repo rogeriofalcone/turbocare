@@ -8,7 +8,7 @@ class PersonForm(widgets.WidgetsList):
 	NameFirst = widgets.TextField(validator=validators.NotEmpty(), label="First Name")
 	NameMiddle = widgets.TextField(label="Middle Name")
 	NameLast = widgets.TextField(validator=validators.NotEmpty(), label="Last Name")
-	DateBirth = widgets.CalendarDateTimePicker("date_of_birth", label="Date of Birth", button_text="Date",field_class="calendardatepicker")
+	DateBirth = widgets.CalendarDatePicker("date_of_birth", label="Date of Birth", button_text="Date",field_class="calendardatepicker")
 	AddrStr = widgets.TextField(label="Street Address")
 	AddrZip = widgets.TextField(label="PIN Code")
 	AddrCitytownNr = AutoCompletingFKLookupField(  
@@ -41,6 +41,22 @@ class PersonForm(widgets.WidgetsList):
                  var_name='tribes')
 
 @expose(format='json')
+def CityFkSearch(self, city_id = None, city_name = None, **kw):
+	log.debug(kw)
+	cities = []
+	if city_name:
+		search = model.AddressCityTown.select(model.AddressCityTown.q.Name.contains(str(city_name)))
+		for city in search:
+			cities.append((city.id, city.DisplayNameShort()))
+	else:
+		try:
+			city = model.AddressCityTown.get(int(city_id))
+			cities.append((city.id, city.DisplayNameShort()))
+		except:
+			pass
+	return dict(cities=cities)
+
+@expose(format='json')
 def EthnicOrigFkSearch(self, tribe_id = None, tribe_name = None, **kw):
 	tribes = []
 	if tribe_name:
@@ -55,6 +71,7 @@ def EthnicOrigFkSearch(self, tribe_id = None, tribe_name = None, **kw):
 			pass
 	return dict(tribes=tribes)
 
+	
 #		DateReg = DateTimeCol(dbName='date_reg',default=cur_date_time())
 #	        Name2 = widgets.TextField(validator=validators.NotEmpty(), label="Name (2nd)")
 #	        Name3 = widgets.TextField(validator=validators.NotEmpty(), label="Name (3rd)")
