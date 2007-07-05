@@ -8,7 +8,7 @@ class PersonForm(widgets.WidgetsList):
 	NameFirst = widgets.TextField(validator=validators.NotEmpty(), label="First Name")
 	NameMiddle = widgets.TextField(label="Middle Name")
 	NameLast = widgets.TextField(validator=validators.NotEmpty(), label="Last Name")
-	DateBirth = widgets.CalendarDatePicker("Date of Birth")
+	DateBirth = widgets.CalendarDateTimePicker("date_of_birth", label="Date of Birth", button_text="Date",field_class="calendardatepicker")
 	AddrStr = widgets.TextField(label="Street Address")
 	AddrZip = widgets.TextField(label="PIN Code")
 	AddrCitytownNr = AutoCompletingFKLookupField(  

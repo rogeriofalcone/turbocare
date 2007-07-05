@@ -5,13 +5,13 @@ py:extends="'master.kid'">
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" py:replace="''"/>
     <title>${getattr(self,'title','Forms Tutorial')}</title>
     <LINK HREF="/tg_static/css/widget.css" TYPE="text/css" REL="stylesheet"/>
-    <LINK HREF="/static/javascript/calendar/calendar-green.css" TYPE="text/css" REL="stylesheet"/>
+    <LINK HREF="/static/javascript/calendar_custom/calendar-green.css" TYPE="text/css" REL="stylesheet"/>
     <LINK HREF="/static/css/tabber.css" TYPE="text/css" REL="stylesheet"/>
 	<link rel="stylesheet" type="text/css" href="/static/css/yui/fonts.css" />
 	<link rel="stylesheet" type="text/css" href="/static/css/yui/menu.css" /> 
 	<link rel="stylesheet" type="text/css" href="/static/css/yui/tree.css" /> 
 	<link rel="stylesheet" type="text/css" href="/static/css/yui/grids.css" /> 
-    <SCRIPT SRC="/static/javascript/calendar/calendar.js" TYPE="text/javascript">
+    <SCRIPT SRC="/static/javascript/calendar_custom/calendar.js" TYPE="text/javascript">
   </SCRIPT>
   	<script type="text/javascript">
 		var tabberOptions = {manualStartup:true};
