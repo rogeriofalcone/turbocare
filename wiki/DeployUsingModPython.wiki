@@ -50,6 +50,12 @@ Note the manual installation of TurboJson and SQLObject is to overcome a conflic
 
 Note when using easy_install we need to specify the install as unziped eggs as this stops apache from trying to extract the eggs into its own home directory.
 
+===Additional TurboGears Widgets===
+Foreign Key look up widget
+{{{
+sudo easy_install TGFKLookup
+}}}
+
 ===Install turbocare===
 
 {{{
