@@ -57,6 +57,12 @@ How To Install TurboCare on Windows
   # Download "http://initd.org/pub/software/pysqlite/releases/2.3/2.3.3/pysqlite-2.3.3.win32-py2.4.exe"
   # Install the program after downloading
 
+== Additional TurboGears Widgets ==
+Foreign Key look up widget
+{{{
+sudo easy_install TGFKLookup
+}}}
+
 == Install Subversion ==
 
   # Go to: http://subversion.tigris.org/project_packages.html
@@ -120,4 +126,3 @@ utils.InitAdmin('Admin','Password')
  # Exit the shell window (Linux/Unix <Ctrl>+d, windows <Ctrl>+z ??)
  # When it asks to commit the transactions, choose "yes"
  # Restart the server, you should be able to log-in with administrative rights using the new login
-
