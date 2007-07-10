@@ -17,7 +17,8 @@ class PersonForm(widgets.WidgetsList):
                  label='City (ID/Name)',  
                  search_controller='CityFkSearch', 
                  id_search_param='city_id',  
-                 text_search_param='city_name',  
+                 text_search_param='city_name',
+		 #text_result_attr={'name':'AddrCitytownNr_text'},
                  var_name='cities')
 	Phone1Nr = widgets.TextField(label="Phone Number")
 	Cellphone1Nr = widgets.TextField(label="Cell Number")
