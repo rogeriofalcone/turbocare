@@ -18,7 +18,7 @@ LATEST_QRS = 5 # In quote requests quick listing, we limit the display of past q
 LATEST_QS = 5 # Quotes quick listing limit
 LATEST_POS = 5 # Purchase order quick list limit
 LATEST_STRS = 5 # Stock Transfer Requests quick list limit
-# Default values for certain patient services... hard coded
+# Default values for certain patient services... these are reset during application initialization via the config file
 DFLT_WARD = {'Referral':3,'Emergency':1,'Birth delivery':3,'Walk-in':2,'Accident':1}
 #1=General Surgery, 2=General Surgery 3rd Floor, 3=Ob-Gyn
 DFLT_CONSLT_COMMON = {'name':'Consultation Common', 'catalogid':34}

@@ -19,6 +19,12 @@ from printer_inventory import *
 log = logging.getLogger("turbocare.controllers")
 conn = model.hub.getConnection()
 
+class RegistrationError(Exception):
+	def __init__(self, value):
+		self.value = value
+	def __str__(self):
+		return repr(self.value)
+
 class Registration(turbogears.controllers.Controller):
 	@expose(html='turbocare.templates.registration_search')
 	def index(self, **kw):
@@ -435,12 +441,14 @@ class Registration(turbogears.controllers.Controller):
 		if DateBirth=='' or DateBirth==None:
 			Age = None
 		else:
-			DateBirth = datetime.fromtimestamp(time.mktime(time.strptime(DateBirth[0:10],DATE_FORMAT)))
+			DateBirth = datetime.date.fromtimestamp(time.mktime(time.strptime(DateBirth[0:10],DATE_FORMAT)))
 			Age = float(((datetime.datetime.now().date() - DateBirth).days+0.5)/365.25)
 		# Load our patient types: similar to titles
 		log.debug(PatientType)
 		if PatientType == '':
 			PatientType = 3 #3=self_pay
+		else:
+			PatientType = int(PatientType)
 		patienttypes = []
 		items = model.ClassInsurance.select()
 		#log.debug(' RELOAD PatientType: %r' % PatientType)
@@ -550,29 +558,32 @@ class Registration(turbogears.controllers.Controller):
 		try:
 			if Title=='':
 				turbogears.flash('You need to enter a Title')
-				raise ValueError
+				raise RegistrationError
 			if PatientType=='1' and Firm=='':
 				turbogears.flash('You need to enter an Insurance Firm')
-				raise ValueError
+				raise RegistrationError
 			if PatientType=='1' and InsuranceNumber=='':
 				turbogears.flash('You need to enter an Insurance number')
-				raise ValueError
+				raise RegistrationError
 			log.debug(NameFirst)
 			if NameFirst=='':
 				log.debug('Raising a value error')
 				turbogears.flash('You need to enter a first name')
-				raise ValueError
+				raise RegistrationError
 			if NameLast=='':
+				log.debug('Raising a value error')
 				turbogears.flash('You need to enter a last name')
-				raise ValueError
+				raise RegistrationError
 			if AddrCitytownNrID==None:
+				log.debug('Raising a value error')
 				turbogears.flash('You need to select a city/town/area')
-				raise ValueError
-			if Age=='' or (int(Age)<0):
+				raise RegistrationError
+			if Age=='' or (float(Age)<0):
+				log.debug('Raising a value error')
 				turbogears.flash('The age cannot be empty or negative')
-				raise ValueError
-		except ValueError:
-			log.debug('ValueError successfully raised')
+				raise RegistrationError
+		except RegistrationError:
+			log.debug('RegistrationError successfully raised')
 			if PatientID != '':
 				log.debug('redirecting to Registration page 1 using the patient id')
 				raise cherrypy.HTTPRedirect('RegistrationPage1?PatientID=%s' % PatientID)
@@ -1163,7 +1174,13 @@ class Registration(turbogears.controllers.Controller):
 		PrefixDays = {'COMM':0, 'CMPR':0, 'PRIV':0} #Count the number of days spent in each financial category
 		for room in RoomDays:
 			ward = model.Ward.get(room['WardID'])
-			PrefixDays[ward.Roomprefix] += room['Days']
+			# NOTE: We default any wards with no prefix to the common prefix, the user is warned about this.  It should always be set
+			if ward.Roomprefix in [None, '']:
+				turbogears.flash("WARNING: The current room doesn't have a prefix, please add a room prefix")
+				ROOMPREFIX = 'COMM'
+			else:
+				ROOMPREFIX = ward.Roomprefix
+			PrefixDays[ROOMPREFIX] += room['Days']
 		# Subtract any paid days from what we have
 		for receipt in encounter.Receipts:
 			for item in receipt.CatalogItems:
@@ -1257,7 +1274,13 @@ class Registration(turbogears.controllers.Controller):
 					RoomCatalogID = self.RegistrationBedRoomChange(EncounterID, Ward, Room, Bed)
 				else:
 					curward = model.Ward.get(Ward)
-					RoomCatalogID = model.DFLT_ROOMPREFIX[curward.Roomprefix]
+					# NOTE: we default the room prefix to common in case the data entry person didn't put a room prefix in
+					if curward.Roomprefix in [None, '']:
+						turbogears.flash("WARNING: The current room doesn't have a prefix, please add a room prefix")
+						ROOMPREFIX = 'COMM'
+					else:
+						ROOMPREFIX = curward.Roomprefix
+					RoomCatalogID = model.DFLT_ROOMPREFIX[ROOMPREFIX]
 			else: # Add new room entries
 				#Create all new records (NOTE, the GroupNr is the Ward id... i think)
 				newward = model.EncounterLocation(EncounterNr=EncounterID,TypeNr=model.TYPE_LOCATION['ward'],\
