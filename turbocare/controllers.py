@@ -1,7 +1,7 @@
 import logging
 import cherrypy
 import turbogears
-from turbogears import controllers, expose, validate, redirect
+from turbogears import controllers, expose, validate, redirect, config
 from turbogears import identity
 from turbogears.toolbox.catwalk import CatWalk 
 import model
@@ -31,6 +31,7 @@ class Root(controllers.RootController):
 		# Map the services
 		# Dynamically create Store and dispensing locations from locations which we have in the database
 		self.MapServices()
+		self.MapWards()
 		Locations = model.InvLocation.select()
 		for location in Locations:
 			name_store = '%s_store' % location.Name.lower().replace(' ','_')
@@ -198,7 +199,30 @@ class Root(controllers.RootController):
 		if identity.not_anonymous():
 				results.append(dict(link='/user_reports',name='User Reports',sub_menu=[]))
 		return results
-
+	
+	def MapWards(self):
+		""" Map the default wards - information is provided in the configuration file 
+		hospital.Ward_default_referral = ward_id
+		hospital.Ward_default_emergency = ward_id
+		hospital.Ward_default_birthdelivery = ward_id
+		hospital.Ward_default_walkin = ward_id		
+		hospital.Ward_default_accident = ward_id
+		Where ward_id is the id number for the ward in the database
+		"""
+		log.debug('Mapping default wards')
+		# Find the first ward, this will be our default if no config settings are found
+		wards = model.Ward.select()
+		if wards.count() == 0:
+			turbogears.flash("Warning, no wards exist, so inpatient registration will result in an error")
+			model.DFLT_WARD = {'Referral':None,'Emergency':None,'Birth delivery':None,'Walk-in':None,'Accident':None}
+		else:
+			dflt_ward = wards[0] # when no ward is given, our default is the first ward in existence
+			model.DFLT_WARD['Referral'] = config.get('hospital.Ward_default_referral', dflt_ward.id)
+			model.DFLT_WARD['Emergency'] = config.get('hospital.Ward_default_emergency', dflt_ward.id)
+			model.DFLT_WARD['Birth delivery'] = config.get('hospital.Ward_default_birthdelivery', dflt_ward.id)
+			model.DFLT_WARD['Walk-in'] = config.get('hospital.Ward_default_walkin', dflt_ward.id)
+			model.DFLT_WARD['Accident'] = config.get('hospital.Ward_default_accident', dflt_ward.id)
+			
 	def MapServices(self):
 		log.debug('Mapping Services')
 		Service = model.InvCatalogItem.select(model.InvCatalogItem.q.Name=='Consultation Common')

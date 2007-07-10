@@ -29,7 +29,7 @@
     <td valign="top">
       <div class="tabber"> 
              <div class="tabbertab"><h2>Person</h2>
-                <div py:content="person_form.display(submit_text='Add Person')">Person Entry</div>
+                <div py:content="person_form.display(value=personvalues,submit_text='Add Person')">Person Entry</div>
              </div> 
              <div class="tabbertab"><h2>Patient</h2></div> 
              <div class="tabbertab"><h2>Employee</h2></div> 

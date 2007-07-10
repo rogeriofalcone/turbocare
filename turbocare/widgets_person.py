@@ -3,7 +3,8 @@ from tgfklookup.widgets import AutoCompletingFKLookupField
 from model import Person, AddressCityTown, TypeEthnicOrig
 
 class PersonForm(widgets.WidgetsList):
-	PersonID = widgets.HiddenField("PersonID", value="")
+	
+	PersonID = widgets.HiddenField("PersonID")
 	Title = widgets.TextField(label="Title")
 	NameFirst = widgets.TextField(validator=validators.NotEmpty(), label="First Name")
 	NameMiddle = widgets.TextField(label="Middle Name")
@@ -11,8 +12,9 @@ class PersonForm(widgets.WidgetsList):
 	DateBirth = widgets.CalendarDatePicker("date_of_birth", label="Date of Birth", button_text="Date",field_class="calendardatepicker")
 	AddrStr = widgets.TextField(label="Street Address")
 	AddrZip = widgets.TextField(label="PIN Code")
-	AddrCitytownNr = AutoCompletingFKLookupField(  
-                 name='City (ID/Name)',  
+	AddrCitytownNr = AutoCompletingFKLookupField(
+		 name = 'AddrCitytownNr',
+                 label='City (ID/Name)',  
                  search_controller='CityFkSearch', 
                  id_search_param='city_id',  
                  text_search_param='city_name',  
@@ -21,20 +23,21 @@ class PersonForm(widgets.WidgetsList):
 	Cellphone1Nr = widgets.TextField(label="Cell Number")
 	Fax = widgets.TextField(label="Fax Number")
 	Email = widgets.TextField(label="E-mail")
-	CivilStatus = widgets.SingleSelectField("Civil Status",   
+	CivilStatus = widgets.SingleSelectField(name='CivilStatus', label="Civil Status",   
                                     options=[('Unknown', "Unknown"),   
                                              ('Single', "Single"),   
                                              ('Married', "Married"),  
                                              ('Divorced', "Divorced"),
 					     ('Widow(er)',"Widow(er)")],  
                                     default=1)
-	Sex = widgets.SingleSelectField("Civil Status",   
+	Sex = widgets.SingleSelectField(name="Sex", label="Gender",   
                                     options=[('U', "Unknown"),   
                                              ('M', "Male"),   
                                              ('F', "Female")],  
                                     default=1)
-	EthnicOrig = AutoCompletingFKLookupField(  
-                 name='Tribe (ID/Name)',  
+	EthnicOrig = AutoCompletingFKLookupField(
+		 name = 'EthnicOrig',
+                 label='Tribe (ID/Name)',  
                  search_controller='EthnicOrigFkSearch', 
                  id_search_param='tribe_id',  
                  text_search_param='tribe_name',  
@@ -42,15 +45,14 @@ class PersonForm(widgets.WidgetsList):
 
 @expose(format='json')
 def CityFkSearch(self, city_id = None, city_name = None, **kw):
-	log.debug(kw)
 	cities = []
 	if city_name:
-		search = model.AddressCityTown.select(model.AddressCityTown.q.Name.contains(str(city_name)))
+		search = AddressCityTown.select(AddressCityTown.q.Name.contains(str(city_name)))
 		for city in search:
 			cities.append((city.id, city.DisplayNameShort()))
 	else:
 		try:
-			city = model.AddressCityTown.get(int(city_id))
+			city = AddressCityTown.get(int(city_id))
 			cities.append((city.id, city.DisplayNameShort()))
 		except:
 			pass
@@ -65,7 +67,7 @@ def EthnicOrigFkSearch(self, tribe_id = None, tribe_name = None, **kw):
 			tribes.append((tribe.id, tribe.Name))
 	else:
 		try:
-			tribe = AddressCityTown.get(int(tribe_id))
+			tribe = TypeEthnicOrig.get(int(tribe_id))
 			tribes.append((tribe.id, tribe.Name))
 		except:
 			pass

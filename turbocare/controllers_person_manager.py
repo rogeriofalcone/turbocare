@@ -23,7 +23,7 @@ class PersonManager(turbogears.controllers.Controller):
 		next_link = "/"
 		return dict(error_message = error, next_link=next_link)
 	
-	@identity.require(identity.has_permission("patient_manager_view"))
+	@identity.require(identity.has_permission("person_manager_view"))
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
 	@expose(html='turbocare.templates.pm_Main')
 	def index(self, PersonID=None, CustomerID=None, PersonellID=None, **kw):
@@ -54,11 +54,37 @@ class PersonManager(turbogears.controllers.Controller):
 				return CreateCustomer(Person)
 			else:
 				return customers[0]
+		# Load any data
+		personvalues = None
+		if PersonID:
+			try:
+				person = model.Person.get(int(PersonID))
+			except:
+				person = None
+				turbogears.flash("Could not load Person")
+			if person:
+				personvalues = {}
+				personvalues['PersonID'] = person.id
+				personvalues['Title'] = person.Title
+				personvalues['NameFirst'] = person.NameFirst
+				personvalues['NameMiddle'] = person.NameMiddle
+				personvalues['NameLast'] = person.NameLast
+				personvalues['DateBirth'] = person.DateBirth
+				personvalues['AddrStr'] = person.AddrStr
+				personvalues['AddrZip'] = person.AddrZip
+				personvalues['AddrCitytownNr'] = person.AddrCitytownNrID
+				personvalues['Phone1Nr'] = person.Phone1Nr
+				personvalues['Cellphone1Nr'] = person.Cellphone1Nr
+				personvalues['Fax'] = person.Fax
+				personvalues['Email'] = person.Email
+				personvalues['CivilStatus'] = person.CivilStatus
+				personvalues['Sex'] = person.Sex
+				personvalues['EthnicOrig'] = person.EthnicOrigID
 		# Attempt to load our objects
 		person_form = widgets.TableForm(name="person_form", fields=widgets_person.PersonForm()) #, validator=EmailFormSchema())
 		tabber = widgets.Tabber()
 		person_search = widgets.RemoteForm(update = 'search_results', fields = [widgets.TextField("searchtext",label="Search")],name="person_search",action = "PersonSearch")  
-		return dict(person_form=person_form,tabber=tabber,person_search=person_search)
+		return dict(person_form=person_form,tabber=tabber,person_search=person_search, personvalues=personvalues)
 	# These lines include the search functions locally - a necessary step
 	CityFkSearch = widgets_person.CityFkSearch
 	EthnicOrigFkSearch = widgets_person.EthnicOrigFkSearch
@@ -72,7 +98,7 @@ class PersonManager(turbogears.controllers.Controller):
 						     model.Person.q.NameLast.contains(str(searchtext))))
 			if search.count() > 0:
 				for person in search:
-					html += '<li><a href="?pid=%s">%s</li>' % (str(person.id), person.DisplayName())
+					html += '<li><a href="?PersonID=%s">%s</li>' % (str(person.id), person.DisplayName())
 		#log.debug(html)
 		html += "</ul>"
 		return html

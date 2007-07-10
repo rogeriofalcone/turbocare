@@ -423,7 +423,8 @@ DFLT_PERMISSIONS = {'bill_create': 'Create Bill',
 	       'report_editor': 'Report Editor',
 	       'admin_users': 'Administer Users',
 	       'bill_refund': 'Perform billing refunds',
-	       'admin_controllers_configuration': 'Configuration controller access'}
+	       'admin_controllers_configuration': 'Configuration controller access',
+	       'person_manager_view':'Person Manager View'}
 	
 def InitAdmin(name='admin', password=None):
 	''' Initialize an administrative account with a login id and password (name and password) '''
@@ -449,6 +450,8 @@ def InitAdmin(name='admin', password=None):
 		admin_user = model.User(user_name = name, email_address = name, display_name = name, password = password)
 	else:
 		admin_user = users[0]
+		# Reset the password to what the user supplied
+		admin_user.password = password
 	# Step 5: Make sure the supergroup is included in the admin_user
 	if supergroup.id not in [x.id for x in admin_user.groups]:
 		admin_user.addGroup(supergroup)
