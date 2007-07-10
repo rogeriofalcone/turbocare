@@ -73,6 +73,7 @@ class PersonManager(turbogears.controllers.Controller):
 				personvalues['AddrStr'] = person.AddrStr
 				personvalues['AddrZip'] = person.AddrZip
 				personvalues['AddrCitytownNr'] = person.AddrCitytownNrID
+				personvalues['AddrCitytownNr_text'] = 'TEST'#person.AddrCitytownNrID
 				personvalues['Phone1Nr'] = person.Phone1Nr
 				personvalues['Cellphone1Nr'] = person.Cellphone1Nr
 				personvalues['Fax'] = person.Fax

@@ -1227,7 +1227,8 @@ class InvStockLocation(SQLObject):
 		FromQty = 0
 		for item in self.TransfersFromHere:
 			if (not item.IsComplete):
-				FromQty -= item.Qty
+				if item.Qty:
+					FromQty -= item.Qty
 		#FromQty = 0
 		#for item in self.TransfersFromHere:
 		#	if (not item.IsComplete):
@@ -2612,7 +2613,7 @@ class InvStockTransfer(SQLObject):
 				DateTransferred = '(no date selected)'
 			else:
 				DateTransferred = self.DateTransferred.strftime(DATE_FORMAT)
-			value = '%s%d of %s moved from %s to %s on %s %s' % (Deleted, self.Qty, StockName, FromLocation,\
+			value = '%s%s of %s moved from %s to %s on %s %s' % (Deleted, str(self.Qty), StockName, FromLocation,\
 				ToLocation, DateTransferred, note)
 		except AttributeError:
 			value = 'NEW ENTRY (ERR)'

@@ -3064,7 +3064,11 @@ class Store(turbogears.controllers.Controller):
 				orderBy=[-model.InvStockLocation.q.Quantity],distinct=True)
 		results = []
 		for item in items:
-			results.append(dict(id=item.StockItemID, text='%d of %s' % (item.Quantity, item.StockItem.Name), linkurl="StockItemsEditor?StockItemID=%d" % item.StockItemID))
+			try:
+				results.append(dict(id=item.StockItemID, text='%d of %s' % (item.Quantity, item.StockItem.Name), linkurl="StockItemsEditor?StockItemID=%d" % item.StockItemID))
+			except SQLObjectNotFound:
+				turbogears.flash("Warning:  some database data errors were logged (StockTransfersEditorStockItemSelect)")
+				log.debug("Database data error: inv_stock_location by id %d is linked to inv_stock_item id %d, but that stock item is producing an error" % (item.id, item.StockItemID))
 		if StockTransferRequestItemID==None:
 			function_name = 'StockTransfersEditorStockItemSelect'
 		else:
