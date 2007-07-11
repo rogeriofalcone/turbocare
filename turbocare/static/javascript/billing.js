@@ -1240,7 +1240,14 @@ billing.payment_post = function() {
 		TotalCashAmt = 0;
 		getElement('payment_TotalCashAmt').value = TotalCashAmt;
 	}
-	if (confirm('Continue with customer making a payment for Rs. '+TotalCashAmt+'?  This operation cannot be un-done.')) {
+	var TotalInsAmt = getElement('payment_InsrAmt').value;
+	var TotalCurrPaid = getElement('payment_CurrPaid').value;
+	if (TotalInsAmt>0) {
+		InsrMsg = "Insurance will cover the balance of the bill: Rs. "+String(Number(TotalInsAmt)-Number(TotalCurrPaid))+". ";
+	} else {
+		InsrMsg = "";
+	}
+	if (confirm('Continue with customer making a payment for Cash: Rs. '+TotalCashAmt+'? '+InsrMsg+' This operation cannot be un-done.')) {
 		billing.payment_remove();
 		billing.Pay(CashAmt,CashNotes,InsrAmt,InsrNotes, TotalCashAmt);
 	}
