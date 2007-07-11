@@ -2607,6 +2607,7 @@ class Store(turbogears.controllers.Controller):
 			qArgs+="model.InvGrpStock.q.id == model.InvViewJoinCatalogItemGrpStock.q.GrpStockId,"
 			qArgs+="model.InvCatalogItem.q.id == model.InvViewJoinCatalogItemGrpStock.q.CatalogItemId,"
 		if len(qArgs) > 0:
+			#log.debug('model.InvCatalogItem.select(AND ('+qArgs[0:len(qArgs)-1]+'),orderBy=[model.InvCatalogItem.q.Name])')
 			items = eval('model.InvCatalogItem.select(AND ('+qArgs[0:len(qArgs)-1]+'),orderBy=[model.InvCatalogItem.q.Name])')
 		else:
 			items = model.InvCatalogItem.select(orderBy=[model.InvCatalogItem.q.Name])

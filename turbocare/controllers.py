@@ -1,6 +1,7 @@
 import logging
 import cherrypy
 import turbogears
+import MySQLdb
 from turbogears import controllers, expose, validate, redirect, config
 from turbogears import identity
 from turbogears.toolbox.catwalk import CatWalk 
@@ -26,6 +27,8 @@ log = logging.getLogger("turbocare.controllers")
 class Root(controllers.RootController):
 		
 	def __init__(self):
+		# Fix any database schema problems
+		self.FixDatabase()
 		# Run any initializations that we might need
 		initialize_database.InitPatientTypes()
 		# Map the services
@@ -222,6 +225,47 @@ class Root(controllers.RootController):
 			model.DFLT_WARD['Birth delivery'] = config.get('hospital.Ward_default_birthdelivery', dflt_ward.id)
 			model.DFLT_WARD['Walk-in'] = config.get('hospital.Ward_default_walkin', dflt_ward.id)
 			model.DFLT_WARD['Accident'] = config.get('hospital.Ward_default_accident', dflt_ward.id)
+			
+	def FixDatabase(self):
+		''' If the schema gets messed up, this routine will try to fix it '''
+		CreateStockGrpView = """
+		CREATE VIEW `inv_view_join_catalog_item_grp_stock` AS 
+		select ((`inv_catalog_item_inv_grp_stock`.`inv_catalog_item_id` * 1000000000) + 
+		`inv_catalog_item_inv_grp_stock`.`inv_grp_stock_id`) AS `id`,
+		`inv_catalog_item_inv_grp_stock`.`inv_catalog_item_id` AS `catalog_item_id`,
+		`inv_catalog_item_inv_grp_stock`.`inv_grp_stock_id` AS `grp_stock_id` 
+		from `inv_catalog_item_inv_grp_stock`
+		"""
+		conn_str = config.get('sqlobject.dburi', None)
+		if conn_str:
+			# Connect to the database
+			login = conn_str[conn_str.find('://')+3:conn_str.find('@')]
+			db = conn_str[conn_str.find('@')+1:]
+			dbname = db[db.find('/')+1:]
+			user = login[0:login.find(':')]
+			passwd = login[login.find(':')+1:]
+			host = db[0:db.find(':')]
+			port = db[db.find(':')+1:db.find('/')]
+			conn = MySQLdb.connect(db=dbname, user=user, passwd=passwd, host=host, port=int(port))
+			# Determine if the view inv_catalog_item_inv_grp_stock exists as a view (and not a table).  Make sure it exists as a view.
+			qry = conn.cursor()
+			qry.execute("SHOW FULL TABLES WHERE Table_type = 'VIEW'")
+			views = qry.fetchall()
+			viewnames = [view[0] for view in views]
+			qry.execute("SHOW FULL TABLES WHERE Table_type != 'VIEW'")
+			tables = qry.fetchall()
+			tablenames = [table[0] for table in tables]
+			log.debug('Checking for database schema problems')
+			if 'inv_view_join_catalog_item_grp_stock' not in viewnames:
+				log.debug('Fixing database schema, inv_view_join_catalog_item_grp_stock is being added as a view')
+				if 'inv_view_join_catalog_item_grp_stock' in tablenames:
+					log.debug('Dropping the table with the name inv_view_join_catalog_item_grp_stock')
+					qry.execute('DROP TABLE inv_view_join_catalog_item_grp_stock')
+				qry.execute(CreateStockGrpView)
+			qry.close()
+			conn.commit()
+		else:
+			log.debug('No Database schema problems found')
 			
 	def MapServices(self):
 		log.debug('Mapping Services')
