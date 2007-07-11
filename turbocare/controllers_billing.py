@@ -451,7 +451,6 @@ class Billing(controllers.RootController):
 						log.debug('....NOT ENOUGH STOCK FOR TRANSFER for updating receipt with no assigned stock location!!')
 			else:
 				log.debug('....Cannot update item (%d) since it is finished' % record_rcpt_item.id)
-
 	
 	@expose(format='json')
 	@identity.require(identity.has_permission("bill_edit"))
@@ -497,6 +496,13 @@ class Billing(controllers.RootController):
 			record.TotalPayment = record.TotalPaymentCalc()
 		else:
 			ReceiptID = None
+		# If insurance is covering this receipt, then apply the insurance amount
+		# Do not touch the record if there is any cash amounts on the receipt!
+		if record:
+			if record.External.IsInsurance() and (record.TotalSelfPay in [None,0.0]):
+				record.TotalInsurance = record.TotalPaymentCalc()
+				record.TotalPaid = record.TotalPaymentCalc()
+				record.TotalSelfPay = 0.0
 		# if the receipt has been paid (at least in part) mark items for Auto transfer
 		if ReceiptID != None and record.TotalPaidCalc() > 0:
 			self.AutoTransferReceiptItems(record.id)
@@ -868,7 +874,7 @@ class Billing(controllers.RootController):
 		'''
 		# Load the customer
 		Customer = model.InvReceipt.get(ReceiptID).Customer
-		if (Customer.CalcBalance() >= 0):
+		if (Customer.CalcCashBalance() >= 0):
 			ErrorMsg = 'Refund rejected, Customer has no credit'
 			NextLink = 'index?receipt_id=%d' % ReceiptID
 			raise cherrypy.HTTPRedirect('DataEntryError?error=%s&next_link=%s' % (ErrorMsg, NextLink))

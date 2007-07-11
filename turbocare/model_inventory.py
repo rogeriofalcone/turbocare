@@ -964,6 +964,37 @@ class InvCustomer(SQLObject):
 		for payment in self.Payments:
 			SumCustomerPayments += payment.Amount
 		return SumTotalSelfPay - SumCustomerPayments - SumInsurancePayments
+	
+	def CalcCashBalance(self, DoNotIncludReceiptID=None):
+		'''	For any in-complete transactions (not dispensed), this returns the Cash amount the
+		customer owes (if positive) or we can refund (if negative).  Amounts covered by
+		insurance are ignored.  Insurance amounts are ignored for refund purposes, but if the patient
+		has a cash credit, that can be refunded (even if the customer had insurance on some receipts).
+		'''
+		SumTotalPayment = 0.0 # On in-complete receipts
+		SumInsurancePayments = 0.0 # on in-complete receipts
+		SumTotalCashPayments = 0.0 # on in-complete receipts
+		if DoNotIncludReceiptID==None:
+			for receipt in self.Receipts:
+				if not receipt.IsDispensed():
+					SumTotalPayment += receipt.TotalPaymentCalc() # receipt.TotalSelfPay
+					SumInsurancePayments += receipt.TotalInsurance
+					SumTotalCashPayments += receipt.TotalSelfPay
+		else:
+			DoNotIncludReceiptID = int(DoNotIncludReceiptID)
+			for receipt in self.Receipts:
+				if receipt.id != DoNotIncludReceiptID:
+					if not receipt.IsDispensed():
+						SumTotalPayment += receipt.TotalPaymentCalc() # receipt.TotalSelfPay
+						SumInsurancePayments += receipt.TotalInsurance
+						SumTotalCashPayments += receipt.TotalSelfPay
+		if (SumTotalPayment - SumTotalCashPayments - SumInsurancePayments)<0:
+			if SumTotalCashPayments > (SumTotalCashPayments + SumInsurancePayments - SumTotalPayment):
+				return SumTotalPayment - SumTotalCashPayments - SumInsurancePayments
+			else:
+				return -SumTotalCashPayments
+		else:
+			return SumTotalPayment - SumTotalCashPayments - SumInsurancePayments
 
 	def MostRecentReceipt(self):
 		last_purchase = None

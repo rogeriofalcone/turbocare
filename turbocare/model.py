@@ -840,6 +840,10 @@ class Encounter(SQLObject):
 		def TotalVisitCount(self):
 			""" The number of visits that this patient has in total """
 			return len(self.P.Encounters)
+		
+		def IsInsurance(self):
+			''' True if the patient is covered by insurance on this encounter, false otherwise '''
+			return self.InsuranceClassNr.ClassId != 'self_pay'
 
 		Pid = ForeignKey("Person", dbName='pid')
 		EncounterDate = DateTimeCol(default=cur_date_time(), dbName='encounter_date')
