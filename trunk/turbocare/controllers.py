@@ -242,11 +242,18 @@ class Root(controllers.RootController):
 			login = conn_str[conn_str.find('://')+3:conn_str.find('@')]
 			db = conn_str[conn_str.find('@')+1:]
 			dbname = db[db.find('/')+1:]
-			user = login[0:login.find(':')]
-			passwd = login[login.find(':')+1:]
+			if login.find(':') >= 0:
+				user = login[0:login.find(':')]
+				passwd = login[login.find(':')+1:]
+			else:
+				user = login
+				passwd = None
 			host = db[0:db.find(':')]
 			port = db[db.find(':')+1:db.find('/')]
-			conn = MySQLdb.connect(db=dbname, user=user, passwd=passwd, host=host, port=int(port))
+			if passwd:
+				conn = MySQLdb.connect(db=dbname, user=user, passwd=passwd, host=host, port=int(port))
+			else:
+				conn = MySQLdb.connect(db=dbname, user=user, host=host, port=int(port))
 			# Determine if the view inv_catalog_item_inv_grp_stock exists as a view (and not a table).  Make sure it exists as a view.
 			qry = conn.cursor()
 			qry.execute("SHOW FULL TABLES WHERE Table_type = 'VIEW'")
