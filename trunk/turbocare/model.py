@@ -12,7 +12,7 @@ log = logging.getLogger("turbocare.controllers")
 
 # class YourDataClass(SQLObject):
 #     pass
-dbReligion = ['Christian', 'Hindu', 'Muslim', 'Scientology', 'Unknown']
+dbReligion = ['Unknown', 'Christian', 'Hindu', 'Muslim', 'Scientology']
 dbGender = ['U','F','M']
 dbTitles = ['Ms.', 'Mrs.', 'Mr.', 'Dr.']
 

@@ -1,6 +1,6 @@
 from turbogears import widgets, validators, expose
 from tgfklookup.widgets import AutoCompletingFKLookupField
-from model import Person, AddressCityTown, TypeEthnicOrig
+from model import Person, AddressCityTown, TypeEthnicOrig, dbReligion, DATE_FORMAT
 
 class PersonForm(widgets.WidgetsList):
 	
@@ -9,7 +9,8 @@ class PersonForm(widgets.WidgetsList):
 	NameFirst = widgets.TextField(validator=validators.NotEmpty(), label="First Name")
 	NameMiddle = widgets.TextField(label="Middle Name")
 	NameLast = widgets.TextField(validator=validators.NotEmpty(), label="Last Name")
-	DateBirth = widgets.CalendarDatePicker("date_of_birth", label="Date of Birth", button_text="Date",field_class="calendardatepicker")
+	DateBirth = widgets.CalendarDatePicker(name="DateBirth", label="Date of Birth", button_text="Date",
+					       field_class="calendardatepicker", format=DATE_FORMAT)
 	AddrStr = widgets.TextField(label="Street Address")
 	AddrZip = widgets.TextField(label="PIN Code")
 	AddrCitytownNr = AutoCompletingFKLookupField(
@@ -24,6 +25,9 @@ class PersonForm(widgets.WidgetsList):
 	Cellphone1Nr = widgets.TextField(label="Cell Number")
 	Fax = widgets.TextField(label="Fax Number")
 	Email = widgets.TextField(label="E-mail")
+	Religion = widgets.SingleSelectField(name='Religion', label="Religion",   
+                                    options=dbReligion,  
+                                    default=1)
 	CivilStatus = widgets.SingleSelectField(name='CivilStatus', label="Civil Status",   
                                     options=[('Unknown', "Unknown"),   
                                              ('Single', "Single"),   

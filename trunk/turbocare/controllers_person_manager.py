@@ -76,13 +76,15 @@ class PersonManager(turbogears.controllers.Controller):
 				personvalues['AddrCitytownNr_text'] = 'TEST'#person.AddrCitytownNrID
 				personvalues['Phone1Nr'] = person.Phone1Nr
 				personvalues['Cellphone1Nr'] = person.Cellphone1Nr
+				personvalues['Religion'] = person.Religion
 				personvalues['Fax'] = person.Fax
 				personvalues['Email'] = person.Email
 				personvalues['CivilStatus'] = person.CivilStatus
 				personvalues['Sex'] = person.Sex
 				personvalues['EthnicOrig'] = person.EthnicOrigID
 		# Attempt to load our objects
-		person_form = widgets.TableForm(name="person_form", fields=widgets_person.PersonForm()) #, validator=EmailFormSchema())
+		person_form = widgets.RemoteForm(name="person_form", fields=widgets_person.PersonForm(),
+						 submit_text="Save", action="PersonSave") #, validator=EmailFormSchema())
 		tabber = widgets.Tabber()
 		person_search = widgets.RemoteForm(update = 'search_results', fields = [widgets.TextField("searchtext",label="Search")],name="person_search",action = "PersonSearch")  
 		return dict(person_form=person_form,tabber=tabber,person_search=person_search, personvalues=personvalues)
@@ -103,6 +105,62 @@ class PersonManager(turbogears.controllers.Controller):
 		#log.debug(html)
 		html += "</ul>"
 		return html
+	
+	@expose()
+	def PersonSave(self, PersonID=None, Title='', NameFirst='', NameMiddle='', NameLast='', DateBirth=None, AddrStr='', AddrZip='',
+		       AddrCitytownNr=None, Phone1Nr='', Cellphone1Nr='', Fax='', Email='', CivilStatus='', Sex='', EthnicOrig=None, Religion=''):
+		""" Save Person data Ajax style """
+		# If PersonID is None, then we have a new entry
+		if EthnicOrig in ['',None]:
+			EthnicOrig = None
+		else:
+			EthnicOrig = int(EthnicOrig)
+		if AddrCitytownNr not in [None, '']:
+			AddrCitytownNr = int(AddrCitytownNr)
+		else:
+			AddrCitytownNr = None
+		if DateBirth not in [None, '']:
+			log.debug(DateBirth)
+			bday = time.strptime(str(DateBirth),DATE_FORMAT)
+			bdate = datetime.datetime(bday.tm_year,bday.tm_mon,bday.tm_mday)
+		else:
+			bdate = None
+		if PersonID not in [None, '']:
+			try:
+				person = model.Person.get(int(PersonID))
+			except SQLObjectNotFound:
+				person = none
+				turbogears.flash("The person couldn't be found, so we're creating a new record")
+		else:
+			person = None
+		if not person:
+			# Create new person and customer record
+			person = model.Person(NameFirst=NameFirst,NameLast=NameLast,NameMiddle=NameMiddle,\
+				AddrStr=AddrStr,AddrCitytownNrID=AddrCitytownNr,Sex=Sex, Religion=Religion,\
+				DateBirth=bdate, EthnicOrig=EthnicOrig)
+			citytown = model.AddressCityTown.get(AddrCitytownNrID)
+			AddressLabel = '%s\n%s\n%s, %s\n%s\n%s' % (AddressStreet, citytown.Name, citytown.Block, citytown.District, citytown.State, citytown.ZipCode)			
+			PatientName = ('%s %s,%s,%s' % (Title, NameFirst, NameMiddle, NameLast)).replace(',,',',').replace(',', ' ').strip()
+			customer = model.InvCustomer(Name=PatientName ,CityID=patient.AddrCitytownNrID , AddressLabel=AddressLabel, CreditAmount=0.0, \
+				InventoryLocation=self.GetDefaultCustomerLocationID(), ExternalID=person.id)
+		else:
+			# Update the person information
+			person.Title = Title
+			person.NameFirst = NameFirst
+			person.NameMiddle = NameMiddle
+			person.NameLast = NameLast
+			person.DateBirth = bdate
+			person.AddrStr = AddrStr
+			person.AddrZip = AddrZip
+			person.AddrCitytownNrID = AddrCitytownNr
+			person.Phone1Nr = Phone1Nr
+		        person.Cellphone1Nr = Cellphone1Nr
+			person.Fax = Fax
+			person.Email = Email
+			person.CivilStatus = CivilStatus
+			person.Sex = Sex
+			person.EthnicOrigID = EthnicOrig
+		return "OK"
 
 	@expose(html='turbocare.templates.programmingerror')
 	def idFail(error):

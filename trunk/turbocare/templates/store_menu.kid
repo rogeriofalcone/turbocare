@@ -54,7 +54,7 @@
 						Add/Edit/Remove stock
 					</div>
 				</div>
-				<div py:if="IsStore" class="row">
+				<div class="row">
 					<div py:if="'stores_stocktransferrequest_view' in tg.identity.permissions" style="text-align: left" class="clear"><a href="StockTransferRequestsEditor">Stock transfer requests</a></div>
 					<div py:if="'stores_stocktransferrequest_view' in tg.identity.permissions" style="text-align: left" class="clear">
 						Add/Edit/Remove stock transfer requests (for ${LocationName})

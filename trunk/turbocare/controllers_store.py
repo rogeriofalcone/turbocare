@@ -66,10 +66,10 @@ class Store(turbogears.controllers.Controller):
 				results['QuotesEditor'] = True
 			if identity.has_permission("stores_stock_view"):
 				results['StockItemsEditor'] = True
-			if identity.has_permission("stores_stocktransferrequest_view"):
-				results['StockTransferRequestsEditor'] = True
 			if identity.has_permission("stores_vendor_view"):
 				results['VendorsEditor'] = True
+		if identity.has_permission("stores_stocktransferrequest_view"):
+			results['StockTransferRequestsEditor'] = True
 		if identity.has_permission("stores_stocktransfer_view"):
 			results['StockTransfersEditor'] = True
 		return results
