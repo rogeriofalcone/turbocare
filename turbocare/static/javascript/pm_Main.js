@@ -91,6 +91,15 @@ config.clearAllFormFields = function(parentid){
 }
 
 // AJSON reactions ==================
+config.success = function() {
+	config.toggle_message("Saved");
+	var d = callLater(5,config.toggle_message);
+}
+config.failure = function() {
+	config.toggle_message("Error Saving");
+	var d = callLater(5,config.toggle_message);
+}
+
 config.updated = function(data){
 	var remove_message = function(data) {
 		if (getNodeAttribute('last_result_msg','class') != null){

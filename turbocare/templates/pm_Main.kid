@@ -31,8 +31,17 @@
              <div class="tabbertab"><h2>Person</h2>
                 <div py:content="person_form.display(value=personvalues)">Person Entry</div>
              </div> 
+             <div class="tabbertab"><h2>Customer</h2>
+                <div py:content="customer_form.display(value=customervalues)">Customer Entry</div>
+                Receipts
+                <div py:content="customer_receipts.display(receiptvalues)">Receipts</div>
+                Payments
+                <div py:content="customer_payments.display(paymentvalues)">Payments</div>
+             </div> 
              <div class="tabbertab"><h2>Patient</h2></div> 
-             <div class="tabbertab"><h2>Employee</h2></div> 
+             <div class="tabbertab"><h2>Employee</h2>
+                <div py:content="personell_form.display(value=personellvalues)">Customer Entry</div>
+             </div>
       </div>
     </td>
    </tr>

@@ -27,7 +27,7 @@ class PersonManager(turbogears.controllers.Controller):
 	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
 	@expose(html='turbocare.templates.pm_Main')
 	def index(self, PersonID=None, CustomerID=None, PersonellID=None, **kw):
-		'''	The main page for the Person manager - which will also do patient management
+		'''     The main page for the Person manager - which will also do patient management
 			PersonID -  the id of the person we want to load (priority)
 			CustomerID - if no PersonID is available, customer id will suffice
 			PersonellID - final resort for an id to load
@@ -38,77 +38,161 @@ class PersonManager(turbogears.controllers.Controller):
 				return "checked"
 			else:
 				return None
-			
+		def DateConvert(value):
+			if value:
+				return value.strftime(DATE_FORMAT)
+			else:
+				return ""
 		def CreateCustomer(Person):
-			"""	Create a customer record based on the Person record """
+			"""     Create a customer record based on the Person record """
 			citytown = model.AddressCityTown.get(Person.AddrCitytownNrID)
-			AddressLabel = '%s\n%s\n%s, %s\n%s\n%s' % (Person.AddrStr, citytown.Name, citytown.Block, citytown.District, citytown.State, citytown.ZipCode)			
+			AddressLabel = '%s\n%s\n%s, %s\n%s\n%s' % (Person.AddrStr, citytown.Name, citytown.Block, citytown.District, citytown.State, citytown.ZipCode)                  
 			PersonName = ('%s %s,%s,%s' % (Person.Title, Person.NameFirst, Person.NameMiddle, Person.NameLast)).replace(',,',',').replace(',', ' ').strip()
 			customer = model.InvCustomer(Name=PersonName ,CityID=Person.AddrCitytownNrID , AddressLabel=AddressLabel, CreditAmount=0.0, \
 				InventoryLocation=self.GetDefaultCustomerLocationID(), ExternalID=Person.id)
 			return customer
 		def GetCustomer(Person):
-			"""	Look for a customer based on the person record.  If none is found, then create it """
+			"""     Look for a customer based on the person record.  If none is found, then create it """
 			customers = model.InvCustomer.select(model.InvCustomer.q.ExternalID==Person.id)
 			if customers.count() == 0:
 				return CreateCustomer(Person)
 			else:
 				return customers[0]
 		# Load any data
-		personvalues = None
-		if PersonID:
+		# Set our defaults
+		person = None
+		customer = None
+		personell = None
+		if PersonID or CustomerID or PersonellID:
 			try:
-				person = model.Person.get(int(PersonID))
-			except:
-				person = None
-				turbogears.flash("Could not load Person")
-			if person:
-				personvalues = {}
-				personvalues['PersonID'] = person.id
-				personvalues['Title'] = person.Title
-				personvalues['NameFirst'] = person.NameFirst
-				personvalues['NameMiddle'] = person.NameMiddle
-				personvalues['NameLast'] = person.NameLast
-				personvalues['DateBirth'] = person.DateBirth
-				personvalues['AddrStr'] = person.AddrStr
-				personvalues['AddrZip'] = person.AddrZip
-				personvalues['AddrCitytownNr'] = person.AddrCitytownNrID
-				personvalues['AddrCitytownNr_text'] = 'TEST'#person.AddrCitytownNrID
-				personvalues['Phone1Nr'] = person.Phone1Nr
-				personvalues['Cellphone1Nr'] = person.Cellphone1Nr
-				personvalues['Religion'] = person.Religion
-				personvalues['Fax'] = person.Fax
-				personvalues['Email'] = person.Email
-				personvalues['CivilStatus'] = person.CivilStatus
-				personvalues['Sex'] = person.Sex
-				personvalues['EthnicOrig'] = person.EthnicOrigID
+				if PersonID:
+					person = model.Person.get(int(PersonID))
+					customer = GetCustomer(person)
+					if len(person.Personell) > 0:
+						personell = person.Personell[0]
+				elif CustomerID:
+					customer = model.InvCustomer.get(int(CustomerID))
+					person = customer.External
+					if len(person.Personell) > 0:
+						personell = person.Personell[0]
+				else:
+					personell = model.Personell.get(int(PersonellID))
+					person = personell.Person
+					customer = GetCustomer(person)
+			except SQLObjectNotFound:
+				turbogears.flash("Could not find the record you wanted")
+		if not PersonID and person:
+			PersonID = person.id
+		# Person Information
+		personvalues = None
+		if person:
+			personvalues = {}
+			personvalues['Citizenship'] = person.Citizenship
+			personvalues['SssNr'] = person.SssNr
+			personvalues['NatIdNr'] = person.NatIdNr
+			personvalues['Occupation'] = person.Occupation
+			personvalues['PersonID'] = person.id
+			personvalues['Title'] = person.Title
+			personvalues['NameFirst'] = person.NameFirst
+			personvalues['NameMiddle'] = person.NameMiddle
+			personvalues['NameLast'] = person.NameLast
+			personvalues['DateBirth'] = person.DateBirth
+			personvalues['AddrStr'] = person.AddrStr
+			personvalues['AddrZip'] = person.AddrZip
+			personvalues['AddrCitytownNr'] = person.AddrCitytownNrID
+			personvalues['AddrCitytownNr_text'] = 'TEST'#person.AddrCitytownNrID
+			personvalues['Phone1Nr'] = person.Phone1Nr
+			personvalues['Cellphone1Nr'] = person.Cellphone1Nr
+			personvalues['Religion'] = person.Religion
+			personvalues['Fax'] = person.Fax
+			personvalues['Email'] = person.Email
+			personvalues['CivilStatus'] = person.CivilStatus
+			personvalues['Sex'] = person.Sex
+			personvalues['EthnicOrig'] = person.EthnicOrigID
+		# Customer Information
+		customervalues = None
+		receiptvalues = []
+		paymentvalues = []
+		if customer:
+			customervalues = {}
+			customervalues['CustomerID'] = customer.id
+			customervalues['CreditAmount'] = customer.CreditAmount
+			customervalues['Accounting'] = customer.Accounting
+			customervalues['InventoryLocation'] = customer.InventoryLocationID
+			# Get Receipt values
+			for receipt in customer.Receipts:
+				#receipt_link = '<a href="/billing/?receipt_id=%d">%d</a>' % (receipt.id, receipt.id)
+				receiptvalues.append((receipt.id, '%d Items purchased on %s (%s)' % (receipt.CountPurchasedItems(), receipt.ModifyTime.strftime(DATE_FORMAT), receipt.StatusText()), receipt.TotalPaymentCalc()))
+			# Get Payment values
+			for payment in customer.Payments:
+				paymentvalues.append((payment.id, '%s on %s' % (payment.Type(), payment.DatePaid.strftime(DATE_FORMAT)), payment.Amount))
+		# Employee Information
+		personellvalues = {}
+		if personell:
+			personellvalues['PersonellID'] = personell.id
+			personellvalues['JobFunctionTitle'] = personell.JobFunctionTitle
+			personellvalues['DateJoin'] = DateConvert(personell.DateJoin)
+			personellvalues['DateExit'] = DateConvert(personell.DateExit)
+			personellvalues['ContractClass'] = personell.ContractClass
+			personellvalues['ContractStart'] = DateConvert(personell.ContractStart)
+			personellvalues['ContractEnd'] = DateConvert(personell.ContractEnd)
+			personellvalues['IsDischarged'] = Checked(personell.IsDischarged)
+			personellvalues['PayClass'] = personell.PayClass
+			personellvalues['PayClassSub'] = personell.PayClassSub
+			personellvalues['LocalPremiumId'] = personell.LocalPremiumId
+			personellvalues['TaxAccountNr'] = personell.TaxAccountNr
+			personellvalues['IrCode'] = personell.IrCode
+			personellvalues['NrWorkday'] = personell.NrWorkday
+			personellvalues['NrWeekhour'] = personell.NrWeekhour
+			personellvalues['NrVacationDay'] = personell.NrVacationDay
+			personellvalues['MultipleEmployer'] = personell.MultipleEmployer
+			personellvalues['NrDependent'] = personell.NrDependent
+		# Patient Information
+		if person:
+			pass
 		# Attempt to load our objects
-		person_form = widgets.RemoteForm(name="person_form", fields=widgets_person.PersonForm(),
-						 submit_text="Save", action="PersonSave") #, validator=EmailFormSchema())
+		person_form = widgets.RemoteForm(name="person_form", fields=widgets_person.PersonForm(), \
+							submit_text="Save", action="PersonSave", loading="config.toggle_message('Saving...')", \
+						on_complete="config.success();", on_success="config.success();", \
+						on_failure="config.failure()") #, validator=EmailFormSchema())
+		customer_form = widgets.RemoteForm(name="customer_form", fields=widgets_person.CustomerForm(), \
+							submit_text="Save", action="CustomerSave", loading="config.toggle_message('Saving...')", \
+						on_complete="config.success();", on_success="config.success();", \
+						on_failure="config.failure()") #, validator=EmailFormSchema())
+		personell_form = widgets.RemoteForm(name="personell_form", fields=widgets_person.PersonellForm(), \
+							submit_text="Save", action="PersonellSave", loading="config.toggle_message('Saving...')", \
+						on_complete="config.success();", on_success="config.success();", \
+						on_failure="config.failure()") #, validator=EmailFormSchema())
 		tabber = widgets.Tabber()
-		person_search = widgets.RemoteForm(update = 'search_results', fields = [widgets.TextField("searchtext",label="Search")],name="person_search",action = "PersonSearch")  
-		return dict(person_form=person_form,tabber=tabber,person_search=person_search, personvalues=personvalues)
+		person_search = widgets.RemoteForm(update = 'search_results', fields = [widgets.TextField("searchtext",label="Search")],
+							name="person_search",action = "PersonSearch")  
+		return dict(person_form=person_form,tabber=tabber,person_search=person_search, personvalues=personvalues,
+			customer_form=customer_form, customervalues=customervalues,customer_payments=widgets_person.Payments,
+			customer_receipts=widgets_person.Receipts, PersonID=PersonID, receiptvalues=receiptvalues,
+			paymentvalues = paymentvalues, personellvalues=personellvalues, personell_form=personell_form)
+	
 	# These lines include the search functions locally - a necessary step
 	CityFkSearch = widgets_person.CityFkSearch
 	EthnicOrigFkSearch = widgets_person.EthnicOrigFkSearch
-	
+	OccupationSearch = widgets_person.OccupationSearch
+	LocationSearch = widgets_person.LocationSearch
 	@expose()
 	def PersonSearch(self, searchtext=None, **kw):
 		""" Search for a person... currently, only a name search """
 		html = "<ul><h4>Results:</h4>"
 		if searchtext:
 			search = model.Person.select(OR (model.Person.q.NameFirst.contains(str(searchtext)), 
-						     model.Person.q.NameLast.contains(str(searchtext))))
+							model.Person.q.NameLast.contains(str(searchtext))))
 			if search.count() > 0:
 				for person in search:
-					html += '<li><a href="?PersonID=%s">%s</li>' % (str(person.id), person.DisplayName())
+					html += '<li><a href="?PersonID=%s">%s</a></li>' % (str(person.id), person.DisplayName())
 		#log.debug(html)
 		html += "</ul>"
 		return html
 	
 	@expose()
 	def PersonSave(self, PersonID=None, Title='', NameFirst='', NameMiddle='', NameLast='', DateBirth=None, AddrStr='', AddrZip='',
-		       AddrCitytownNr=None, Phone1Nr='', Cellphone1Nr='', Fax='', Email='', CivilStatus='', Sex='', EthnicOrig=None, Religion=''):
+			AddrCitytownNr=None, Phone1Nr='', Cellphone1Nr='', Fax='', Email='', CivilStatus='', Sex='', EthnicOrig=None, Religion=''):
 		""" Save Person data Ajax style """
 		# If PersonID is None, then we have a new entry
 		if EthnicOrig in ['',None]:
@@ -137,14 +221,14 @@ class PersonManager(turbogears.controllers.Controller):
 			# Create new person and customer record
 			person = model.Person(NameFirst=NameFirst,NameLast=NameLast,NameMiddle=NameMiddle,\
 				AddrStr=AddrStr,AddrCitytownNrID=AddrCitytownNr,Sex=Sex, Religion=Religion,\
-				DateBirth=bdate, EthnicOrig=EthnicOrig)
-			citytown = model.AddressCityTown.get(AddrCitytownNrID)
-			AddressLabel = '%s\n%s\n%s, %s\n%s\n%s' % (AddressStreet, citytown.Name, citytown.Block, citytown.District, citytown.State, citytown.ZipCode)			
-			PatientName = ('%s %s,%s,%s' % (Title, NameFirst, NameMiddle, NameLast)).replace(',,',',').replace(',', ' ').strip()
-			customer = model.InvCustomer(Name=PatientName ,CityID=patient.AddrCitytownNrID , AddressLabel=AddressLabel, CreditAmount=0.0, \
-				InventoryLocation=self.GetDefaultCustomerLocationID(), ExternalID=person.id)
+				DateBirth=bdate, EthnicOrig=EthnicOrig,Citizenship = Citizenship,SssNr = SssNr,\
+				NatIdNr = NatIdNr,Occupation = Occupation)
 		else:
 			# Update the person information
+			person.Citizenship = Citizenship
+			person.SssNr = SssNr
+			person.NatIdNr = NatIdNr
+			person.Occupation = Occupation
 			person.Title = Title
 			person.NameFirst = NameFirst
 			person.NameMiddle = NameMiddle
@@ -154,12 +238,39 @@ class PersonManager(turbogears.controllers.Controller):
 			person.AddrZip = AddrZip
 			person.AddrCitytownNrID = AddrCitytownNr
 			person.Phone1Nr = Phone1Nr
-		        person.Cellphone1Nr = Cellphone1Nr
+			person.Cellphone1Nr = Cellphone1Nr
 			person.Fax = Fax
 			person.Email = Email
 			person.CivilStatus = CivilStatus
 			person.Sex = Sex
 			person.EthnicOrigID = EthnicOrig
+		# Update/add customer information
+		citytown = model.AddressCityTown.get(AddrCitytownNrID)
+		AddressLabel = '%s\n%s\n%s, %s\n%s\n%s' % (AddressStreet, citytown.Name, citytown.Block, citytown.District, citytown.State, citytown.ZipCode)                   
+		PatientName = ('%s %s,%s,%s' % (Title, NameFirst, NameMiddle, NameLast)).replace(',,',',').replace(',', ' ').strip()
+		if len(person.Customer)==0:
+			customer = model.InvCustomer(Name=PatientName ,CityID=patient.AddrCitytownNrID , AddressLabel=AddressLabel, CreditAmount=0.0, \
+							InventoryLocation=self.GetDefaultCustomerLocationID(), ExternalID=person.id)
+		else:
+			customer = person.Customer[0]
+			customer.AddressLabel = AddressLabel
+			customer.Name = PatientName
+		return "OK"
+	
+	@expose()
+	def CustomerSave(self, CustomerID = None, Accounting = None, InventoryLocation = None, **kw):
+		''' Save customer specific information... which isn't much at this point '''
+		if InventoryLocation in [None, '']:
+			InventoryLocation = None
+		else:
+			InventoryLocation = int(InventoryLocation)
+		if CustomerID:
+			try:
+				customer = model.InvCustomer.get(int(CustomerID))
+				customer.Accounting = Accounting
+				customer.InventoryLocation = InventoryLocation
+			except SQLObjectNotFound:
+				turbogears.flash("The customer record doesn't exist")
 		return "OK"
 
 	@expose(html='turbocare.templates.programmingerror')
@@ -186,7 +297,7 @@ class PersonManager(turbogears.controllers.Controller):
 		return dict(error_message = error, next_link=next_link)
 			
 	def UndoStockTransfers(self, StockLocationID):
-		'''	Remove all stock transfers from a stock location
+		'''     Remove all stock transfers from a stock location
 			Update all locations where we got stock from and cancel
 			the transfers.
 			
@@ -207,7 +318,7 @@ class PersonManager(turbogears.controllers.Controller):
 
 	@expose(format='json')
 	def RegistrationCityTownSearch(self, CityTownName='', PostOffice='', Block='', District='', State='', Country='',  **kw):
-		'''	Search for Addresses (by Block, City/Town, District, State)
+		'''     Search for Addresses (by Block, City/Town, District, State)
 		'''
 		qArgs = ''
 		if CityTownName != '':
@@ -238,7 +349,7 @@ class PersonManager(turbogears.controllers.Controller):
 	
 	@expose(format='json')
 	def RegistrationSearch(self, SearchText='', SearchAddress='', **kw):
-		'''	Search for patients which match the criteria specified
+		'''     Search for patients which match the criteria specified
 			SearchText searches First, Middle and Last name fields
 				if a SearchText value is a number, it is assumed to be a customer id
 				An "OR" operation is done on all
@@ -306,11 +417,11 @@ class PersonManager(turbogears.controllers.Controller):
 		except:
 			log.debug('0 items found')
 		for item in items:
-			results.append(dict(id=item.id, text=item.DisplayName()))		
+			results.append(dict(id=item.id, text=item.DisplayName()))               
 		return dict(results=results, result_count=len(results))
 	
 	def GetDefaultCustomerLocationID(self):
-		'''	When moving inventory to a location where it's sold, we need to mark the new location as the customer
+		'''     When moving inventory to a location where it's sold, we need to mark the new location as the customer
 			location.  Most customers should have a location already defined, but we need
 			a default just in case
 		'''
@@ -322,7 +433,7 @@ class PersonManager(turbogears.controllers.Controller):
 	
 	
 	def RegistrationPatientLoad(self, PatientID='', CustomerID=''):
-		'''	Either load patient data, or create a blank form for data entry
+		'''     Either load patient data, or create a blank form for data entry
 			to add new patient to the system
 		'''
 		# Attempt to load patient information, customerid will take precedence
@@ -474,7 +585,7 @@ class PersonManager(turbogears.controllers.Controller):
 			if gender == Gender.upper():
 				genders.append(dict(id=gender, name=gender, selected='selected'))
 			else:
-				genders.append(dict(id=gender, name=gender, selected=None))		
+				genders.append(dict(id=gender, name=gender, selected=None))             
 		# Load our religions: similar to titles
 		Religion = ''
 		if patient != None:
@@ -530,7 +641,7 @@ class PersonManager(turbogears.controllers.Controller):
 			InsuranceNumber=InsuranceNumber,NameFirst=NameFirst,NameMiddle=NameMiddle,NameLast=NameLast,\
 			AddressStreet=AddressStreet,AddrCitytownNrID=AddrCitytownNrID,CityTownName=CityTownName,PostOffice=PostOffice,\
 			Block=Block,District=District,State=State,Country=Country, history=History, SelectedCity=SelectedCity,\
-			PatientID=PatientID, CustomerID=CustomerID, DateBirth=DateBirth, Age=Age)			
+			PatientID=PatientID, CustomerID=CustomerID, DateBirth=DateBirth, Age=Age)                       
 	
 	@expose(html='turbocare.templates.registration_patient_page1')
 	@identity.require(identity.has_permission("reg_edit"))
@@ -538,10 +649,10 @@ class PersonManager(turbogears.controllers.Controller):
 	def RegistrationPage1Reload(self, Tribe='', Title='', Gender='', Religion='', Firm='', PatientType='', \
 			InsuranceNumber='', NameFirst='', NameMiddle='', NameLast='', AddressStreet='',\
 			AddrCitytownNrID='',PatientID='', CustomerID='', DateBirth='', **kw):
-		'''	Normally called if we get an error and we want to re-do the page.
+		'''     Normally called if we get an error and we want to re-do the page.
 			Majority of errors should be missing a required entry
 		'''
-		'''	Either load patient data, or create a blank form for data entry
+		'''     Either load patient data, or create a blank form for data entry
 			to add new patient to the system
 		'''
 		# Attempt to load patient information, customerid will take precedence
@@ -612,7 +723,7 @@ class PersonManager(turbogears.controllers.Controller):
 			if gender == Gender:
 				genders.append(dict(id=gender, name=gender, selected='selected'))
 			else:
-				genders.append(dict(id=gender, name=gender, selected=None))		
+				genders.append(dict(id=gender, name=gender, selected=None))             
 		# Load our religions: similar to titles
 		if Religion == '':
 			Religion = 'Unknown'
@@ -638,29 +749,29 @@ class PersonManager(turbogears.controllers.Controller):
 				tribes.append(dict(id=tribe.id, name=tribe.Name, selected=None))
 		# Load previous registration information
 		History = []
-		History.append('NEW PATIENT')		
+		History.append('NEW PATIENT')           
 		return dict(tribes=tribes, titles=titles,genders=genders,religions=religions,firms=firms, patienttypes=patienttypes,\
 			InsuranceNumber=InsuranceNumber,NameFirst=NameFirst,NameMiddle=NameMiddle,NameLast=NameLast,\
 			AddressStreet=AddressStreet,AddrCitytownNrID=AddrCitytownNrID,CityTownName=CityTownName,PostOffice=PostOffice,\
 			Block=Block,District=District,State=State,Country=Country, history=History, SelectedCity=SelectedCity,\
-			PatientID=PatientID, CustomerID=CustomerID, DateBirth=DateBirth, Age=Age)			
+			PatientID=PatientID, CustomerID=CustomerID, DateBirth=DateBirth, Age=Age)                       
 
-	#	Step 1: Enter/Update Primary patient information
+	#       Step 1: Enter/Update Primary patient information
 	@expose(html='turbocare.templates.registration_patient_page1')
 	
 	def RegistrationPage1(self, PatientID='', CustomerID='', **kw):
-		'''	When loading the patient from a link or redirection, then this function is called
+		'''     When loading the patient from a link or redirection, then this function is called
 		'''
 		return self.RegistrationPatientLoad(PatientID, CustomerID)
 		
 	@expose(format='json')
 	def RegistrationPage1Ajson(self, PatientID='', CustomerID='', **kw):
-		'''	When loading a patient using a barcode scanner within the page,
+		'''     When loading a patient using a barcode scanner within the page,
 			this function is called.
 		'''
 		return self.RegistrationPatientLoad(PatientID, CustomerID)
 
-	#	Step 2: Save (create/update) information from page 1, and prepare page 2
+	#       Step 2: Save (create/update) information from page 1, and prepare page 2
 	@validate(validators={'Tribe':validators.String(),'Title':validators.String(), 'Gender':validators.String(), \
 	'Religion':validators.String(),'Firm':validators.String(), 'PatientType':validators.String(), \
 	'InsuranceNumber':validators.String(),'NameFirst':validators.String(), 'NameMiddle':validators.String(), \
@@ -676,7 +787,7 @@ class PersonManager(turbogears.controllers.Controller):
 			InsuranceNumber='', NameFirst='', NameMiddle='', NameLast='', AddressStreet='',\
 			AddrCitytownNrID=None,PatientID='', CustomerID='', CityTownName='', PostOffice='',\
 			Block='', District='', State='', Country='', DateBirth='', Age='', **kw):
-		'''	Update or Add new patient (and customer) record.  Load the information for the next screen
+		'''     Update or Add new patient (and customer) record.  Load the information for the next screen
 			in the series for new patient data entry.
 			1. Create/update a patient and customer record
 			2. Check for a current encounter, either the patient registered that day or they are an inpatient
@@ -756,7 +867,7 @@ class PersonManager(turbogears.controllers.Controller):
 				AddrStr=AddressStreet,AddrCitytownNrID=AddrCitytownNrID,Sex=Gender,Religion=Religion,\
 				DateBirth=bdate, EthnicOrig=int(Tribe))
 			citytown = model.AddressCityTown.get(AddrCitytownNrID)
-			AddressLabel = '%s\n%s\n%s, %s\n%s\n%s' % (AddressStreet, citytown.Name, citytown.Block, citytown.District, citytown.State, citytown.ZipCode)			
+			AddressLabel = '%s\n%s\n%s, %s\n%s\n%s' % (AddressStreet, citytown.Name, citytown.Block, citytown.District, citytown.State, citytown.ZipCode)                   
 			PatientName = ('%s %s,%s,%s' % (Title, NameFirst, NameMiddle, NameLast)).replace(',,',',').replace(',', ' ').strip()
 			customer = model.InvCustomer(Name=PatientName ,CityID=patient.AddrCitytownNrID , AddressLabel=AddressLabel, CreditAmount=0.0, \
 				InventoryLocation=self.GetDefaultCustomerLocationID(), ExternalID=patient.id)
@@ -820,15 +931,15 @@ class PersonManager(turbogears.controllers.Controller):
 		if receipt_item == None:
 			receipt_item = model.InvReceiptItems(ReceiptID=receipt.id, CatalogItemID=registration.id, Quantity=1)
 		#
-		#	NOTE: Stock transfer will happen on the billing screen
+		#       NOTE: Stock transfer will happen on the billing screen
 		# if len(receipt_item.StockItems) == 0:
 			#transfer the registration
-		#	from_location = registration.StockItems[0].Locations[0]
-		#	to_location = model.InvStockLocation(StockItemID=from_location.StockItemID,LocationID=\
-		#		customer.InventoryLocationID,ReceiptID=receipt_item.id,IsConsumed=True,IsSold=True,
-		#		TotalPaid=0.0, Quantity=1)
-		#	transfer = model.InvStockTransfer(FromStockLocationID=from_location.id,ToStockLocationID=to_location.id,\
-		#		Qty=1,DateTransferred=datetime.datetime.now())
+		#       from_location = registration.StockItems[0].Locations[0]
+		#       to_location = model.InvStockLocation(StockItemID=from_location.StockItemID,LocationID=\
+		#               customer.InventoryLocationID,ReceiptID=receipt_item.id,IsConsumed=True,IsSold=True,
+		#               TotalPaid=0.0, Quantity=1)
+		#       transfer = model.InvStockTransfer(FromStockLocationID=from_location.id,ToStockLocationID=to_location.id,\
+		#               Qty=1,DateTransferred=datetime.datetime.now())
 		# PREPARE our variables for the next screen
 		ContactPerson = patient.ContactPerson
 		ContactRelation = patient.ContactRelation
@@ -894,7 +1005,7 @@ class PersonManager(turbogears.controllers.Controller):
 
 	@expose(format='json')
 	def RegistrationSearchOccupation(self, Occupation):
-		'''	Type ahead lookup for occupations
+		'''     Type ahead lookup for occupations
 		'''
 		Occupation = Occupation.lower()
 		#items=[x[0] for x in conn.queryAll('select distinct occupation from care_person')]
@@ -906,7 +1017,7 @@ class PersonManager(turbogears.controllers.Controller):
 
 	@expose(format='json')
 	def RegistrationSearchRelationship(self, Relationship):
-		'''	Type ahead lookup for relationships
+		'''     Type ahead lookup for relationships
 		'''
 		Relationship = Relationship.lower()
 		#items=[x[0] for x in conn.queryAll('select distinct contact_relation from care_person')]
@@ -916,7 +1027,7 @@ class PersonManager(turbogears.controllers.Controller):
 		else:
 			return dict(relationships=[])
 			
-	#	Step 3: Update Patient/Encounter information and choose between in/out patient
+	#       Step 3: Update Patient/Encounter information and choose between in/out patient
 	@validate(validators={'Cellphone1Nr':validators.String(),'Phone1Nr':validators.String(), 'ContactPerson':validators.String(), \
 	'PatientID':validators.Int(),'CustomerID':validators.Int(), 'EncounterID':validators.Int(), \
 	'ReceiptID':validators.Int(),'btnNext':validators.String(), 'FinancialClassNr':validators.Int(), \
@@ -927,7 +1038,7 @@ class PersonManager(turbogears.controllers.Controller):
 	def RegistrationPage2Save(self, PatientID=None, CustomerID=None, EncounterID=None, ReceiptID=None, btnNext='', 
 			FinancialClassNr='', Email='', Cellphone1Nr='', Phone1Nr='', Occupation={}, ContactRelation={},\
 			ContactPerson='', EncounterType='', **kw):
-		'''	Update Patient/Encounter information and choose between in/out patient
+		'''     Update Patient/Encounter information and choose between in/out patient
 		'''
 		log.debug('RegistrationPage2Save')
 		try:
@@ -1020,7 +1131,7 @@ class PersonManager(turbogears.controllers.Controller):
 				if bed == Bed:
 					beds.append(dict(id=bed, name=bed, selected='selected'))
 				else:
-					beds.append(dict(id=bed, name=bed, selected=None))					
+					beds.append(dict(id=bed, name=bed, selected=None))                                      
 		else:
 			PatientClass = 'Outpatient'
 			#Prepare for outpatient consulation. 
@@ -1037,7 +1148,7 @@ class PersonManager(turbogears.controllers.Controller):
 				if queue == Queue:
 					queues.append(dict(id=queue, name=queue, selected='selected'))
 				else:
-					queues.append(dict(id=queue, name=queue, selected=None))				
+					queues.append(dict(id=queue, name=queue, selected=None))                                
 			# Select a doctor - This is only needed if "Specialist" is selected from above
 			if encounter.ConsultingDr != None:
 				Doctor = encounter.ConsultingDr
@@ -1063,7 +1174,7 @@ class PersonManager(turbogears.controllers.Controller):
 				ReferrerRecomTherapy = encounter.ReferrerRecomTherapy
 				ReferrerNotes = encounter.ReferrerNotes
 		else:
-			Referrer = False			
+			Referrer = False                        
 		#Fill up the history information
 		History = []
 		customer = model.InvCustomer.get(CustomerID)
@@ -1090,13 +1201,13 @@ class PersonManager(turbogears.controllers.Controller):
 			BookletPrinting = None
 		return dict(PatientID=PatientID, CustomerID=CustomerID, ReceiptID=ReceiptID, EncounterID=EncounterID, \
 			history=History, wards=wards, rooms=rooms, beds=beds, queues=queues, DoctorLookup=DoctorLookup,\
-			ReferrerInstitution = ReferrerInstitution,	ReferrerDr = ReferrerDr,	ReferrerDept = ReferrerDept,\
+			ReferrerInstitution = ReferrerInstitution,      ReferrerDr = ReferrerDr,        ReferrerDept = ReferrerDept,\
 			ReferrerDiagnosis=ReferrerDiagnosis,ReferrerRecomTherapy=ReferrerRecomTherapy,\
 			ReferrerNotes=ReferrerNotes, Referrer = Referrer, PatientClass = PatientClass, BookletPrinting=BookletPrinting)
 			
 	@expose(format='json')
 	def RegistrationRooms(self, WardID):
-		'''	Produces a listing of Rooms for a particular ward
+		'''     Produces a listing of Rooms for a particular ward
 		'''
 		log.debug("RegistrationRooms")
 		rooms = model.Room.select(model.Room.q.WardNrID == int(WardID))
@@ -1112,7 +1223,7 @@ class PersonManager(turbogears.controllers.Controller):
 	@expose(format='json')
 	@validate(validators={'WardID':validators.Int(),'RoomNr':validators.Int(), 'EncounterID':validators.Int()})
 	def RegistrationBedsInRoom(self, WardID, RoomNr, EncounterID):
-		'''	Given a ward id and a room number, return a list
+		'''     Given a ward id and a room number, return a list
 			of available beds.  Using the EncounterID If a bed is
 			assigned to the patient, then include this in the list
 			and try to make it selected
@@ -1145,7 +1256,7 @@ class PersonManager(turbogears.controllers.Controller):
 		return dict(result=result)
 	
 	def RegistrationBeds(self, RoomID):
-		'''	Produces a listing of available beds for a particular
+		'''     Produces a listing of available beds for a particular
 			room
 		'''
 		room = model.Room.get(int(RoomID))
@@ -1170,7 +1281,7 @@ class PersonManager(turbogears.controllers.Controller):
 	
 	@expose(format='json')
 	def RegistrationSearchDoctor(self, DoctorName):
-		'''	Type ahead lookup for Doctors
+		'''     Type ahead lookup for Doctors
 		'''
 		DoctorName = DoctorName.lower()
 		items=model.Personell.select(AND (model.Personell.q.JobFunctionTitle == 'Doctor',\
@@ -1183,7 +1294,7 @@ class PersonManager(turbogears.controllers.Controller):
 
 	# Room assignment change
 	def RegistrationBedRoomChange(self, EncounterID, Ward, Room, Bed):
-		'''	Make a room assignment change.  If the change happens withing 4 hours of the initial
+		'''     Make a room assignment change.  If the change happens withing 4 hours of the initial
 			assignment, then don't make a transfer, just update the record.  Otherwise, do a 
 			Transfer.
 			Return the catalog id used for billing of the current room assignment
@@ -1269,7 +1380,7 @@ class PersonManager(turbogears.controllers.Controller):
 				
 	# Bed assignment receipt item
 	def RegistrationBedReceipt(self, EncounterID, ReceiptID):
-		'''	Make sure there are Receipt entries for all current
+		'''     Make sure there are Receipt entries for all current
 			Bed assignment entries.  Any un-accounted entries
 			will be added to the ReceiptID indicated with a min
 			of 1 days assigned
@@ -1306,12 +1417,12 @@ class PersonManager(turbogears.controllers.Controller):
 			receipt_item = model.InvReceiptItems(Quantity=round(PrefixDays['PRIV'],1),ReceiptID=ReceiptID,CatalogItemID=model.DFLT_ROOMPREFIX['PRIV'])
 
 	def GetBookletPrintingID(self):
-		'''	Get the CatalogItemID for booklet printing
+		'''     Get the CatalogItemID for booklet printing
 		'''
 		booklet = model.InvCatalogItem.select(model.InvCatalogItem.q.Name == 'Booklet printing')[0]
 		return booklet.id
 		
-	#	Step 3: Update Patient/Encounter information and choose between in/out patient
+	#       Step 3: Update Patient/Encounter information and choose between in/out patient
 	@validate(validators={'PatientID':validators.Int(),'CustomerID':validators.Int(), 'EncounterID':validators.Int(), \
 	'ReceiptID':validators.Int(),'BookletPrinting':validators.String(), 'Ward':validators.Int(), 'Room':validators.Int(),\
 	'Bed':validators.Int(),'ReferrerInstitution':validators.String(),'ReferrerDr':validators.String(),\
@@ -1322,7 +1433,7 @@ class PersonManager(turbogears.controllers.Controller):
 		BookletPrinting='', Ward=None, Room=None, Bed=None, ReferrerInstitution='', ReferrerDr='', ReferrerDept='',\
 		ReferrerDiagnosis='', ReferrerRecomTherapy='',ReferrerNotes='',Queue='',DoctorName={},\
 		PatientClass='', **kw):
-		'''	Assign/Update bed/referral/booklet/consultant information for in/out patients
+		'''     Assign/Update bed/referral/booklet/consultant information for in/out patients
 			Update billing information
 			After saving the patient and customer information redirect the screen to billing
 		'''
