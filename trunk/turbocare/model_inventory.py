@@ -1074,6 +1074,13 @@ class InvCustomerPayment(SQLObject):
 			value += 500
 		self.Sort = value
 		return value
+	
+	def Type(self):
+		''' Either a payment or refund '''
+		if self.Amount < 0:
+			return "Refund"
+		else:
+			return "Payment"
 		
 	def Name(self):
 		if self.DatePaid == None or self.CustomerID == None or self.Amount == None:
