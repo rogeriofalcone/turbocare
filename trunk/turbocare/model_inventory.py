@@ -13,6 +13,7 @@ __connection__ = hub
 #Default Vars:
 default_sort = 1000
 DATE_FORMAT = '%Y-%m-%d'
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 LATEST_GRS = 5 # In the Goods Received quick listing, how many will we list
 LATEST_QRS = 5 # In quote requests quick listing, we limit the display of past quote requests
 LATEST_QS = 5 # Quotes quick listing limit
