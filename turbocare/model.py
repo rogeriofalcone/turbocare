@@ -389,7 +389,7 @@ class Person(SQLObject):
 		AddrStr = StringCol(length=60,dbName='addr_str')
 		AddrStrNr = StringCol(length=10,dbName='addr_str_nr', default=None)
 		AddrZip = StringCol(length=15,dbName='addr_zip', default=None)
-		AddrCitytownNr = ForeignKey("AddressCityTown", dbName='addr_citytown_nr')
+		AddrCitytownNr = ForeignKey("AddressCityTown", dbName='addr_citytown_nr', default=None)
 		AddrIsValid = BoolCol(dbName='addr_is_valid', default=None)
 		Citizenship = StringCol(length=35,dbName='citizenship', default=None)
 		Phone1Code = StringCol(length=15, dbName='phone_1_code', default=None)
@@ -837,6 +837,27 @@ class Encounter(SQLObject):
 								return location.LocationNr
 				return None
 			
+		def Description(self):
+			''' A brief text description of the encounter '''
+			if self.EncounterClassNr.Name == 'Inpatient':
+				if self.IsDischarged:
+					return '%s visit on %s until %s' % (self.EncounterClassNr.Name,self.EncounterDate.strftime(DATE_FORMAT), self.DischargeDate.strftime(DATE_FORMAT))
+				else:
+					return '%s visit on %s (not discharged)' % (self.EncounterClassNr.Name,self.EncounterDate.strftime(DATE_FORMAT))
+			else:
+				return '%s visit on %s' % (self.EncounterClassNr.Name,self.EncounterDate.strftime(DATE_FORMAT))
+			
+		def FullDescription(self):
+			''' Like Description(), except that this includes the patient name '''
+			Name = self.Pid.DisplayNameAsContact()
+			if self.EncounterClassNr.Name == 'Inpatient':
+				if self.IsDischarged:
+					return '%s: %s visit on %s until %s' % (Name, self.EncounterClassNr.Name,self.EncounterDate.strftime(DATE_FORMAT), self.DischargeDate.strftime(DATE_FORMAT))
+				else:
+					return '%s: %s visit on %s (not discharged)' % (Name, self.EncounterClassNr.Name,self.EncounterDate.strftime(DATE_FORMAT))
+			else:
+				return '%s: %s visit on %s' % (Name, self.EncounterClassNr.Name,self.EncounterDate.strftime(DATE_FORMAT))
+
 		def TotalVisitCount(self):
 			""" The number of visits that this patient has in total """
 			return len(self.P.Encounters)

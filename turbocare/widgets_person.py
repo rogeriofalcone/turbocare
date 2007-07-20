@@ -28,7 +28,6 @@ class PersonForm(widgets.WidgetsList):
 	Cellphone1Nr = widgets.TextField(label="Cell Number")
 	Fax = widgets.TextField(label="Fax Number")
 	Email = widgets.TextField(label="E-mail")
-
 	Citizenship = widgets.TextField(label="Citizenship")
 	SssNr = widgets.TextField(label="Social Security Number")
 	NatIdNr = widgets.TextField(label="National ID")
@@ -123,6 +122,11 @@ Payments = widgets.DataGrid(#name='PaymentsGrid',
 					('Description', lambda row: row[1]),
 					('Amount', lambda row: row[2])],  
 				default = [])
+Encounters = widgets.DataGrid(#name='PaymentsGrid',
+				fields=[('ID', lambda row: row[0]),  
+					('Description', lambda row: row[1])],  
+				default = [])
+
 
 @expose(format='json')  
 def ReceiptSearch(self, PersonID=None, **kw):
@@ -169,6 +173,7 @@ def LocationSearch(self, location_id = None, location_name = None, **kw):
 
 class PersonellForm(widgets.WidgetsList):
 	PersonellID = widgets.HiddenField("PersonellID")
+	PersonellPersonID = widgets.HiddenField("PersonellPersonID")
 	JobFunctionTitle = widgets.TextField(label="Job Title")
 	DateJoin = widgets.CalendarDatePicker(name="DateJoin", label="Date of Joining", button_text="Date",
 						field_class="calendardatepicker", format=DATE_FORMAT, default="")
@@ -192,8 +197,7 @@ class PersonellForm(widgets.WidgetsList):
 	NrDependent = widgets.TextField(label="Number of Dependents",validator=validators.Number())
 	
 EmployeeEncounters = widgets.DataGrid(fields=[('ID', lambda row: row[0]),  
-					('Description', lambda row: row[1]),
-					('Amount', lambda row: row[2])],  
+					('Description', lambda row: row[1])],  
 				default = [])
 
 #               DateReg = DateTimeCol(dbName='date_reg',default=cur_date_time())
