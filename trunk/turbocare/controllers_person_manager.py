@@ -31,6 +31,11 @@ class HRef(widgets.Widget):
 	template = '''
 	<a xmlns:py="http://purl.org/kid/ns#" href="${link_href}">${link_text}</a>
 	'''
+def Checked(value):
+	if value:
+		return "checked"
+	else:
+		return None
 
 class PersonManager(turbogears.controllers.Controller):
 	@expose(html='turbocare.templates.programmingerror')
@@ -50,11 +55,6 @@ class PersonManager(turbogears.controllers.Controller):
 			PersonellID - final resort for an id to load
 			If no Id's are given, then the user is re-directed to the Search Screen
 		'''
-		def Checked(value):
-			if value:
-				return "checked"
-			else:
-				return None
 		def DateConvert(value):
 			if value:
 				return value.strftime(DATE_FORMAT)
@@ -153,37 +153,7 @@ class PersonManager(turbogears.controllers.Controller):
 		dialogboxes = []
 		if person:
 			for encounter in person.Encounters:
-				encounterdetailvalues = {}
-				encounterdetailvalues['PersonID'] = person.id
-				encounterdetailvalues['EncounterDate'] = encounter.EncounterDate
-				encounterdetailvalues['IsDischarged'] = Checked(encounter.IsDischarged)
-				# FIX THIS next line for date time, not just date
-				encounterdetailvalues['DischargeDateTime'] = encounter.DischargeDate
-				encounterdetailvalues['EncounterClassNr'] = encounter.EncounterClassNrID
-				encounterdetailvalues['EncounterType'] = encounter.EncounterType
-				encounterdetailvalues['EncounterStatus'] = encounter.EncounterStatus
-				encounterdetailvalues['ExtraService'] = encounter.ExtraService
-				encounterdetailvalues['FinancialClassNr'] = encounter.FinancialClassNrID
-				encounterdetailvalues['InsuranceNr'] = encounter.InsuranceNr
-				encounterdetailvalues['InsuranceFirmId'] = encounter.InsuranceFirmId
-				encounterdetailvalues['InsuranceClassNr'] = encounter.InsuranceClassNrID
-				encounterdetailvalues['Insurance2Nr'] = encounter.Insurance2Nr
-				encounterdetailvalues['Insurance2FirmId'] = encounter.Insurance2FirmId
-				encounterdetailvalues['ReferrerDiagnosis'] = encounter.ReferrerDiagnosis
-				encounterdetailvalues['ReferrerRecomTherapy'] = encounter.ReferrerRecomTherapy
-				encounterdetailvalues['ReferrerDr'] = encounter.ReferrerDr
-				encounterdetailvalues['ReferrerDept'] = encounter.ReferrerDept
-				encounterdetailvalues['ReferrerInstitution'] = encounter.ReferrerInstitution
-				encounterdetailvalues['ReferrerNotes'] = encounter.ReferrerNotes
-				encounterdetailvalues['CurrentAttDrNr'] = encounter.CurrentAttDrNrID
-				encounterdetailvalues['ConsultingDr'] = encounter.ConsultingDr
-				encounterdetailvalues['FollowupDate'] = encounter.FollowupDate
-				encounterdetailvalues['FollowupResponsibility'] = encounter.FollowupResponsibility
-				encounterdetailvalues['PostEncounterNotes'] = encounter.PostEncounterNotes
-				template = widgets.TableForm(name="person_encounter_form%d" % encounter.id, fields=EncounterFormPage1(),
-							submit_text="Save", action="EncounterSave?EncounterID=%d" % encounter.id).display(encounterdetailvalues)
-				dialogboxes.append(dict(id='encounter_dialogbox%d' % encounter.id, text=template))
-				encountervalues.append((DialogBoxLink(name="encounter_dialog_box_w%d" % encounter.id,height='500',width='500',title=encounter.Description(),link_text="%d" % encounter.id,dom_id='encounter_dialogbox%d' % encounter.id).display(), encounter.Description()))
+				encountervalues.append((HRef().display(link_href='Encounter?EncounterID=%d' % encounter.id, link_text=encounter.id), encounter.Description()))
 				#encountervalues.append((DialogBoxLink(title=encounter.Description(),link_text="%d" % encounter.id,dom_id='encounter_dialogbox%d' % encounter.id).display(), encounter.Description()))
 		# Attempt to load our objects
 		person_form = widgets.TableForm(name="person_form", fields=widgets_person.PersonForm(), \
@@ -199,7 +169,7 @@ class PersonManager(turbogears.controllers.Controller):
 			customer_form=customer_form, customervalues=customervalues,customer_payments=widgets_person.Payments,
 			customer_receipts=widgets_person.Receipts, PersonID=PersonID, receiptvalues=receiptvalues,
 			paymentvalues = paymentvalues, personellvalues=personellvalues, personell_form=personell_form,
-			encountervalues=encountervalues, encounters=widgets_person.Encounters, dialogboxes=dialogboxes)
+			encountervalues=encountervalues, encounters=widgets_person.Encounters)
 	
 	def LoadPersonValues(self, person):
 		''' Load the values of person into a dictionary for our form '''
@@ -447,3 +417,55 @@ class PersonManager(turbogears.controllers.Controller):
 			return items[0].id
 		else:
 			return None
+	
+	@identity.require(identity.has_permission("person_manager_view"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	@expose(html='turbocare.templates.pm_Encounter')
+	def Encounter(self, EncounterID=None, **kw):
+		''' Load and display Encounter (visit) information '''
+		encountervalues = {}
+		Name = 'Unknown Encounter'
+		PersonLink = "index"
+		if EncounterID:
+			try:
+				encounter = model.Encounter.get(int(EncounterID))
+				person = encounter.P
+			except SQLObjectNotFound:
+				encounter = None
+			if encounter:
+				encountervalues['PersonID'] = person.id
+				encountervalues['EncounterDate'] = encounter.EncounterDate
+				encountervalues['IsDischarged'] = Checked(encounter.IsDischarged)
+				# FIX THIS next line for date time, not just date
+				encountervalues['DischargeDateTime'] = encounter.DischargeDate
+				encountervalues['EncounterClassNr'] = encounter.EncounterClassNrID
+				encountervalues['EncounterType'] = encounter.EncounterType
+				encountervalues['EncounterStatus'] = encounter.EncounterStatus
+				encountervalues['ExtraService'] = encounter.ExtraService				
+				encountervalues['FinancialClassNr'] = encounter.FinancialClassNrID
+				encountervalues['InsuranceNr'] = encounter.InsuranceNr
+				encountervalues['InsuranceFirmId'] = encounter.InsuranceFirmId
+				encountervalues['InsuranceClassNr'] = encounter.InsuranceClassNrID
+				encountervalues['Insurance2Nr'] = encounter.Insurance2Nr
+				encountervalues['Insurance2FirmId'] = encounter.Insurance2FirmId
+				encountervalues['ReferrerDiagnosis'] = encounter.ReferrerDiagnosis
+				encountervalues['ReferrerRecomTherapy'] = encounter.ReferrerRecomTherapy
+				encountervalues['ReferrerDr'] = encounter.ReferrerDr
+				encountervalues['ReferrerDept'] = encounter.ReferrerDept
+				encountervalues['ReferrerInstitution'] = encounter.ReferrerInstitution
+				encountervalues['ReferrerNotes'] = encounter.ReferrerNotes
+				encountervalues['CurrentAttDrNr'] = encounter.CurrentAttDrNrID
+				encountervalues['ConsultingDr'] = encounter.ConsultingDr
+				encountervalues['FollowupDate'] = encounter.FollowupDate
+				encountervalues['FollowupResponsibility'] = encounter.FollowupResponsibility
+				encountervalues['PostEncounterNotes'] = encounter.PostEncounterNotes
+				# Other page variables
+				Name = person.DisplayNameAsContact()
+				PersonLink = "index?PersonID=%d" % person.id
+		encounter_form = widgets.TableForm(name="encounter_form%d" % encounter.id, fields=EncounterFormPage1(),
+					submit_text="Save", action="EncounterSave?EncounterID=%d" % encounter.id)
+		person_search = widgets.RemoteForm(update = 'search_results', fields = [widgets.TextField("searchtext",label="Search")],
+							name="person_search",action = "PersonSearch")
+		return dict(encounter_form=encounter_form, encountervalues=encountervalues,Name=Name,PersonLink=PersonLink,
+			    person_search=person_search)
+		
