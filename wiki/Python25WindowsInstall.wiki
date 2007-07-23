@@ -1,0 +1,42 @@
+#Python 2.5 TurboCare Installation
+
+= Introduction =
+
+THERE ARE STILL PROBLEMS WITH AJSON OPERATIONS!!!!
+
+Instructions for installing TurboCare on a system using Python version 2.5.  This document highlights the differences with the regular Python version 2.4 installation.  NOTE that while TurboGears now supports version 2.5 of Python, TurboCare has not been tested yet.  This document is a work in progress.
+
+= Details =
+
+== Install Python ==
+
+  # Go to http://www.python.org/
+  # Download the latest version of Python version 2.5
+  # Install Python in the default folder
+
+== Install MySQL-Python module ==
+  # At the command line, execute `easy_install mysql-python`
+
+== DO NOT Downgrade SQLObject to version 0.7.1dev ==
+
+== DO NOT Downgrade TurboJSON ==
+
+== Install ReportLab ==
+  # Download the Report lab DLLs from "http://www.reportlab.org/ftp/win32-dlls-py25.zip"
+  # Unzip the contents to "C:\Python25\DLLs"
+  # Download "http://www.reportlab.org/ftp/ReportLab_2_0.zip"
+  # Unzip the file and copy the the "reportlab" folder to "C:\Python25\Lib\site-packages" (Note: not the "reportlab_2_0" folder, the "reportlab" folder)
+
+== Install PySQLite 2 ==
+  # At the command prompt, type `easy_install pysqlite`
+
+== Scriptaculous ==
+  # Download "http://files.turbogears.org/eggs/Scriptaculous-1.6.2-py2.4.egg"
+  # Using a command prompt, change to the folder where the above file is downloaded to
+  # Type `easy_install Scriptaculous-1.6.2-py2.4.egg`
+
+== Install TGPaginate ==
+  # At the command prompt, type: `easy_install tgpaginate`
+
+== Source code updates ==
+  # Line 2 in "turbocare\turbocare\model_inventory.py" needs to be commented out: `from __future__ import division`
