@@ -60,7 +60,8 @@ How To Install TurboCare on Windows
 == Additional TurboGears Widgets ==
 Foreign Key look up widget
 {{{
-sudo easy_install TGFKLookup
+easy_install TGFKLookup
+easy_install tgpaginate
 }}}
 
 == Install Subversion ==
