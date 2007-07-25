@@ -36,6 +36,20 @@ def Checked(value):
 		return "checked"
 	else:
 		return None
+def ConvertDate(value):
+	if value not in [None, '']:
+		tdate = time.strptime(str(value),DATE_FORMAT)
+		return datetime.datetime(tdate.tm_year,tdate.tm_mon,tdate.tm_mday)
+	else:
+		return None
+def ConvertInt(value):
+	if value in ['', None]:
+		return None
+	else:
+		try:
+			return int(value)
+		except ValueError:
+			return None
 
 class PersonManager(turbogears.controllers.Controller):
 	@expose(html='turbocare.templates.programmingerror')
@@ -319,20 +333,6 @@ class PersonManager(turbogears.controllers.Controller):
 			  PersonellPersonID=None):
 		''' Save personell specific information '''
 		# Convert inputs to proper datatypes
-		def ConvertDate(value):
-			if value not in [None, '']:
-				tdate = time.strptime(str(value),DATE_FORMAT)
-				return datetime.datetime(tdate.tm_year,tdate.tm_mon,tdate.tm_mday)
-			else:
-				return None
-		def ConvertInt(value):
-			if value in ['', None]:
-				return None
-			else:
-				try:
-					return int(value)
-				except ValueError:
-					return None
 		DateJoin = ConvertDate(DateJoin)
 		DateExit = ConvertDate(DateExit)
 		ContractStart = ConvertDate(ContractStart)
@@ -382,6 +382,12 @@ class PersonManager(turbogears.controllers.Controller):
 			personell.NrDependent=NrDependent
 		else:
 			log.debug("Attempted to save the personell record, but there is insufficient information to do this (controllers_person_manager)")
+		if personell or person:
+			if not person:
+				person = personell.Person
+			raise cherrypy.HTTPRedirect("?PersonID=%d" % person.id)
+		else:
+			raise cherrypy.HTTPRedirect("index")
 		return "OK"
 
 	@expose(html='turbocare.templates.programmingerror')
@@ -468,4 +474,33 @@ class PersonManager(turbogears.controllers.Controller):
 							name="person_search",action = "PersonSearch")
 		return dict(encounter_form=encounter_form, encountervalues=encountervalues,Name=Name,PersonLink=PersonLink,
 			    person_search=person_search)
-		
+	
+	
+	@identity.require(identity.has_permission("person_manager_view"))
+	@exception_handler(idFail,"isinstance(tg_exceptions,identity.IdentityFailure)")
+	@expose()
+	def EncounterSave(self, EncounterID=None, **kw):
+		''' Update Encounter information
+		Note, there are some issues with this: what if someone changes from insurance to self-pay?  what happens to current receipts?
+		'''
+		if EncounterID:
+			try:
+				encounter = model.Encounter.get(int(EncounterID))
+			except SQLObjectNotFound:
+				encounter = None
+		if encounter:
+			for key in kw.keys():
+				if hasattr(encounter,key):
+					if key in ['EncounterDate','DischargeDateTime','FollowupDate']:
+						setattr(encounter,key,ConvertDate(kw[key]))
+					elif key in ['IsDischarged']:
+						setattr(encounter,key,True)
+					elif key in ['EncounterClassNrID','FinancialClassNrID','InsuranceClassNrID','CurrentAttDrNrID']:
+						setattr(encounter,key,ConvertInt(kw[key]))
+					else:
+						setattr(encounter,key,kw[key])
+			if 'IsDischarged' not in kw.keys():
+				encounter.IsDischarged = False
+			raise cherrypy.HTTPRedirect("Encounter?EncounterID=%s" % encounter.id)
+		else:
+			raise cherrypy.HTTPRedirect("index")
