@@ -28,7 +28,7 @@
     </td>
     <td valign="top">
     <h2><a href="${PersonLink}">${Name}</a></h2>
-      <div style="width: 800px; height: 500px; overflow: auto"> 
+      <div style="width: 800px;overflow: auto"> 
          <div id="encounter_form_contents" py:content="encounter_form.display(value=encountervalues)">Encounter Entry</div>
       </div>
     </td>
