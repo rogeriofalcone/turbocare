@@ -839,13 +839,16 @@ class Encounter(SQLObject):
 			
 		def Description(self):
 			''' A brief text description of the encounter '''
-			if self.EncounterClassNr.Name == 'Inpatient':
-				if self.IsDischarged:
-					return '%s visit on %s until %s' % (self.EncounterClassNr.Name,self.EncounterDate.strftime(DATE_FORMAT), self.DischargeDate.strftime(DATE_FORMAT))
+			try:
+				if self.EncounterClassNr.Name == 'Inpatient':
+					if self.IsDischarged:
+						return '%s visit on %s until %s' % (self.EncounterClassNr.Name,self.EncounterDate.strftime(DATE_FORMAT), self.DischargeDate.strftime(DATE_FORMAT))
+					else:
+						return '%s visit on %s (not discharged)' % (self.EncounterClassNr.Name,self.EncounterDate.strftime(DATE_FORMAT))
 				else:
-					return '%s visit on %s (not discharged)' % (self.EncounterClassNr.Name,self.EncounterDate.strftime(DATE_FORMAT))
-			else:
-				return '%s visit on %s' % (self.EncounterClassNr.Name,self.EncounterDate.strftime(DATE_FORMAT))
+					return '%s visit on %s' % (self.EncounterClassNr.Name,self.EncounterDate.strftime(DATE_FORMAT))
+			except SQLObjectNotFound, (errormsg):
+				return "ERROR in data: could not retrieve some data: %s" % errormsg
 			
 		def FullDescription(self):
 			''' Like Description(), except that this includes the patient name '''

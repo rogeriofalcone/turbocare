@@ -503,9 +503,9 @@ class InvCatalogItem(SQLObject):
 	IsForSale = BoolCol(default=False)
 	IsSelectable = BoolCol(default=True) #If the catalog item is just a node in the tree, use "False", if stock are linked to it, then use "True"
 	IsDispensable = BoolCol(default=False) #If the item is dispensed at a particular location, then this is true, false otherwise.  If false, and the item is sold, then the program will autmatically complete the full transaction when the bill is paid.
-	Tax = FloatCol()
-	MinStockAmt = FloatCol()
-	ReorderAmt = FloatCol()
+	Tax = FloatCol(default=0.0)
+	MinStockAmt = FloatCol(default=0.0)
+	ReorderAmt = FloatCol(default=0.0)
 	Sort = IntCol(default=1000)
 	Status = StringCol(length=25,dbName="status",default="")
 	ModifyId = StringCol(length=35,dbName="modify_id",default=cur_user_id())
