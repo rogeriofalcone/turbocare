@@ -906,6 +906,33 @@ class Registration(turbogears.controllers.Controller):
 					beds.append(dict(id=bed, name=bed, selected='selected'))
 				else:
 					beds.append(dict(id=bed, name=bed, selected=None))					
+			# Add "Inpatient Administration" charges to our receipt
+			# First check if we have a receipt for this encounter with an un-paid registration.  Assume the unpaid registration
+			# IS the current registration (back button was pressed)
+			receipts = model.InvReceipt.select(AND (model.InvReceipt.q.ExternalId == encounter.id, model.InvReceipt.q.CreateTime >= \
+				encounter.EncounterDate))
+			if receipts.count() > 0:
+				receipt = receipts[0]
+				log.debug('....Found a matching receipt to use')
+			else:
+				receipt = model.InvReceipt(CustomerID=customer.id, TotalPayment=0.0, TotalPaid=0.0, TotalSelfPay=0.0,\
+					TotalInsurance=0.0, ExternalId=encounter.id)
+			#bill for registration
+			inpatient_admin_search = model.InvCatalogItem.select(model.InvCatalogItem.q.Name == "Inpatient Administration")
+			if inpatient_admin_search.count() == 0:
+				# We need to add the Inpatient Administration charges catalog item
+				inpatient_admin = model.InvCatalogItem(ParentItemID=None,Name="Inpatient Administration", Description="Inpatient Administration Charges",
+							       IsFixedAsset=False,IsService=True,IsForSale=True,IsSelectable=True,IsDispensable=False)
+			else:
+				inpatient_admin = inpatient_admin_search[0]
+			# Look in the receipt for a receipt item for registration
+			receipt_item = None
+			for item in receipt.CatalogItems:
+				if item.CatalogItemID == inpatient_admin.id:
+					receipt_item = item
+					break;
+			if receipt_item == None:
+				receipt_item = model.InvReceiptItems(ReceiptID=receipt.id, CatalogItemID=inpatient_admin.id, Quantity=1)
 		else:
 			PatientClass = 'Outpatient'
 			#Prepare for outpatient consulation. 
@@ -931,6 +958,30 @@ class Registration(turbogears.controllers.Controller):
 			DoctorName = widgets.TextField("DoctorName", attrs={'size':'40'})
 			DoctorLookup = widgets.AutoCompleteField(name="DoctorName", search_controller="RegistrationSearchDoctor",\
 				search_param="DoctorName", result_name="doctors", default=Doctor, text_field=DoctorName)
+			# Remove any "Inpatient Administration" charges from our receipt if they were added before (in case the back button was used)
+			# First check if we have a receipt for this encounter with an un-paid registration.  Assume the unpaid registration
+			# IS the current registration (back button was pressed)
+			receipts = model.InvReceipt.select(AND (model.InvReceipt.q.ExternalId == encounter.id, model.InvReceipt.q.CreateTime >= \
+				encounter.EncounterDate))
+			if receipts.count() > 0:
+				receipt = receipts[0]
+			else:
+				receipt = model.InvReceipt(CustomerID=customer.id, TotalPayment=0.0, TotalPaid=0.0, TotalSelfPay=0.0,\
+					TotalInsurance=0.0, ExternalId=encounter.id)
+			inpatient_admin_search = model.InvCatalogItem.select(model.InvCatalogItem.q.Name == "Inpatient Administration")
+			if inpatient_admin_search.count() == 0:
+				# We need to add the Inpatient Administration charges catalog item
+				inpatient_admin = model.InvCatalogItem(ParentItemID=None,Name="Inpatient Administration", Description="Inpatient Administration Charges",
+							       IsFixedAsset=False,IsService=True,IsForSale=True,IsSelectable=True,IsDispensable=False)
+			else:
+				inpatient_admin = inpatient_admin_search[0]
+			# Look in the receipt for a receipt item for registration
+			receipt_item = None
+			for item in receipt.CatalogItems:
+				if item.CatalogItemID == inpatient_admin.id:
+					receipt_item = item
+					receipt_item.destroySelf()
+					break;
 		# Collect referral information
 		ReferrerInstitution = ''
 		ReferrerDr = ''

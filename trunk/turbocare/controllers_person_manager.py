@@ -468,12 +468,17 @@ class PersonManager(turbogears.controllers.Controller):
 				# Other page variables
 				Name = person.DisplayNameAsContact()
 				PersonLink = "index?PersonID=%d" % person.id
+		receiptvalues = []
+		for receipt in encounter.Receipts:
+			#receipt_link = '<a href="/billing/?receipt_id=%d">%d</a>' % (receipt.id, receipt.id)
+			receipt_link = HRef()
+			receiptvalues.append((receipt_link.display(link_href='/billing/?receipt_id=%d' % receipt.id, link_text=receipt.id), '%d Items purchased on %s (%s)' % (receipt.CountPurchasedItems(), receipt.ModifyTime.strftime(DATE_FORMAT), receipt.StatusText()), receipt.TotalPaymentCalc()))
 		encounter_form = widgets.TableForm(name="encounter_form%d" % encounter.id, fields=EncounterFormPage1(),
 					submit_text="Save", action="EncounterSave?EncounterID=%d" % encounter.id)
 		person_search = widgets.RemoteForm(update = 'search_results', fields = [widgets.TextField("searchtext",label="Search")],
 							name="person_search",action = "PersonSearch")
 		return dict(encounter_form=encounter_form, encountervalues=encountervalues,Name=Name,PersonLink=PersonLink,
-			    person_search=person_search)
+			    person_search=person_search, receiptvalues=receiptvalues, encounter_receipts = widgets_encounter.Receipts)
 	
 	
 	@identity.require(identity.has_permission("person_manager_view"))
@@ -483,22 +488,27 @@ class PersonManager(turbogears.controllers.Controller):
 		''' Update Encounter information
 		Note, there are some issues with this: what if someone changes from insurance to self-pay?  what happens to current receipts?
 		'''
+		log.debug(kw.keys())
 		if EncounterID:
 			try:
 				encounter = model.Encounter.get(int(EncounterID))
 			except SQLObjectNotFound:
 				encounter = None
 		if encounter:
-			for key in kw.keys():
-				if hasattr(encounter,key):
-					if key in ['EncounterDate','DischargeDateTime','FollowupDate']:
-						setattr(encounter,key,ConvertDate(kw[key]))
-					elif key in ['IsDischarged']:
-						setattr(encounter,key,True)
-					elif key in ['EncounterClassNrID','FinancialClassNrID','InsuranceClassNrID','CurrentAttDrNrID']:
-						setattr(encounter,key,ConvertInt(kw[key]))
+			for arrkey in kw.keys():
+				if hasattr(encounter,arrkey):
+					if arrkey in ['EncounterDate','DischargeDateTime','FollowupDate']:
+						setattr(encounter,arrkey,ConvertDate(kw[arrkey]))
+					elif arrkey in ['IsDischarged']:
+						setattr(encounter,arrkey,True)
+					elif arrkey in ['EncounterClassNr','FinancialClassNr','InsuranceClassNr','CurrentAttDrNr']:
+						setattr(encounter,arrkey+"ID",ConvertInt(kw[arrkey]))
+						log.debug("key:%s var:%s" % (arrkey,kw[arrkey]))
 					else:
-						setattr(encounter,key,kw[key])
+						setattr(encounter,arrkey,kw[arrkey])
+				elif hasattr(encounter,arrkey+"ID"):
+					if arrkey in ['EncounterClassNr','FinancialClassNr','InsuranceClassNr','CurrentAttDrNr']:
+						setattr(encounter,arrkey+"ID",ConvertInt(kw[arrkey]))
 			if 'IsDischarged' not in kw.keys():
 				encounter.IsDischarged = False
 			raise cherrypy.HTTPRedirect("Encounter?EncounterID=%s" % encounter.id)

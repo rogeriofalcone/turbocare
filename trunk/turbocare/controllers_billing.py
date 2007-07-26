@@ -106,8 +106,15 @@ class Billing(controllers.RootController):
 			else:
 				record_encounter = model.Encounter.get(record_rcpt.ExternalId)
 			EncounterDate = record_encounter.EncounterDate 
+			# Make sure that the insurance class is set.  When in doubt, pick "self_pay"
+			if record_encounter.InsuranceClassNrID in [None, '', 0]:
+				insurance_classes = model.ClassInsurance.select(model.ClassInsurance.q.ClassId == 'self_pay')
+				if insurance_classes.count() == 0:
+					turbogears.flash("Error with database data: ClassInsurance doesn't have all the values I need - missing self pay")
+				else:
+					record_encounter.InsuranceClassNrID = insurance_classes[0].id
 			InsuranceType = record_encounter.InsuranceClassNr.ClassId #class_id.  e.g. self_pay, private, charity, hospital, common (state run for everyone in the state)
-			InsuranceName = record_encounter.InsuranceClassNr.Name #name
+			InsuranceName = record_encounter.InsuranceClassNr.Name #name				
 			if InsuranceType != 'self_pay':
 				try:
 					record_firm = model.InsuranceFirm.get(record_encounter.InsuranceFirmId)
