@@ -424,7 +424,8 @@ DFLT_PERMISSIONS = {'bill_create': 'Create Bill',
 	       'admin_users': 'Administer Users',
 	       'bill_refund': 'Perform billing refunds',
 	       'admin_controllers_configuration': 'Configuration controller access',
-	       'person_manager_view':'Person Manager View'}
+	       'person_manager_view':'Person Manager View',
+	       'bed_manager_view':'Bed Manager View'}
 	
 def InitAdmin(name='admin', password=None):
 	''' Initialize an administrative account with a login id and password (name and password) '''
