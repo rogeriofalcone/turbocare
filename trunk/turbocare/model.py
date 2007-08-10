@@ -837,6 +837,25 @@ class Encounter(SQLObject):
 								return location.LocationNr
 				return None
 			
+		def CurrentRoomID(self):
+			""" Returns the current RoomID"""
+			RoomNr = None
+			WardNr = None
+			RoomGrpNr = None
+			WardGrpNr = None
+			for location in self.EncounterLocations:
+				if (location.DischargeTypeNrID == None or location.DischargeTypeNrID == 0) and location.TypeNr.Type == 'room':
+					RoomNr = location.LocationNr
+					RoomGrpNr = location.GroupNr
+				elif (location.DischargeTypeNrID == None or location.DischargeTypeNrID == 0) and location.TypeNr.Type == 'ward':
+					WardNr = location.LocationNr
+					WardGrpNr = location.GroupNr
+			if WardGrpNr == RoomGrpNr:
+				rooms = Room.select(AND (Room.q.RoomNr == RoomNr, Room.q.WardNr == WardNr))
+				if rooms.count() > 0:
+					return rooms[0].id
+			return None
+			
 		def Description(self):
 			''' A brief text description of the encounter '''
 			try:
