@@ -1,6 +1,6 @@
 from turbogears import widgets, validators, expose, paginate
 from tgfklookup.widgets import AutoCompletingFKLookupField
-from tgpaginate.widgets import AjaxPaginatedGrid
+# from tgpaginate.widgets import AjaxPaginatedGrid
 from model import Person, AddressCityTown, TypeEthnicOrig, dbReligion, DATE_FORMAT, InvCustomer, InvLocation
 import logging
 
