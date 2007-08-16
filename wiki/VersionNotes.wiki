@@ -5,6 +5,15 @@
 
 Some versions have important notes.  Read below for important information regarding updating to a specific version.
 
+= Revision 290 =
+
+ # Removed "tgpaginate" requirement
+
+= Revision 289 and earlier (I missed a few entries) =
+
+Run the following commands:
+ # `easy_install TGFKLookup`
+ # `easy_install tgpaginate`
 
 = Revision 216 =
 
