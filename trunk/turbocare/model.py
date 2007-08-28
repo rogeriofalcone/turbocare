@@ -295,6 +295,9 @@ class Person(SQLObject):
 						value = cur_date_time()
 				self._SO_set_DateReg(value)
 				
+		def __str__(self):
+			return self.DisplayName()
+				
 		def DisplayName(self):
 				Name = ''
 				if self.Title !=None and self.Title.isalnum():
