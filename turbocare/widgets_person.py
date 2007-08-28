@@ -200,6 +200,22 @@ EmployeeEncounters = widgets.DataGrid(fields=[('ID', lambda row: row[0]),
 					('Description', lambda row: row[1])],  
 				default = [])
 
+class PersonWidget(widgets.Widget):
+	''' Find/Select/Display a Person from the system '''
+	template = '''
+    <table xmlns:py="http://purl.org/kid/ns#"
+      class="PersonWidget" border="1">
+        <input type="hidden" name="PersonID" value="" />
+        <tr><td>Search</td><td><input type="text" name="search" value="" /></td></tr>
+	<tr><td>Name</td><td><input type="text" name="name" readonly="readonly" value="" /></td></tr>
+	<tr><td>Details</td><td id="PersonWidgetDetails"></td></tr>
+	<tr><td>Options</td><td id="PersonWidgetOperations">Links go here</td></tr>
+    </table>	
+	'''
+	javascript = '''
+	
+	'''
+
 #               DateReg = DateTimeCol(dbName='date_reg',default=cur_date_time())
 #               Name2 = widgets.TextField(validator=validators.NotEmpty(), label="Name (2nd)")
 #               Name3 = widgets.TextField(validator=validators.NotEmpty(), label="Name (3rd)")
