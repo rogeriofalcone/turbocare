@@ -14,7 +14,7 @@ from model import DATE_FORMAT
 import widgets_person
 from widgets_encounter import EncounterFormPage1
 import widgets_encounter
-from div_dialogs.widgets import DialogBoxLink
+#from div_dialogs.widgets import DialogBoxLink
 
 log = logging.getLogger("turbocare.controllers")
 
