@@ -21,6 +21,7 @@ import controllers_waitingroom
 import initialize_database
 import controllers_person_manager
 import controllers_bed_manager
+#import controllers_test
 from turbocare import json
 
 log = logging.getLogger("turbocare.controllers")
@@ -62,6 +63,8 @@ class Root(controllers.RootController):
 	#catwalk = CatWalk(model_userperm) #Create a user admininstrator CatWalk with the custom User Model.
 	#catwalk = identity.SecureObject(catwalk,identity.has_permission('admin_catwalk'))  #Securing objects is good. 
 	#tempwalk = CatWalk(model_userperm) #Create a user admininstrator CatWalk with the custom User Model.
+	
+	#test = controllers_test.Test()
 	
 	user_manager = controllers_user_manager.UserManager()
 	user_manager = identity.SecureObject(user_manager,identity.has_permission('admin_users'))
